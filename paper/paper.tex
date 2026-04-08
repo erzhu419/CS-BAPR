@@ -1,0 +1,784 @@
+\documentclass[10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in, left=1.25in, right=1.25in, top=1in, bottom=1in]{geometry}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[linktoc=all, bookmarksdepth=3, pdfstartview=FitH]{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, filecolor=magenta, urlcolor=cyan}
+\urlstyle{same}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{bbold}
+\usepackage{graphicx}
+\usepackage[export]{adjustbox}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{caption}
+\captionsetup[figure]{name=Fig.}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[normalem]{ulem}
+\usepackage{amsthm}
+\usepackage{enumitem}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{assumption}[theorem]{Assumption}
+
+\graphicspath{ {./} }
+
+\title{CS-BAPR: Causal-Symbolic Bayesian Adaptive Policy Regularization with Machine-Verified OOD Extrapolation Bounds\footnote{Code available at \url{https://github.com/erzhu419/CS-BAPR}}}
+
+\author{
+  Yifan Zhang\thanks{Central South University, \href{mailto:erzhu419@gmail.com}{erzhu419@gmail.com}, \href{mailto:204201048@csu.edu.cn}{204201048@csu.edu.cn}} \and
+  Liang Zheng\thanks{Central South University, \href{mailto:zhengliang@csu.edu.cn}{zhengliang@csu.edu.cn}}
+}
+\date{}
+
+%New command to display footnote whose markers will always be hidden
+\let\svthefootnote\thefootnote
+\newcommand\blfootnotetext[1]{%
+  \let\thefootnote\relax\footnote{#1}%
+  \addtocounter{footnote}{-1}%
+  \let\thefootnote\svthefootnote%
+}
+\let\svfootnotetext\footnotetext
+\renewcommand\footnotetext[2][?]{%
+  \if\relax#1\relax%
+    \ifnum\value{footnote}=0\blfootnotetext{#2}\else\svfootnotetext{#2}\fi%
+  \else%
+    \if?#1\ifnum\value{footnote}=0\blfootnotetext{#2}\else\svfootnotetext{#2}\fi%
+    \else\svfootnotetext[#1]{#2}\fi%
+  \fi
+}
+
+\begin{document}
+\maketitle
+
+
+\begin{abstract}
+Standard reinforcement learning policies trained on bounded state regions fail catastrophically when deployed in out-of-distribution (OOD) regimes. A key yet underexplored source of this failure is \emph{architectural}: ReLU-based policy networks exhibit derivative discontinuities that permit unbounded error growth in extrapolation regions---a structural deficiency that no amount of data can remedy.
+
+We propose \textbf{CS-BAPR} (Causal-Symbolic Bayesian Adaptive Policy Regularization), which extends the BAPR framework~\cite{Zhang2025BAPR} with three pillars for principled OOD extrapolation: (1)~\emph{Neural Arithmetic Units} (NAU/NMU) that replace ReLU output layers, providing architecturally guaranteed finite derivative Lipschitz constants; (2)~\emph{SINDy symbolic discovery} that extracts sparse analytic equations from trajectory data and enforces Jacobian consistency between the policy gradient and the discovered physical law; and (3)~\emph{IRM causal filtering} that selects symbolic formulas invariant across multiple training environments, provably tightening extrapolation bounds.
+
+Our main theoretical result is the \textbf{OOD Extrapolation Stability Bound}: if the policy achieves base accuracy $\delta$ on the training domain, SINDy derivative error $\varepsilon$, and NAU/NMU derivative Lipschitz constant $L$, then the OOD prediction error at distance $\|d\|$ satisfies $\|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$. We further prove that ReLU networks \emph{provably lack} any finite $L$, establishing a sharp architectural boundary for extrapolation capability. The CS-BAPR Bellman operator with frozen symbolic penalty $\Gamma_{\text{sym}}$ is a $\gamma$-contraction, extending BAPR's convergence guarantee without additional assumptions. All results---including the ReLU impossibility theorem, the full SINDy-to-OOD pipeline, and the $n$-dimensional quadratic bound---are machine-verified in Lean~4 with no \texttt{sorry} (954~lines, 34~theorems). A dedicated counterproof (\texttt{CSBAPR-Counterproof.lean}) establishes that the frozen-$\Gamma_{\text{sym}}$ requirement is \emph{necessary}.
+\end{abstract}
+
+
+\noindent\textbf{Keywords:} out-of-distribution extrapolation; symbolic regression; neural arithmetic units; causal invariance; formal verification; robust reinforcement learning.
+
+
+\section{Introduction}
+
+Reinforcement learning (RL) has achieved remarkable success in domains where training and deployment conditions are well-aligned~\cite{Haarnoja2018SAC}. However, real-world applications frequently require policies to operate in regimes far beyond their training distribution---a challenge we term \emph{magnitude extrapolation}. Unlike the interpolation-based generalization studied in domain randomization~\cite{Lee2020ESCP} or the regime-switch adaptation addressed by BAPR~\cite{Zhang2025BAPR}, magnitude extrapolation demands that the agent's output scale correctly to input magnitudes never encountered during training.
+
+\begin{definition}[Extrapolation Failure]
+    \label{def:extrapolation_failure}
+    Let $\pi_\theta: \mathcal{S} \to \mathcal{A}$ be a policy trained on domain $D_{\text{train}} \subset \mathcal{S}$, and let $f_{\text{real}}: \mathcal{S} \to \mathcal{A}$ be the optimal response function governed by underlying physical laws. The policy suffers from \emph{extrapolation failure} if there exists a distance threshold $d_0 > 0$ such that for $x_{\text{ood}}$ with $\|x_{\text{ood}} - D_{\text{train}}\| > d_0$:
+    \begin{enumerate}[label=(\roman*)]
+        \item \textbf{Error explosion:} $\|\pi_\theta(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\|$ grows super-polynomially with distance;
+        \item \textbf{Gradient saturation:} $\|\nabla_x \pi_\theta(x_{\text{ood}})\| \to 0$ or exhibits discontinuous jumps, preventing meaningful response scaling.
+    \end{enumerate}
+\end{definition}
+
+This failure mode is \emph{architecturally determined}---it arises not from insufficient data or poor training, but from the structural properties of the function class used to represent the policy. We identify three root causes and their corresponding solutions:
+
+\begin{enumerate}
+    \item \textbf{ReLU derivative discontinuity (architectural):} Standard ReLU networks have piecewise-linear activations whose derivatives are discontinuous at breakpoints. In OOD regions, the derivative can change arbitrarily between 0 and 1, causing the policy's response to ``freeze'' or ``jump'' unpredictably. We prove (machine-verified) that no finite Lipschitz constant $L$ exists for ReLU derivatives, making polynomial OOD error bounds \emph{of the form} $\delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$ structurally impossible for ReLU policies (Theorem~\ref{thm:relu_impossible}). Note that this does not preclude other framework-specific OOD guarantees for ReLU networks; rather, it establishes that the derivative-Lipschitz approach---which yields the tightest bounds in our framework---is architecturally incompatible with ReLU.
+
+    \item \textbf{Lack of physical structure (representational):} Even with smooth activations, a purely data-driven policy has no mechanism to discover that the environment obeys sparse analytic laws (e.g., $F = ma$, ballistic equations). Without such structure, the policy must memorize input-output mappings rather than learning generalizable rules. We address this through SINDy-based symbolic discovery~\cite{Brunton2016SINDy}, which extracts sparse differential equations from trajectory data and conditions the policy's gradient to align with the discovered law (Jacobian Consistency Loss).
+
+    \item \textbf{Spurious correlations (statistical):} A formula discovered from a single training environment may capture correlations (e.g., temperature $\leftrightarrow$ wind speed) rather than causal mechanisms (e.g., wind $\to$ trajectory deviation). We integrate Invariant Risk Minimization (IRM)~\cite{Arjovsky2019IRM} to filter symbolic candidates across multiple environments, retaining only causally invariant physical laws that remain stable under distributional shift.
+\end{enumerate}
+
+Building upon the robust ensemble framework of RE-SAC~\cite{Zhang2025RESAC} and the Bayesian change-point adaptation of BAPR~\cite{Zhang2025BAPR}, our contributions are:
+
+\begin{itemize}
+    \item \textbf{OOD Extrapolation Stability Bound (Theorem~\ref{thm:ood_quad_nD}):} Under Jacobian Consistency ($\varepsilon$) and NAU/NMU Arithmetic Bias ($L < \infty$), the OOD error satisfies $\|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$. To our knowledge, this is the first machine-verified polynomial OOD bound for structured RL policies satisfying the Jacobian Consistency and Arithmetic Bias conditions.
+
+    \item \textbf{ReLU Impossibility Theorem (Theorem~\ref{thm:relu_impossible}):} $\neg\exists L,\ \text{HasArithmeticInductiveBias}(\text{ReLU}, L)$. Machine-verified in Lean~4, establishing that ReLU networks are structurally incapable of satisfying any polynomial OOD bound of this form.
+
+    \item \textbf{SINDy-to-OOD Pipeline (Theorem~\ref{thm:sindy_pipeline}):} A formal composition: SINDy identification success $\Rightarrow$ Jacobian Consistency $\Rightarrow$ OOD Bound, providing end-to-end guarantees from data-driven symbolic discovery to extrapolation quality.
+
+    \item \textbf{IRM Tightening (Theorem~\ref{thm:irm_tighten}):} IRM-filtered symbolic formulas yield provably tighter Jacobian Consistency bounds than single-environment formulas, reducing the $\varepsilon$ term in the OOD bound.
+
+    \item \textbf{CS-BAPR Bellman Contraction (Theorem~\ref{thm:csbapr_contraction}):} The CS-BAPR operator---extending BAPR with a frozen symbolic consistency penalty $\Gamma_{\text{sym}}$---is a $\gamma$-contraction in $L_\infty$, preserving convergence guarantees. The symbolic penalty cancels exactly in the contraction argument, requiring only that it be frozen during each backup.
+
+    \item \textbf{Machine verification:} All results are formally verified in Lean~4 with no \texttt{sorry} (\texttt{CSBAPR.lean}: 954~lines, 34~definitions/theorems/lemmas), using Mathlib's calculus library including the convex Mean Value Theorem and the Gr\"onwall-style fencing theorem.
+\end{itemize}
+
+
+\section{Related work}
+
+\subsection{OOD generalization in RL}
+Generalization in RL has been studied through domain randomization~\cite{Lee2020ESCP}, distributional robustness~\cite{Panaganti2024RobustF, Zhou2023NaturalActorCritic}, and epistemic uncertainty quantification~\cite{Ghosh2021EpistemicPOMDP}. These approaches provide \emph{interpolation} guarantees within the convex hull of training environments but do not address \emph{extrapolation} to magnitudes beyond the training support. Robust MDPs~\cite{Wiesemann2013RobustMDP, Iyengar2005RobustDP} hedge against worst-case perturbations but with \emph{static} uncertainty sets that become vacuous far from the training distribution. CS-BAPR instead leverages \emph{structural} knowledge (physical laws) to extend guarantees beyond the training domain.
+
+\subsection{Neural arithmetic units}
+Neural Arithmetic Logic Units (NALU)~\cite{Trask2018NALU} introduced the idea of discrete-weight arithmetic layers for numerical extrapolation. Neural Arithmetic Units (NAU) and Neural Multiplication Units (NMU)~\cite{Madsen2020NAU} improved stability by separating addition and multiplication paths and using regularization-based weight discretization. These architectures have been applied to function learning tasks~\cite{Sahoo2018LearningEquations} but not to RL policy networks or formal OOD bounds. CS-BAPR is the first to provide machine-verified Lipschitz derivative guarantees for NAU/NMU architectures and to prove that ReLU lacks this property.
+
+\subsection{Symbolic regression and SINDy}
+Sparse Identification of Nonlinear Dynamics (SINDy)~\cite{Brunton2016SINDy} discovers governing equations from data using sparse regression over a candidate function library. SINDy-RL~\cite{Vajdi2024SINDyRL} integrates SINDy with model-based RL for interpretable dynamics models. AI Feynman~\cite{Udrescu2020AIFeynman} uses physics-inspired symbolic regression for equation discovery. CS-BAPR formalizes the SINDy identification process in Lean~4 and proves that successful identification implies Jacobian Consistency, which in turn implies polynomial OOD bounds.
+
+\subsection{Causal RL and invariant risk minimization}
+Invariant Risk Minimization (IRM)~\cite{Arjovsky2019IRM} seeks predictors whose optimal classifier is invariant across training environments, targeting causal rather than spurious correlations. Causal representation learning~\cite{Scholkopf2021CausalRL} and causal RL surveys~\cite{CausalRLSurvey2023} provide the theoretical foundations. CS-BAPR applies IRM not to the policy directly but to the \emph{symbolic formula selection} stage, filtering SINDy candidates to retain only causally invariant physical laws.
+
+\subsection{Physics-informed ML and ReLU failures}
+Recent work has identified systematic failures of ReLU activations in physics-informed machine learning~\cite{ReLUFailure2023}, showing that ReLU's piecewise linearity prevents accurate learning of smooth physical solutions. Our ReLU Impossibility Theorem (Theorem~\ref{thm:relu_impossible}) provides the first \emph{formal proof} that this failure extends to derivative Lipschitz continuity---a necessary condition for polynomial OOD bounds within our framework. We emphasize that the impossibility is specific to bounds requiring Lipschitz-continuous derivatives; alternative frameworks (e.g., piecewise-linear extrapolation analysis) may yield different guarantees for ReLU networks.
+
+\subsection{Formal verification in RL}
+Machine verification of RL algorithms remains rare. Our prior work established Lean~4 contraction proofs for RE-SAC~\cite{Zhang2025RESAC} and BAPR~\cite{Zhang2025BAPR}. CS-BAPR extends this methodology to OOD extrapolation bounds, SINDy formalization, IRM consistency, and architectural impossibility results---the broadest scope of machine-verified RL theory to date.
+
+
+\section{Preliminaries}
+
+\subsection{Maximum entropy RL}
+Following SAC~\cite{Haarnoja2018SAC}, the agent maximizes the entropy-augmented objective:
+\begin{equation}
+    J(\pi) = \mathbb{E}_{\pi, P} \left[ \sum_{t=0}^{\infty} \gamma^t \left( R(s_t, a_t) + \alpha \mathcal{H}(\pi(\cdot|s_t)) \right) \right],
+\end{equation}
+where $\mathcal{H}(\pi(\cdot|s_t))$ is the Shannon entropy and $\alpha$ is the temperature parameter.
+
+\subsection{BAPR framework}
+CS-BAPR builds upon the BAPR framework~\cite{Zhang2025BAPR}, which integrates Bayesian Online Change Detection (BOCD)~\cite{Adams2007BOCD} with robust ensemble RL for piecewise-stationary environments. The BAPR operator is a belief-weighted mixture of mode-conditional Bellman operators:
+\begin{equation}
+    \mathcal{T}^{BAPR}_\rho Q(s,a) = \sum_{m \in \mathcal{M}} \rho(m) \cdot \mathcal{T}_m Q(s,a),
+\end{equation}
+where $\rho$ is a frozen belief distribution over modes derived from the BOCD posterior. Each mode-conditional operator $\mathcal{T}_m$ inherits RE-SAC's disentangled aleatoric ($\kappa$) and epistemic ($\Gamma_{\text{epi}}$) penalties~\cite{Zhang2025RESAC}. The operator is a $\gamma$-contraction when all penalties and beliefs are frozen during each backup~\cite{Zhang2025BAPR}.
+
+
+\section{Methodology}
+
+\subsection{The OOD extrapolation problem}
+\label{sec:ood_problem}
+
+Let $D_{\text{train}} \subset \mathcal{S}$ be the training domain and $x_0 \in D_{\text{train}}$ a reference point. For an OOD test point $x_{\text{ood}} \notin D_{\text{train}}$, we seek to bound $\|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\|$ as a function of the distance $d = x_{\text{ood}} - x_0$.
+
+\begin{remark}[On the relationship between $\pi$ and $f_{\text{real}}$]
+    \label{rem:pi_vs_freal}
+    In standard RL, the policy $\pi: \mathcal{S} \to \mathcal{A}$ maps states to actions, while the environment dynamics $f_{\text{real}}: \mathcal{S} \times \mathcal{A} \to \mathcal{S}$ maps state-action pairs to next states. These are semantically distinct. Our OOD bound applies in the important special case where the policy approximates a \emph{deterministic optimal response function} $\pi^*: \mathcal{S} \to \mathcal{A}$ governed by known physical laws (e.g., ballistic corrections, torque control). In this setting, $f_{\text{real}}(s)$ denotes the \emph{physics-prescribed optimal action} at state $s$, and the Jacobian Consistency constraint $\nabla_s \pi \approx \nabla_s f_{\text{sym}}$ ensures that the policy's \emph{rate of change} tracks the physical law's rate of change in OOD regions. This is meaningful because: (i) in control problems with analytic solutions, the optimal policy \emph{is} a known function of state; (ii) SINDy discovers equations governing how the \emph{optimal response} changes with state, not the transition dynamics per se; and (iii) the gradient alignment ensures that even when the policy has not seen a particular state magnitude, its response scales consistently with the underlying physics.
+\end{remark}
+
+We state three structural assumptions under which the CS-BAPR framework operates:
+
+\begin{assumption}[SINDy Identifiability]
+    \label{assump:sindy}
+    The optimal response function $f_{\text{real}}: \mathcal{S} \to \mathcal{A}$ admits a sparse representation in the chosen basis library $\{\varphi_1, \ldots, \varphi_n\}$, such that SINDy can identify it with derivative accuracy $\varepsilon_1 < \varepsilon_{\text{threshold}}$ on the training domain.
+\end{assumption}
+
+\begin{assumption}[Smooth Target Dynamics]
+    \label{assump:smooth}
+    The function $f_{\text{real}}$ is differentiable on the convex hull of $D_{\text{train}} \cup \{x_{\text{ood}}\}$, and its Fr\'echet derivative is $M$-Lipschitz: $\|Df_{\text{real}}(x_1) - Df_{\text{real}}(x_2)\| \leq M\|x_1 - x_2\|$ for some finite $M \geq 0$. This is satisfied for physical systems governed by smooth differential equations with bounded second derivatives (e.g., rigid-body dynamics, fluid mechanics, ballistic trajectories), but excludes environments with discontinuous transitions (e.g., contact-rich manipulation with Coulomb friction). The constant $M$ captures the \emph{nonlinearity} of the physical law: $M = 0$ for linear systems, $M > 0$ for nonlinear.
+\end{assumption}
+
+\begin{assumption}[Bounded Feature Extractor]
+    \label{assump:feature_lip}
+    The feature extraction layers of the actor network have a finite Lipschitz constant $L_{\text{feat}} < \infty$, achievable via spectral normalization or weight clamping. Combined with the NAU/NMU output head's derivative Lipschitz constant $L_{\text{head}}$ (0 for NAU, $2|c|$ for NMU), the composed actor has effective derivative Lipschitz constant $L_{\text{pol}} = L_{\text{feat}} \cdot L_{\text{head}} < \infty$. (Lean: \texttt{IsFunctionLipschitz} for the feature extractor, \texttt{HasArithmeticInductiveBias} for the output head.)
+\end{assumption}
+
+\begin{remark}[Elimination of pointwise OOD Jacobian Consistency assumption]
+    \label{rem:assumption4_eliminated}
+    An earlier version of this work required a fourth assumption: pointwise Jacobian Consistency along the entire OOD line segment. This assumption was problematic because training only enforces JC on the replay buffer distribution, not in OOD regions.
+
+    We now \emph{derive} the OOD derivative error bound from the three assumptions above, without assuming anything about OOD-segment Jacobian alignment. The key result (Lean: \texttt{deriv\_error\_propagation\_nD}, Part~X) shows that for any point $x$ (including OOD):
+    \begin{equation}
+        \|D\pi(x) - Df_{\text{real}}(x)\| \leq \underbrace{\varepsilon}_{\text{training JC}} + \underbrace{(L_{\text{pol}} + M)}_{\text{architecture + physics}} \cdot \|x - x_0\|,
+        \label{eq:deriv_propagation}
+    \end{equation}
+    where the three terms come from:
+    \begin{enumerate}[label=(\roman*)]
+        \item $\varepsilon$: Jacobian Consistency at the training boundary $x_0$ (from the training loss $\mathcal{L}_{\text{AC}}$);
+        \item $L_{\text{pol}} \cdot \|x - x_0\|$: how much $\pi$'s derivative drifts from $x_0$ (bounded by NAU/NMU architecture, Assumption~\ref{assump:feature_lip});
+        \item $M \cdot \|x - x_0\|$: how much $f_{\text{real}}$'s derivative drifts from $x_0$ (bounded by physics smoothness, Assumption~\ref{assump:smooth}).
+    \end{enumerate}
+    This is a strict improvement: Eq.~\eqref{eq:deriv_propagation} is \emph{derived} from training-time quantities and architectural properties, with no OOD-segment assumptions. The generalization from training boundary to population is handled by a standard PAC bound (Lean: \texttt{jc\_generalization\_to\_ood}, Part~XIII): $\varepsilon_{\text{pop}} \leq \varepsilon_{\text{emp}} + O(B/\sqrt{N})$.
+\end{remark}
+
+We introduce two key predicates, formalized in Lean~4:
+
+\begin{definition}[Jacobian Consistency]
+    \label{def:jac_consistency}
+    A function $\pi: E \to F$ is \emph{$\varepsilon$-Jacobian Consistent} with a symbolic formula $f_{\text{sym}}: E \to F$ on domain $D$ if:
+    \begin{equation}
+        \forall x \in D,\quad \|D\pi(x) - Df_{\text{sym}}(x)\| \leq \varepsilon,
+    \end{equation}
+    where $D$ denotes the Fr\'echet derivative. (Lean: \texttt{IsJacobianConsistent\_nD}, line~400.)
+\end{definition}
+
+\begin{definition}[Arithmetic Inductive Bias]
+    \label{def:arith_bias}
+    A function $\pi: E \to F$ has \emph{$L$-Arithmetic Inductive Bias} if its Fr\'echet derivative is $L$-Lipschitz:
+    \begin{equation}
+        \forall x_1, x_2,\quad \|D\pi(x_1) - D\pi(x_2)\| \leq L \cdot \|x_1 - x_2\|.
+    \end{equation}
+    (Lean: \texttt{HasArithmeticInductiveBias\_nD}, line~404.)
+\end{definition}
+
+
+\subsection{Pillar I: NAU/NMU arithmetic bias}
+\label{sec:nau}
+
+The first pillar replaces the policy's output layers with Neural Arithmetic Units, ensuring finite derivative Lipschitz constants.
+
+\textbf{NAU layer.} A Neural Arithmetic Unit~\cite{Madsen2020NAU} computes $y = \sum_j w_j x_j$ with weights constrained to $\{-1, 0, 1\}$ (realized via clamping and regularization). Since the output is linear in the input, the derivative $\partial y / \partial x_i = w_i$ is \emph{constant}---independent of the input value.
+
+\begin{theorem}[NAU has zero-Lipschitz derivatives]
+    \label{thm:nau_bias}
+    For any integer weight $w \in \mathbb{Z}$, the function $f(x) = wx$ satisfies $\text{HasArithmeticInductiveBias}(f, 0)$. (Lean: \texttt{nau\_has\_arithmetic\_bias\_1d}, line~843.)
+\end{theorem}
+\begin{proof}
+    $f'(x) = w$ for all $x$, so $|f'(x_1) - f'(x_2)| = |w - w| = 0 \leq 0 \cdot |x_1 - x_2|$.
+\end{proof}
+
+For multi-dimensional inputs, the NAU derivative constancy extends naturally:
+
+\begin{theorem}[NAU partial derivatives are constant]
+    \label{thm:nau_const}
+    For an NAU layer with integer weights $w_1, \ldots, w_n \in \mathbb{Z}$ computing $y = \sum_j w_j x_j$, the partial derivative $\partial y / \partial x_i = w_i$ is \emph{constant} everywhere---independent of the input vector. This guarantees that the derivative does not drift in OOD regions. (Lean: \texttt{nau\_derivative\_is\_constant}, line~817.)
+\end{theorem}
+
+\textbf{NMU layer.} A Neural Multiplication Unit~\cite{Trask2018NALU} computes $f(x) = c \cdot x^2$ with learnable coefficient $c$. Its derivative $f'(x) = 2cx$ is Lipschitz with constant $L = 2|c|$.
+
+\begin{theorem}[NMU has bounded-Lipschitz derivatives]
+    \label{thm:nmu_bias}
+    For any coefficient $c \in \mathbb{R}$, $\text{HasArithmeticInductiveBias}(x \mapsto cx^2, 2|c|)$. (Lean: \texttt{nmu\_has\_bounded\_arithmetic\_bias}, line~876.)
+\end{theorem}
+\begin{proof}
+    $f'(x) = 2cx$, so $|f'(x_1) - f'(x_2)| = |2cx_1 - 2cx_2| = 2|c| \cdot |x_1 - x_2|$.
+\end{proof}
+
+\begin{corollary}[NAU $\circ$ NMU composition]
+    For weights $w, c \in \mathbb{R}$, $\text{HasArithmeticInductiveBias}(x \mapsto wc \cdot x^2, 2|wc|)$. (Lean: \texttt{nau\_nmu\_composition\_bias}, line~896.)
+\end{corollary}
+
+\textbf{ReLU impossibility.} In contrast, we prove that ReLU networks cannot satisfy any polynomial OOD bound:
+
+\begin{theorem}[ReLU derivative is not Lipschitz]
+    \label{thm:relu_impossible}
+    $\neg\exists L \in \mathbb{R},\ \text{HasArithmeticInductiveBias}(\text{ReLU}, L)$. (Lean: \texttt{relu\_derivative\_not\_lipschitz}, line~908.)
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+    ReLU$(x) = \max(0, x)$ has derivative 0 for $x < 0$ and 1 for $x > 0$. For any purported $L$:
+    \begin{itemize}
+        \item If $L \leq 0$: take $x_1 = -1, x_2 = 1$. Then $|0 - 1| = 1 \leq L \cdot 2 \leq 0$, contradiction.
+        \item If $L > 0$: take $x_1 = -(4L)^{-1}, x_2 = (4L)^{-1}$. Then $|0 - 1| = 1 \leq L \cdot 2(4L)^{-1} = 1/2$, contradiction.
+    \end{itemize}
+    The full proof is machine-verified in Lean~4 using filter-based derivative computation.
+\end{proof}
+
+\begin{remark}[Architectural hierarchy for extrapolation]
+    \label{rem:hierarchy}
+    The machine-verified results establish a sharp hierarchy:
+    \begin{center}
+    \begin{tabular}{lccc}
+    \toprule
+    \textbf{Architecture} & \textbf{$L$} & \textbf{OOD bound} & \textbf{Lean theorem} \\
+    \midrule
+    NAU ($w \cdot x$) & $0$ & $\delta$ (constant) & \texttt{nau\_has\_arithmetic\_bias\_1d} \\
+    NMU ($c \cdot x^2$) & $2|c|$ & $\delta + \varepsilon\|d\| + |c|\|d\|^2$ & \texttt{nmu\_has\_bounded\_arithmetic\_bias} \\
+    ReLU ($\max(0,x)$) & $\nexists$ & unbounded & \texttt{relu\_derivative\_not\_lipschitz} \\
+    \bottomrule
+    \end{tabular}
+    \end{center}
+\end{remark}
+
+\begin{remark}[Theory-practice gap: composed architecture]
+    \label{rem:theory_practice}
+    The Lean~4 proofs establish Lipschitz derivative constants for \emph{isolated} NAU ($L=0$) and NMU ($L=2|c|$) layers. The actual actor is a composition $\pi = \tanh \circ (\alpha \cdot \text{NAU} + (1{-}\alpha) \cdot \text{NMU}) \circ \text{FeatureNet}$. The composed constant satisfies $L_{\text{pol}} \leq L_{\text{feat}} \cdot 2(1{-}\alpha)|c| \cdot 1 < \infty$ (Assumption~\ref{assump:feature_lip}), preserving the quadratic OOD bound.
+
+    \textbf{Two Lipschitz concepts (Lean: \texttt{IsFunctionLipschitz} vs \texttt{HasArithmeticInductiveBias}).} This analysis crucially distinguishes:
+    \begin{itemize}
+        \item \emph{Function-Lipschitz}: $|f(x_1) - f(x_2)| \leq K|x_1 - x_2|$ — satisfied by LeakyReLU ($K = 1$), required for the feature extractor.
+        \item \emph{Derivative-Lipschitz}: $|f'(x_1) - f'(x_2)| \leq L|x_1 - x_2|$ — satisfied by NAU ($L = 0$) and NMU ($L = 2|c|$), but \emph{not} by ReLU or LeakyReLU (derivative discontinuity at $x=0$).
+    \end{itemize}
+    The composition rule (Lean: \texttt{composed\_deriv\_lipschitz\_simple}, Part~XI) requires function-Lipschitz for the inner function (feature extractor) and derivative-Lipschitz for the outer function (NAU/NMU head). LeakyReLU in hidden layers is acceptable because only function-Lipschitz is needed there; the OOD bound's derivative-Lipschitz requirement applies only to the output head. See Appendix~\ref{app:nau_details} for the full $L_{\text{pol}}$ derivation.
+\end{remark}
+
+
+\subsection{Pillar II: SINDy symbolic discovery}
+\label{sec:sindy}
+
+The second pillar uses Sparse Identification of Nonlinear Dynamics (SINDy)~\cite{Brunton2016SINDy} to extract analytic equations from trajectory data, then enforces alignment between the policy's gradient and the discovered law.
+
+\textbf{Basis library.} We define a library of $n$ differentiable candidate functions $\varphi_1, \ldots, \varphi_n: E \to F$ (e.g., $\{1, x, x^2, \sin x, e^x\}$) where each $\varphi_i$ is differentiable on the domain. The symbolic formula space is the span $\{f_{\text{sym}} = \sum_{i=1}^n \xi_i \varphi_i \mid \xi \in \mathbb{R}^n\}$. (Lean: \texttt{BasisLibrary}, line~456.)
+
+\textbf{SINDy identification.} Given trajectory data, SINDy solves:
+\begin{equation}
+    \xi = \arg\min_{\xi} \|\dot{X} - \Theta(X)\xi\|_2 + \lambda\|\xi\|_1,
+\end{equation}
+where $\Theta(X)$ is the basis function matrix evaluated on data. The reconstructed formula is $f_{\text{sym}}(x) = \sum_i \xi_i \varphi_i(x)$.
+
+We formalize successful identification as a predicate on output quality:
+
+\begin{definition}[SINDy Identification Success]
+    \label{def:sindy_id}
+    SINDy identifies the true dynamics $f_{\text{real}}$ with derivative accuracy $\varepsilon_1$ on domain $D$ if there exist sparse coefficients $\xi$ such that:
+    \begin{equation}
+        \forall x \in D,\quad \|Df_{\text{real}}(x) - D(\textstyle\sum_i \xi_i \varphi_i)(x)\| \leq \varepsilon_1.
+    \end{equation}
+    (Lean: \texttt{SINDyIdentifies}, line~502.)
+\end{definition}
+
+\begin{theorem}[SINDy $\Rightarrow$ Jacobian Consistency]
+    \label{thm:sindy_jac}
+    If SINDy identifies $f_{\text{real}}$ with derivative error $\varepsilon_1$, and the policy $\pi$ is trained to match the SINDy formula with derivative error $\varepsilon_2$, then $\pi$ is $(\varepsilon_1 + \varepsilon_2)$-Jacobian Consistent with $f_{\text{real}}$. (Lean: \texttt{sindy\_implies\_jacobian\_consistency\_nD}, line~518.)
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+    Triangle inequality: $\|D\pi - Df_{\text{real}}\| \leq \|D\pi - Df_{\text{sym}}\| + \|Df_{\text{sym}} - Df_{\text{real}}\| \leq \varepsilon_2 + \varepsilon_1$.
+\end{proof}
+
+\begin{corollary}[Tight version with same coefficients]
+    \label{cor:sindy_tight}
+    When the policy is trained against the \emph{same} SINDy formula that was identified, i.e., both SINDy error and training error are measured against the same coefficients $\xi$, the Jacobian Consistency follows directly with the same $\varepsilon_1 + \varepsilon_2$ bound. (Lean: \texttt{sindy\_implies\_jacobian\_consistency\_tight}, line~546.) This is the version actually used in the pipeline proof (Theorem~\ref{thm:sindy_pipeline}).
+\end{corollary}
+
+\textbf{Analytic Consistency Loss.} In training, the Jacobian Consistency is enforced through a gradient-alignment loss:
+\begin{equation}
+    \mathcal{L}_{\text{AC}} = \mathbb{E}_{s \sim \mathcal{D}} \left[ \|\nabla_s \pi_\theta(s) - \nabla_s f_{\text{sym}}(s)\|^2 \right],
+    \label{eq:jac_loss}
+\end{equation}
+where $f_{\text{sym}}$ is the frozen SINDy formula (its gradients are detached to satisfy the frozen-parameter requirement).
+
+\begin{theorem}[Full SINDy-to-OOD Pipeline]
+    \label{thm:sindy_pipeline}
+    If SINDy identifies $f_{\text{real}}$ with derivative error $\varepsilon_1$ globally, the policy is trained with derivative error $\varepsilon_2$ globally, $\|\pi(x_0) - f_{\text{real}}(x_0)\| \leq \delta$, and $\varepsilon_1 + \varepsilon_2 \geq 0$, then:
+    \begin{equation}
+        \|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\| \leq \delta + (\varepsilon_1 + \varepsilon_2)\|x_{\text{ood}} - x_0\|.
+    \end{equation}
+    (Lean: \texttt{sindy\_to\_ood\_bound\_nD}, line~576.)
+    This linear bound is the special case of the main quadratic result (Theorem~\ref{thm:ood_quad_nD}) when $L = 0$ (pure NAU architecture). When NMU layers are used ($L = 2|c|$), the quadratic term $(L/2)\|d\|^2$ appears.
+\end{theorem}
+\begin{proof}[Proof sketch]
+    By Theorem~\ref{thm:sindy_jac}, $\pi$ is $(\varepsilon_1 + \varepsilon_2)$-Jacobian Consistent with $f_{\text{real}}$. Setting $C = \varepsilon_1 + \varepsilon_2$ in Theorem~\ref{thm:ood_linear_nD} yields the result immediately.
+\end{proof}
+
+
+\subsection{Pillar III: IRM invariance filtering}
+\label{sec:irm}
+
+The third pillar filters symbolic formula candidates using Invariant Risk Minimization~\cite{Arjovsky2019IRM} to retain only \emph{cross-environment invariant} physical laws. We use ``causal'' in the IRM sense of \emph{invariance across environments}~\cite{Arjovsky2019IRM}, not in the structural causal model (SCM) sense of causal discovery~\cite{Peters2017Elements}. A SINDy formula fitted from a single environment may capture \emph{spurious correlations}---statistical associations (e.g., temperature $\leftrightarrow$ air density in ballistic control) that hold in the training environment but break under distribution shift. IRM addresses this by requiring the symbolic formula to maintain accuracy across \emph{multiple} environments with distinct dynamics parameters but shared invariant structure.
+
+\begin{definition}[IRM Consistency]
+    \label{def:irm}
+    A SINDy formula with coefficients $\xi$ is \emph{$\varepsilon$-IRM Consistent} across environments $\{e_1, \ldots, e_K\}$ if:
+    \begin{equation}
+        \forall e \in \{e_1, \ldots, e_K\},\ \forall x \in D_e,\quad \|Df_{\text{real}}^e(x) - Df_{\text{sym}}(x)\| \leq \varepsilon.
+    \end{equation}
+    (Lean: \texttt{IRM\_Consistent}, line~726.)
+\end{definition}
+
+\begin{theorem}[IRM Tightening]
+    \label{thm:irm_tighten}
+    If formula $\xi_{\text{irm}}$ is $\varepsilon_{\text{irm}}$-IRM Consistent and formula $\xi_{\text{raw}}$ achieves $\varepsilon_{\text{raw}} \geq \varepsilon_{\text{irm}}$ in a single environment, then the IRM-filtered formula yields Jacobian Consistency bound $\varepsilon_{\text{irm}} + \varepsilon_{\text{pol}} \leq \varepsilon_{\text{raw}} + \varepsilon_{\text{pol}}$. (Lean: \texttt{irm\_tightens\_jacobian\_consistency}, line~736.)
+\end{theorem}
+\begin{proof}
+    Direct from $\varepsilon_{\text{irm}} \leq \varepsilon_{\text{raw}}$: $\varepsilon_{\text{irm}} + \varepsilon_{\text{pol}} \leq \varepsilon_{\text{raw}} + \varepsilon_{\text{pol}}$.
+\end{proof}
+
+The above theorem is an \emph{if-then} statement; it does not explain \emph{when} IRM achieves $\varepsilon_{\text{irm}} < \varepsilon_{\text{raw}}$. The following result provides a substantive answer via a causal-spurious decomposition:
+
+\begin{theorem}[IRM Variance Reduction under Causal Decomposition]
+    \label{thm:irm_causal}
+    Suppose the true dynamics decomposes as $f_{\text{real}}^e(x) = f_{\text{causal}}(x) + f_{\text{spurious}}^e(x)$, where $f_{\text{causal}}$ is invariant across environments and $f_{\text{spurious}}^e$ varies. Let $\varepsilon_c$ be the derivative error of the IRM formula $\xi_{\text{irm}}$ against $f_{\text{causal}}$ alone. Then:
+    \begin{enumerate}[label=(\roman*)]
+        \item \textbf{IRM formula on test env $e'$:} $\|Df_{\text{real}}^{e'}(x) - Df_{\text{sym}}^{\text{irm}}(x)\| \leq \varepsilon_c + \varepsilon_{s}^{e'}$, where $\varepsilon_{s}^{e'} = \|Df_{\text{spurious}}^{e'}(x)\|$ is the irreducible test-env spurious magnitude.
+        \item \textbf{Single-env formula on test env $e'$:} $\|Df_{\text{real}}^{e'}(x) - Df_{\text{sym}}^{\text{single}}(x)\| \leq \varepsilon_c + \varepsilon_{s}^{e_{\text{train}}} + \varepsilon_{s}^{e'}$, with additional spurious contamination $\varepsilon_{s}^{e_{\text{train}}}$ from the training environment.
+    \end{enumerate}
+    The IRM advantage is $\varepsilon_{s}^{e_{\text{train}}}$: the spurious contamination that IRM filtering removes. This is non-trivial whenever the training environment has non-zero spurious features. (Lean: \texttt{irm\_vs\_single\_env\_gap}, \texttt{irm\_quantitative\_advantage}, Part~XII.)
+\end{theorem}
+\begin{proof}[Proof sketch]
+    Since $f_{\text{sym}}^{\text{irm}}$ approximates $f_{\text{causal}}$ (not $f_{\text{causal}} + f_{\text{spurious}}^{e_{\text{train}}}$), its error on test env $e'$ is $(Df_{\text{causal}} - Df_{\text{sym}}^{\text{irm}}) + Df_{\text{spurious}}^{e'}$, bounded by $\varepsilon_c + \varepsilon_s^{e'}$ via triangle inequality. A single-env formula absorbs $f_{\text{spurious}}^{e_{\text{train}}}$ into its coefficients, introducing an extra $\varepsilon_s^{e_{\text{train}}}$ term when evaluated on a different environment.
+\end{proof}
+
+\begin{theorem}[Full IRM-to-OOD Pipeline]
+    \label{thm:irm_pipeline}
+    If formula $\xi_{\text{irm}}$ is $\varepsilon_{\text{irm}}$-IRM Consistent, the policy is trained with derivative error $\varepsilon_{\text{pol}}$ against the IRM formula globally, and $\|\pi(x_0) - f_{\text{real}}(x_0)\| \leq \delta$ in environment $e$, then:
+    \begin{equation}
+        \|\pi(x_{\text{ood}}) - f_{\text{real}}^e(x_{\text{ood}})\| \leq \delta + (\varepsilon_{\text{irm}} + \varepsilon_{\text{pol}})\|x_{\text{ood}} - x_0\|.
+    \end{equation}
+    This is the IRM analogue of the SINDy pipeline (Theorem~\ref{thm:sindy_pipeline}), composing IRM filtering with the $n$-D OOD bound. (Lean: \texttt{irm\_to\_ood\_bound\_nD}, line~755.)
+\end{theorem}
+
+\textbf{IRM filtering protocol.} IRM filtering is applied during Phase~0 (pre-training) and requires $K \geq 3$ environments with distinct dynamics parameters (e.g., different gravity levels, friction coefficients, or traffic demand patterns) but shared causal structure:
+\begin{enumerate}
+    \item Collect exploration trajectories from each environment $e_k$;
+    \item Fit SINDy independently on each environment's data;
+    \item Evaluate each candidate formula's derivative error $\varepsilon_k$ across \emph{all} environments;
+    \item Select the coefficient set with the smallest cross-environment derivative variance: $\xi_{\text{irm}} = \arg\min_\xi \text{Var}_k[\varepsilon_k(\xi)]$.
+\end{enumerate}
+The selected formula is frozen for the entirety of Phase~1 training.
+
+\begin{remark}[Environment diversity requirement]
+    \label{rem:irm_envs}
+    IRM filtering depends critically on environment diversity. With too few environments ($K < 3$) or insufficiently diverse dynamics, IRM cannot distinguish causal from spurious features~\cite{Arjovsky2019IRM}. In practice, environments should vary in parameters that \emph{do not} affect the target physical law (e.g., varying friction but holding gravity constant when the target law is ballistic). If only a single environment is available, CS-BAPR degrades gracefully: the IRM step is skipped and the single-environment SINDy formula is used directly, with $\varepsilon_{\text{raw}}$ replacing $\varepsilon_{\text{irm}}$ in the OOD bound.
+\end{remark}
+
+
+\subsection{CS-BAPR Bellman operator}
+\label{sec:operator}
+
+CS-BAPR extends the BAPR operator~\cite{Zhang2025BAPR} with a frozen symbolic consistency penalty $\Gamma_{\text{sym}}$. The mode-conditional operator is:
+\begin{equation}
+    \mathcal{T}_h^{CS} Q(s,a) = R_h(s,a) + \gamma \left( \sum_{s'} P_h(s'|s,a) V^Q(s') - \lambda_{\text{epi}} \Gamma_{\text{epi}}^h(s,a) - \lambda_{\text{sym}} \Gamma_{\text{sym}}^h(s,a) - \kappa_{\text{ale}} \right),
+    \label{eq:csbapr_mode}
+\end{equation}
+where $\Gamma_{\text{sym}}^h(s,a) = \|\nabla_s \pi(s) - \nabla_s f_{\text{sym}}(s)\|^2$ captures the Jacobian deviation between the policy and the SINDy formula. The CS-BAPR operator is the belief-weighted mixture:
+\begin{equation}
+    \mathcal{T}^{CS\text{-}BAPR}_\rho Q(s,a) = \sum_{h \in \mathcal{H}} \rho(h) \cdot \mathcal{T}_h^{CS} Q(s,a).
+    \label{eq:csbapr_operator}
+\end{equation}
+
+\begin{theorem}[CS-BAPR Contraction]
+    \label{thm:csbapr_contraction}
+    Under frozen belief $\rho \geq 0$ with $\sum_h \rho(h) = 1$, per-mode stochastic transitions, and frozen penalties ($\kappa_{\text{ale}}$, $\Gamma_{\text{epi}}$, $\Gamma_{\text{sym}}$), the operator $\mathcal{T}^{CS\text{-}BAPR}_\rho$ is a $\gamma$-contraction in $L_\infty$ with a unique fixed point. (Lean: \texttt{csbapr\_contraction}, line~299.)
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+    The proof exploits that all three penalty terms ($\Gamma_{\text{epi}}$, $\Gamma_{\text{sym}}$, $\kappa_{\text{ale}}$) are frozen during each backup and therefore cancel in the contraction argument:
+    \begin{align}
+        &|\mathcal{T}^{CS}_h Q_1(s,a) - \mathcal{T}^{CS}_h Q_2(s,a)| \notag \\
+        &\quad = \gamma \left|\sum_{s'} P_h(s'|s,a)(V^{Q_1}(s') - V^{Q_2}(s'))\right| \leq \gamma\varepsilon.
+    \end{align}
+    The mixture over modes preserves contraction since $\rho$ is a probability distribution. The full proof, including Blackwell's sufficiency conditions, is machine-verified.
+\end{proof}
+
+\begin{corollary}[Contraction after belief update]
+    If the belief $\rho$ is updated via Bayesian normalization $\rho'(h) = \rho(h) \cdot L(h) / Z$ with non-negative likelihoods and positive normalizer, then $\mathcal{T}^{CS\text{-}BAPR}_{\rho'}$ remains a $\gamma$-contraction. (Lean: \texttt{csbapr\_contraction\_after\_update}, line~370.)
+\end{corollary}
+
+\begin{theorem}[Necessity of frozen $\Gamma_{\text{sym}}$: contraction breaks under Q-dependent symbolic penalty]
+    \label{thm:frozen_sym_necessary}
+    Consider the CS-BAPR operator on a single-state single-action MDP where $\Gamma_{\text{sym}}$ depends on $Q$ with coupling sensitivity $\mu \geq 0$, defined as $\mu = |\partial \Gamma_{\text{sym}} / \partial Q|$ evaluated at the relevant stationary point (i.e., $\Gamma_{\text{sym}}(Q) \approx C - \mu Q$ due to online SINDy refinement creating a feedback loop: higher $Q \to$ better policy $\to$ lower Jacobian error $\to$ lower $\Gamma_{\text{sym}}$). Then the effective contraction factor is $\gamma(1 + \lambda_{\text{sym}} \mu)$, and:
+    \begin{enumerate}[label=(\roman*)]
+        \item If $\lambda_{\text{sym}} \mu \geq 1/\gamma - 1$: the operator is \emph{not} a contraction;
+        \item If $\lambda_{\text{sym}} \mu < 1/\gamma - 1$: the operator \emph{is} a contraction with factor $\gamma(1 + \lambda_{\text{sym}} \mu) > \gamma$.
+    \end{enumerate}
+    The boundary $\gamma(1 + \lambda_{\text{sym}} \mu) = 1$ is sharp. Machine-verified in Lean~4: \texttt{CSBAPR-Counterproof.lean} (\texttt{T\_bad\_sym\_not\_contraction}, \texttt{T\_bad\_sym\_contraction\_below\_threshold}).
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+    When $\Gamma_{\text{sym}}(Q) = C - \mu Q$, the penalty term $-\lambda_{\text{sym}}\Gamma_{\text{sym}}(Q)$ contributes $+\lambda_{\text{sym}}\mu Q$ to the operator. The simplified operator becomes $\mathcal{T}_{\text{bad}}(Q) = \gamma(1 + \lambda_{\text{sym}}\mu) \cdot Q + R_0$ for constant $R_0$. Taking witnesses $Q_1 = 1, Q_2 = 0$: $|\mathcal{T}_{\text{bad}}(1) - \mathcal{T}_{\text{bad}}(0)| = \gamma(1 + \lambda_{\text{sym}}\mu) \geq 1$.
+\end{proof}
+
+\begin{remark}[Structural unity of frozen-parameter counterexamples]
+    \label{rem:frozen_unity}
+    All three counterexamples in this paper series share the same algebraic structure:
+    \begin{center}
+    \begin{tabular}{llll}
+    \toprule
+    \textbf{Paper} & \textbf{Non-frozen term} & \textbf{Factor} & \textbf{Lean file} \\
+    \midrule
+    RE-SAC & $\kappa(Q) = \lambda Q$ & $\gamma + \lambda$ & \texttt{RESAC-Counterproof.lean} \\
+    BAPR   & $\rho(Q)$ + reward gap $\Delta$ & $\gamma + \lambda\Delta$ & \texttt{BAPR-Counterproof.lean} \\
+    CS-BAPR & $\Gamma_{\text{sym}}(Q)$ feedback & $\gamma(1 + \lambda_{\text{sym}}\mu)$ & \texttt{CSBAPR-Counterproof.lean} \\
+    \bottomrule
+    \end{tabular}
+    \end{center}
+    In every case, the frozen penalty cancels exactly in $\mathcal{T}(Q_1) - \mathcal{T}(Q_2)$ (yielding factor $\gamma$), but a Q-dependent version introduces a coupling term that pushes the factor above $\gamma$---and past 1 when the coupling is strong enough. The frozen-parameter design is therefore \emph{necessary} for contraction in all three frameworks.
+\end{remark}
+
+\begin{remark}[Tractable approximation: shared $\Gamma_{\text{sym}}$ across modes]
+    \label{rem:shared_sym}
+    The Lean~4 proof indexes $\Gamma_{\text{sym}}$ by mode $h$ (i.e., $\Gamma_{\text{sym}}^h(s,a)$), allowing mode-specific symbolic penalties. In the implementation, we use a \emph{single shared} $\Gamma_{\text{sym}}$ across all modes, since the SINDy formula $f_{\text{sym}}$ is designed to be causally invariant (via IRM filtering) and therefore mode-independent. This is a conservative approximation: the Lean proof holds for \emph{arbitrary} values of $\Gamma_{\text{sym}}^h$; using identical values across modes is a strict special case. The approximation affects the quality of the fixed point (how well $\Gamma_{\text{sym}}$ captures mode-specific Jacobian deviations) but not the existence or uniqueness of the fixed point.
+\end{remark}
+
+
+\subsection{Component composition: from pillars to bound hypotheses}
+\label{sec:composition}
+
+Before stating the main OOD theorem, we show how the three pillars combine to satisfy its hypothesis---specifically, the linear derivative error growth condition.
+
+\begin{proposition}[Component hypotheses imply derivative bound (generalized)]
+    \label{prop:composition}
+    Under Assumptions~\ref{assump:sindy}--\ref{assump:feature_lip}, if:
+    \begin{enumerate}[label=(\roman*)]
+        \item $f_{\text{real}}$ has $M$-Lipschitz derivatives: $\|Df_{\text{real}}(x_1) - Df_{\text{real}}(x_2)\| \leq M\|x_1 - x_2\|$ (Assumption~\ref{assump:smooth}),
+        \item The policy has $\varepsilon$-Jacobian Consistency at the training boundary $x_0$ (from SINDy + training, Theorem~\ref{thm:sindy_jac}),
+        \item The policy has $L_{\text{pol}}$-Arithmetic Inductive Bias (from NAU/NMU architecture, Assumption~\ref{assump:feature_lip}),
+    \end{enumerate}
+    then for \emph{all} $x$ (including OOD points never seen during training):
+    \begin{equation}
+        \|D\pi(x) - Df_{\text{real}}(x)\| \leq \varepsilon + (L_{\text{pol}} + M) \cdot \|x - x_0\|.
+        \label{eq:deriv_error_propagation}
+    \end{equation}
+    When $M = 0$ (linear physics) and $L_{\text{pol}} = 0$ (pure NAU), this gives the constant bound $\varepsilon$. (Lean: \texttt{deriv\_error\_propagation}, \texttt{deriv\_error\_propagation\_nD}, Part~X.)
+\end{proposition}
+\begin{proof}[Proof sketch]
+    Triangle inequality on three terms: $\|D\pi(x) - Df_{\text{real}}(x)\| \leq \|D\pi(x) - D\pi(x_0)\| + \|D\pi(x_0) - Df_{\text{real}}(x_0)\| + \|Df_{\text{real}}(x_0) - Df_{\text{real}}(x)\| \leq L_{\text{pol}}\|x - x_0\| + \varepsilon + M\|x - x_0\|$.
+\end{proof}
+
+\begin{proposition}[$n$-D composition: from pillars to OOD bound (no OOD assumptions)]
+    \label{prop:composition_nD}
+    Under Assumptions~\ref{assump:sindy}--\ref{assump:feature_lip}, if:
+    \begin{enumerate}[label=(\roman*)]
+        \item $\pi$ has $L_{\text{pol}}$-Arithmetic Inductive Bias in the $n$-D sense (Definition~\ref{def:arith_bias}),
+        \item $\pi$ is $\varepsilon$-Jacobian Consistent with $f_{\text{real}}$ \emph{at the training boundary $x_0$} (from training loss $\mathcal{L}_{\text{AC}}$),
+        \item $f_{\text{real}}$ has $M$-Lipschitz Fr\'echet derivatives (Assumption~\ref{assump:smooth}),
+    \end{enumerate}
+    then by Proposition~\ref{prop:composition}, the global derivative error is $\|D\pi(x) - Df_{\text{real}}(x)\| \leq \varepsilon + (L_{\text{pol}} + M)\|x - x_0\|$ for all $x$. Setting $C = \varepsilon + (L_{\text{pol}} + M)\|d\|$ as a global bound on the segment from $x_0$ to $x_{\text{ood}}$, the $n$-D linear OOD bound (Theorem~\ref{thm:ood_linear_nD}) yields:
+    \begin{equation}
+        \|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\| \leq \delta + \big(\varepsilon + (L_{\text{pol}} + M)\|d\|\big) \cdot \|d\|.
+    \end{equation}
+    (Lean: \texttt{ood\_bound\_no\_assumption4\_nD}, Part~X.)
+\end{proposition}
+
+\begin{remark}[Relation to Theorem~\ref{thm:ood_1d}]
+    \label{rem:prop_vs_thm}
+    Expanding the bound in Proposition~\ref{prop:composition} yields $\delta + \varepsilon\|d\| + (L_{\text{pol}} + M)\|d\|^2$, where the quadratic coefficient is $(L_{\text{pol}} + M)$.
+    In contrast, the fencing-based Theorem~\ref{thm:ood_1d} obtains $\delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$ with $L = L_{\text{pol}} + M$, giving a tighter factor of $\frac{1}{2}$ on the quadratic term.
+    The difference arises because the Proposition applies the MVT with a \emph{worst-case constant} $C = \varepsilon + (L_{\text{pol}} + M)\|d\|$ over the entire segment, while the Theorem exploits the \emph{linearly growing} derivative error $\varepsilon + L\|x - x_0\|$ via integration, recovering the $\frac{1}{2}$ factor.
+    In experiments (Section~\ref{sec:experiments}), we report both bounds; the Proposition bound serves as a conservative envelope and the Theorem bound as a tighter prediction.
+\end{remark}
+
+This $n$-D composition proposition provides the formal bridge between the three pillars (which supply $\varepsilon$, $L_{\text{eff}}$, and the $M = 0$ idealization) and the path-level hypothesis consumed by the fencing theorems. The causal chain is: \textbf{NAU/NMU} (Pillar~I) provides finite $L_{\text{eff}}$; \textbf{SINDy} (Pillar~II) provides small $\varepsilon = \varepsilon_1 + \varepsilon_2$; \textbf{IRM} (Pillar~III) tightens $\varepsilon$ by replacing $\varepsilon_1^{\text{raw}}$ with $\varepsilon_1^{\text{irm}} \leq \varepsilon_1^{\text{raw}}$; and \textbf{RL training} provides small $\delta$. All four quantities enter the final bound.
+
+\begin{remark}[On the nature of the theoretical contribution]
+    \label{rem:novelty}
+    The algebraic core of the OOD bound is an application of the Mean Value Theorem and Gr\"onwall-type fencing. The theoretical contribution lies not in the calculus but in the \emph{structural design insight}: identifying that the specific combination of NAU/NMU architecture, SINDy alignment, and IRM filtering makes the MVT hypotheses \emph{satisfiable}---and proving that the standard ReLU architecture makes them \emph{provably unsatisfiable}. The Lean~4 verification serves as a design audit tool, forcing every structural assumption to be explicit, much as it did for the frozen-parameter requirement in BAPR~\cite{Zhang2025BAPR}.
+\end{remark}
+
+
+\subsection{Main theorem: OOD extrapolation stability}
+\label{sec:main_thm}
+
+We now state the main theoretical result, beginning with the key building blocks.
+
+\begin{lemma}[Linear error growth via MVT]
+    \label{lem:error_linear}
+    Let $\pi, f_{\text{real}}: \mathbb{R} \to \mathbb{R}$ be differentiable, and suppose $\|\pi'(x) - f_{\text{real}}'(x)\| \leq C$ for all $x \in [a, b)$. Then $\|(\pi(b) - f_{\text{real}}(b)) - (\pi(a) - f_{\text{real}}(a))\| \leq C \cdot (b - a)$. (Lean: \texttt{error\_growth\_linear}, line~65. Proof applies Mathlib's \texttt{norm\_image\_sub\_le\_of\_norm\_deriv\_right\_le\_segment} to the error function $e(x) = \pi(x) - f_{\text{real}}(x)$.)
+\end{lemma}
+
+This fundamental lemma establishes that bounded derivative error implies bounded error growth. Combined with the base accuracy $\delta$, it gives the linear OOD bound. The quadratic generalization below replaces the constant $C$ with a \emph{growing} derivative error $\varepsilon + L(x - a)$.
+
+\begin{theorem}[1D OOD Extrapolation Stability Bound]
+    \label{thm:ood_1d}
+    Let $\pi, f_{\text{real}}: \mathbb{R} \to \mathbb{R}$ be differentiable. If:
+    \begin{enumerate}[label=(\roman*)]
+        \item $\|\pi(a) - f_{\text{real}}(a)\| \leq \delta$ \quad (base accuracy),
+        \item $\forall x \in [a,b),\ \|\pi'(x) - f_{\text{real}}'(x)\| \leq \varepsilon + L(x - a)$ \quad (growing derivative error),
+    \end{enumerate}
+    then: $\|\pi(b) - f_{\text{real}}(b)\| \leq \delta + \varepsilon(b-a) + \frac{L}{2}(b-a)^2$. \\
+    (Lean: \texttt{scbapr\_ood\_stability\_bound}, line~112. Proof uses Mathlib's fencing theorem.)
+\end{theorem}
+\begin{proof}[Proof sketch]
+    Define the error function $e(x) = \pi(x) - f_{\text{real}}(x)$. Since $\|e(a)\| \leq \delta$ and $\|e'(x)\| \leq \varepsilon + L(x-a)$ for $x \in [a,b)$, apply Mathlib's Gr\"onwall-style fencing lemma (\texttt{image\_norm\_le\_of\_norm\_deriv\_right\_le\_deriv\_boundary'}) with envelope $g(x) = \delta + \varepsilon(x-a) + \frac{L}{2}(x-a)^2$. Verify: $g(a) = \delta \geq \|e(a)\|$ and $g'(x) = \varepsilon + L(x-a) \geq \|e'(x)\|$. The conclusion $\|e(b)\| \leq g(b)$ gives the bound.
+\end{proof}
+
+\begin{theorem}[$n$-D Linear OOD Bound]
+    \label{thm:ood_linear_nD}
+    For $\pi, f_{\text{real}}: E \to F$ in normed spaces, if $\|\pi(x_0) - f_{\text{real}}(x_0)\| \leq \delta$ and $\forall z,\ \|D\pi(z) - Df_{\text{real}}(z)\| \leq C$, then:
+    \begin{equation}
+        \|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\| \leq \delta + C\|x_{\text{ood}} - x_0\|.
+    \end{equation}
+    (Lean: \texttt{scbapr\_ood\_linear\_nD}, line~413. Proof uses Mathlib's convex Mean Value Theorem.)
+\end{theorem}
+\begin{proof}[Proof sketch]
+    Define $e(x) = \pi(x) - f_{\text{real}}(x)$, so $De(x) = D\pi(x) - Df_{\text{real}}(x)$ with $\|De(x)\| \leq C$. Apply Mathlib's convex MVT (\texttt{Convex.norm\_image\_sub\_le\_of\_norm\_fderiv\_le}): $\|e(x_{\text{ood}}) - e(x_0)\| \leq C\|x_{\text{ood}} - x_0\|$. Triangle inequality: $\|e(x_{\text{ood}})\| \leq \|e(x_0)\| + C\|x_{\text{ood}} - x_0\| \leq \delta + C\|d\|$.
+\end{proof}
+
+\begin{lemma}[Path-level fencing theorem]
+    \label{lem:path_fencing}
+    Let $e_{\text{path}}: \mathbb{R} \to F$ be the error function along a line segment $[0,1]$ (typically $e_{\text{path}}(t) = \pi(x_0 + t \cdot d) - f_{\text{real}}(x_0 + t \cdot d)$). If $\|e_{\text{path}}(0)\| \leq \delta$ and $\|e_{\text{path}}'(t)\| \leq \varepsilon_d + L_d \cdot t$ for $t \in [0,1)$, then:
+    $\|e_{\text{path}}(1)\| \leq \delta + \varepsilon_d + L_d/2$.
+    This is the $F$-valued generalization of the 1D bound (Theorem~\ref{thm:ood_1d}), applied to the composed path. (Lean: \texttt{scbapr\_ood\_quadratic\_path}, line~629.)
+\end{lemma}
+
+The proof chain is: \textbf{1D fencing} (Theorem~\ref{thm:ood_1d}) $\to$ \textbf{path-level fencing} (Lemma~\ref{lem:path_fencing}) $\to$ \textbf{$n$-D bound} (Theorem~\ref{thm:ood_quad_nD} below), where the final step substitutes $\varepsilon_d = \varepsilon\|d\|$ and $L_d = L\|d\|^2$.
+
+\begin{theorem}[$n$-D Quadratic OOD Bound (Main Result)]
+    \label{thm:ood_quad_nD}
+    For $\pi, f_{\text{real}}: E \to F$, if along the line segment from $x_0$ to $x_{\text{ood}}$:
+    \begin{enumerate}[label=(\roman*)]
+        \item $\|\pi(x_0) - f_{\text{real}}(x_0)\| \leq \delta$,
+        \item The derivative error grows linearly: $\|e'(t)\| \leq \varepsilon\|d\| + L\|d\|^2 \cdot t$ for $t \in [0,1)$,
+    \end{enumerate}
+    where $d = x_{\text{ood}} - x_0$, then:
+    \begin{equation}
+        \|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2.
+        \label{eq:ood_bound}
+    \end{equation}
+    (Lean: \texttt{scbapr\_ood\_quadratic\_nD}, line~672.)
+\end{theorem}
+\begin{proof}[Proof sketch]
+    Parametrize the line segment as $\gamma(t) = x_0 + t \cdot d$ for $t \in [0,1]$ and define $e_{\text{path}}(t) = \pi(\gamma(t)) - f_{\text{real}}(\gamma(t))$. Then $\|e_{\text{path}}(0)\| \leq \delta$ and $\|e_{\text{path}}'(t)\| \leq \varepsilon\|d\| + L\|d\|^2 t$ by hypothesis~(ii).
+    Apply the path-level fencing lemma (Lemma~\ref{lem:path_fencing}) with $\varepsilon_d = \varepsilon\|d\|$ and $L_d = L\|d\|^2$:
+    $\|e_{\text{path}}(1)\| \leq \delta + \varepsilon_d + L_d/2 = \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$.
+    Since $\gamma(1) = x_{\text{ood}}$, this gives $\|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$. Full proof in Appendix~\ref{app:proof_main}.
+\end{proof}
+
+\begin{remark}[Engineering interpretation]
+    The bound~\eqref{eq:ood_bound} decomposes OOD error into three controllable terms, each addressed by a specific CS-BAPR component:
+    \begin{center}
+    \begin{tabular}{lll}
+    \toprule
+    \textbf{Term} & \textbf{Meaning} & \textbf{Controlled by} \\
+    \midrule
+    $\delta$ & Training-domain accuracy & Standard RL training \\
+    $\varepsilon\|d\|$ & SINDy quality $\times$ distance & Pillar II (SINDy) + III (IRM) \\
+    $\frac{L}{2}\|d\|^2$ & Architectural extrapolation & Pillar I (NAU: $L{=}0$, NMU: $L{=}2|c|$) \\
+    \bottomrule
+    \end{tabular}
+    \end{center}
+    With NAU ($L=0$), the bound is \emph{linear} in distance. With NMU, it is \emph{quadratic}. With ReLU, no finite $L$ exists within this framework (Theorem~\ref{thm:relu_impossible}), so the bound cannot be instantiated. This hierarchy provides a principled criterion for architecture selection: the trade-off is expressiveness (NMU can represent quadratic functions that NAU cannot) vs.\ extrapolation tightness ($L=0$ for NAU vs.\ $L=2|c|$ for NMU).
+\end{remark}
+
+\begin{remark}[Necessity of each pillar]
+    \label{rem:pillar_necessity}
+    Each pillar is necessary in a precise sense, as removing any one causes a specific term in the OOD bound to become uncontrolled:
+    \begin{itemize}
+        \item \textbf{Without NAU/NMU (Pillar~I):} $L = \infty$ for ReLU (Theorem~\ref{thm:relu_impossible}), and the quadratic term $\frac{L}{2}\|d\|^2 \to \infty$. The bound is \emph{vacuous}.
+        \item \textbf{Without SINDy (Pillar~II):} The Jacobian Consistency error $\varepsilon$ is uncontrolled (no gradient alignment signal), and the linear term $\varepsilon\|d\|$ dominates. The bound \emph{exists} but is too loose to be useful.
+        \item \textbf{Without IRM (Pillar~III):} The bound still holds with $\varepsilon_{\text{raw}} \geq \varepsilon_{\text{irm}}$, but may capture spurious correlations. IRM is the only non-necessary pillar in a strict mathematical sense---it tightens $\varepsilon$ but is not required for the bound to be finite.
+    \end{itemize}
+    Thus, Pillars~I and~II are \emph{structurally necessary} for finite OOD bounds, while Pillar~III provides \emph{quantitative tightening}. The graceful degradation hierarchy (Remark~\ref{rem:degradation}) ensures that partial configurations remain useful.
+\end{remark}
+
+
+\subsection{CS-BAPR algorithm}
+\label{sec:algorithm}
+
+The complete CS-BAPR algorithm operates in two phases:
+
+\textbf{Phase 0: SINDy Pre-Identification.} Before RL training begins, the agent collects exploration trajectories using a random policy, fits a SINDy model to discover sparse dynamics, and optionally applies IRM filtering across multiple environments. The resulting symbolic formula $f_{\text{sym}}$ is frozen as a PyTorch module with detached gradients.
+
+\textbf{Phase 1: CS-BAPR Training.} The training loop extends BAPR with two additions: (1) the symbolic consistency penalty $\Gamma_{\text{sym}}$ in the Q-loss (Eq.~\eqref{eq:csbapr_mode}), and (2) the Jacobian Consistency Loss $\mathcal{L}_{\text{AC}}$ (Eq.~\eqref{eq:jac_loss}) in the policy loss.
+
+\begin{algorithm}[H]
+\caption{CS-BAPR: Causal-Symbolic BAPR}
+\label{alg:csbapr}
+\begin{algorithmic}
+\STATE \textbf{Phase 0: SINDy Pre-Identification}
+\STATE Collect exploration trajectories $\{(s_t, a_t, s_{t+1})\}$ using random policy.
+\STATE Fit SINDy: $\xi = \arg\min \|\dot{X} - \Theta(X)\xi\|_2 + \lambda\|\xi\|_1$.
+\STATE (Optional) IRM filter: select $\xi$ with minimum cross-environment variance.
+\STATE Create frozen PyTorch wrapper: $f_{\text{sym}} \leftarrow \texttt{SINDyTorchWrapper}(\xi)$.
+\STATE
+\STATE \textbf{Phase 1: CS-BAPR Training Loop}
+\STATE \textbf{Initialize:} NAU/NMU Actor $\pi_\theta$, Ensemble critics $\{Q_{\phi_k}\}$, BOCD belief $\rho$.
+\FOR{each training iteration}
+    \STATE Collect transitions; store in $\mathcal{D}$.
+    \STATE Compute surprise $\xi_t$; update BOCD belief $\rho$ (frozen during backup).
+    \STATE Compute $\lambda_w$ and $\beta_{\text{eff}}$ from belief (inherited from BAPR).
+    \FOR{$n = 1, \ldots, N_{\text{updates}}$}
+        \STATE Sample mini-batch from $\mathcal{D}$.
+        \STATE \textit{// Critic update (with $\Gamma_{\text{sym}}$):}
+        \STATE $\Gamma_{\text{sym}} \leftarrow \|\nabla_s \pi_\theta(s') - \nabla_s f_{\text{sym}}(s')\|^2$ \quad (SINDy gradients detached).
+        \STATE $y \leftarrow r + \gamma(\bar{Q}_{\text{target}} - \alpha \log\pi - \lambda_{\text{epi}}\Gamma_{\text{epi}} - \lambda_{\text{sym}}\Gamma_{\text{sym}} - \kappa)$.
+        \STATE Update $\phi_k$ by minimizing $\mathcal{L}_Q + \beta_{\text{ood}}\sigma_{\text{ens}}$.
+        \STATE \textit{// Actor update (with $\mathcal{L}_{\text{AC}}$):}
+        \STATE $\mathcal{L}_\pi \leftarrow -(\bar{Q} + \beta_{\text{eff}}\sigma_{\text{ens}} - \alpha\log\pi) + \mu_{\text{jac}} \cdot \mathcal{L}_{\text{AC}}$.
+        \STATE Update $\theta$ by minimizing $\mathcal{L}_\pi$ (with gradient clipping).
+        \STATE Soft update target networks.
+    \ENDFOR
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\begin{remark}[Frozen-parameter requirements]
+    \label{rem:frozen}
+    CS-BAPR requires four frozen-parameter conditions for contraction:
+    \begin{enumerate}[label=(\roman*)]
+        \item $\kappa_{\text{ale}}$ frozen (from RE-SAC target weights);
+        \item $\Gamma_{\text{epi}}$ frozen (from target Q-ensemble);
+        \item $\rho$ frozen during backup (from BOCD, updated between iterations);
+        \item $\Gamma_{\text{sym}}$ frozen (SINDy coefficients fixed throughout training). \textbf{[CS-BAPR new]}
+    \end{enumerate}
+    Violating any one of these conditions breaks the contraction guarantee, as established by the machine-verified counterexamples in BAPR~\cite{Zhang2025BAPR}, RE-SAC~\cite{Zhang2025RESAC}, and CS-BAPR (Theorem~\ref{thm:frozen_sym_necessary}).
+\end{remark}
+
+\begin{remark}[Graceful degradation]
+    \label{rem:degradation}
+    CS-BAPR is designed to degrade gracefully when its assumptions are not met:
+    \begin{itemize}
+        \item \textbf{SINDy fails} ($\varepsilon_1 > \varepsilon_{\text{threshold}}$): $\Gamma_{\text{sym}}$ and $\mathcal{L}_{\text{AC}}$ are disabled; the algorithm reduces to BAPR with a standard MLP or NAU/NMU actor, retaining all BAPR convergence guarantees.
+        \item \textbf{No multiple environments}: IRM filtering is skipped; single-environment SINDy formula used directly, with $\varepsilon_{\text{raw}}$ replacing $\varepsilon_{\text{irm}}$ in the bound.
+        \item \textbf{NAU/NMU disabled}: The architecture reverts to ReLU; the OOD bound no longer holds, but the Bellman contraction guarantee is unaffected (it depends only on frozen penalties, not on the actor architecture).
+    \end{itemize}
+    This hierarchical fallback ensures that CS-BAPR is never \emph{worse} than BAPR, even when its additional components cannot be applied.
+\end{remark}
+
+\begin{remark}[Computational overhead]
+    \label{rem:overhead}
+    CS-BAPR adds three sources of overhead relative to BAPR:
+    \begin{itemize}
+        \item \textbf{Phase~0 (SINDy, one-time):} 50 exploration episodes + PySINDy fitting, typically $<$5 minutes. Amortized over the full training, this is negligible.
+        \item \textbf{$\mathcal{L}_{\text{AC}}$ (per gradient step):} One additional \texttt{autograd} call to compute $\nabla_s \pi_\theta(s)$. For the action-dimension output ($\dim(\mathcal{A}) \ll \dim(\mathcal{S})$), this is $O(\dim(\mathcal{S}))$ per sample, comparable to a single backward pass.
+        \item \textbf{NAU regularization (per step):} $O(1)$---a scalar penalty on weight magnitudes.
+    \end{itemize}
+    In wall-clock time, CS-BAPR is approximately 15--20\% slower than BAPR (the dominant cost remains the ensemble critic's $K$ forward/backward passes). The Jacobian computation can be further accelerated via JVP with random vectors for high-dimensional state spaces, reducing cost from $O(\dim(\mathcal{S})^2)$ to $O(\dim(\mathcal{S}))$.
+\end{remark}
+
+
+\section{Experiments}
+
+We evaluate CS-BAPR on continuous control tasks designed to test OOD extrapolation capability, addressing four questions:
+\textbf{(Q1)} Does CS-BAPR extrapolate where standard RL fails?
+\textbf{(Q2)} Is each pillar (NAU, SINDy, IRM) necessary?
+\textbf{(Q3)} Does empirical OOD error match the theoretical bound?
+\textbf{(Q4)} How does the NAU vs.\ ReLU architectural choice affect extrapolation?
+
+\subsection{Experimental setup}
+
+\textbf{Environments.} We evaluate on environments with known physical dynamics amenable to SINDy identification: Pendulum-v1 (analytic dynamics $\ddot{\theta} = -g/l \sin\theta + u/ml^2$), and MuJoCo locomotion tasks (Hopper, HalfCheetah) with controlled OOD evaluation at extrapolated state magnitudes.
+
+\textbf{OOD protocol.} We train on a bounded state region $D_{\text{train}}$ and evaluate at progressively increasing distances $\|d\| = \{1\times, 2\times, 4\times, 8\times\}$ the training range, measuring the policy's prediction error against ground-truth dynamics.
+
+\textbf{Baselines.}
+\begin{enumerate}[label=(\roman*)]
+    \item \textbf{SAC}~\cite{Haarnoja2018SAC}: standard ReLU policy;
+    \item \textbf{RE-SAC}~\cite{Zhang2025RESAC}: robust ensemble (ReLU);
+    \item \textbf{BAPR}~\cite{Zhang2025BAPR}: full BAPR framework (ReLU);
+    \item \textbf{CS-BAPR (ours)}: NAU/NMU + SINDy + IRM.
+\end{enumerate}
+
+\subsection{Main results (Q1)}
+
+\textit{(OOD extrapolation comparison results to be inserted after experiments are completed. We expect CS-BAPR to maintain bounded error at $4\times$--$8\times$ training range while ReLU-based baselines exhibit unbounded error growth.)}
+
+\subsection{Ablation study (Q2)}
+
+To isolate each pillar's contribution:
+\begin{itemize}
+    \item \textbf{CS-BAPR w/o NAU}: Replace NAU/NMU actor with standard MLP (ReLU). Tests architectural contribution.
+    \item \textbf{CS-BAPR w/o SINDy}: Remove $\Gamma_{\text{sym}}$ and $\mathcal{L}_{\text{AC}}$. Tests symbolic guidance.
+    \item \textbf{CS-BAPR w/o IRM}: Use single-environment SINDy formula. Tests causal filtering.
+\end{itemize}
+
+\textit{(Ablation results to be inserted.)}
+
+\subsection{OOD error vs.\ theoretical bound (Q3)}
+
+We plot empirical OOD error $\|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\|$ against the theoretical bound $\delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$ as a function of distance $\|d\|$, using measured values of $\delta$, $\varepsilon$, and $L$.
+
+\textit{(Error vs.\ bound plots to be inserted.)}
+
+\subsection{NAU vs.\ ReLU architecture (Q4)}
+
+We compare the derivative Lipschitz constant and OOD error between NAU/NMU and ReLU actors trained on identical data, validating the architectural hierarchy established in Remark~\ref{rem:hierarchy}.
+
+\textit{(Architecture comparison to be inserted.)}
+
+
+\section{Conclusion}
+
+This paper presents CS-BAPR, a framework that addresses the fundamental challenge of OOD extrapolation in reinforcement learning through three synergistic pillars: Neural Arithmetic Units for architecturally guaranteed derivative regularity, SINDy symbolic discovery for physics-informed gradient alignment, and IRM causal filtering for invariant law selection. Our main theoretical contribution is the OOD Extrapolation Stability Bound---the first machine-verified polynomial bound on RL policy error in out-of-distribution regions---along with the ReLU Impossibility Theorem establishing that standard neural architectures are structurally incapable of satisfying such bounds.
+
+All theoretical results are machine-verified in Lean~4 with no \texttt{sorry} (954~lines across \texttt{CSBAPR.lean}, encompassing 34~definitions, theorems, and lemmas). The verification covers the full pipeline from SINDy identification through IRM filtering to the final $n$-dimensional quadratic OOD bound, and extends the BAPR Bellman contraction guarantee to the symbolic-penalty-augmented operator.
+
+\textbf{Limitations.} CS-BAPR's applicability is bounded by its assumptions. First, the OOD bound requires that the target environment admits SINDy-identifiable dynamics (Assumption~\ref{assump:sindy}); pixel-based environments such as Atari, or environments with highly discontinuous dynamics (e.g., contact-rich manipulation), fall outside this scope. Second, the quadratic bound is tight only when the effective Lipschitz constant $L_{\text{eff}}$ is small; for complex multi-layer architectures, the composed $L_{\text{eff}}$ may be large enough that the quadratic term dominates at moderate distances, reducing the practical benefit. Third, the frozen-SINDy design (required for contraction) means that if the environment dynamics genuinely change (as in BAPR's piecewise-stationary setting), the SINDy formula becomes stale and must be re-identified---a procedure that currently requires pausing training for a new Phase~0. Developing an online SINDy refinement protocol that preserves the frozen-parameter guarantee within each backup (e.g., updating coefficients only between training epochs) is an important direction for future work.
+
+In future work, we plan to extend CS-BAPR to high-dimensional visual observation spaces through latent-space SINDy, investigate online SINDy refinement with formal re-verification of frozen-parameter conditions, explore the integration of CS-BAPR's extrapolation capabilities with distributional RL for risk-sensitive OOD deployment, and study tighter Lipschitz analysis for composed NAU/NMU architectures (e.g., via LipSDP or spectral normalization bounds).
+
+\section*{Acknowledgments}
+This work was supported by the National Natural Science Foundation of China (Grant No. 72371251), the Natural Science Foundation for Distinguished Young Scholars of Hunan Province (Grant No. 2024JJ2080), and the Key Research and Development Program of Hunan Province of China (Grant No. 2024JK2007).
+
+\input{paper.bbl}
+\input{appendix}
+\end{document}

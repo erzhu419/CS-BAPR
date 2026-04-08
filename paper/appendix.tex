@@ -1,0 +1,448 @@
+\appendix
+
+\section{Lean~4 Proof Overview}
+\label{app:lean_overview}
+
+The formal verification is contained in a single file \texttt{CSBAPR.lean} (954~lines, 0~\texttt{sorry}) within the \texttt{proof/CS-BAPR/} directory of the project repository. The file is organized into nine parts:
+
+\begin{center}
+\begin{tabular}{clrl}
+\toprule
+\textbf{Part} & \textbf{Content} & \textbf{Lines} & \textbf{Key Theorem} \\
+\midrule
+I   & Core definitions                  & 33--57    & \texttt{IsJacobianConsistent}, \texttt{HasArithmeticInductiveBias} \\
+II  & 1D OOD extrapolation              & 59--188   & \texttt{scbapr\_ood\_stability\_bound} \\
+III & CS-BAPR Bellman contraction        & 189--395  & \texttt{csbapr\_contraction} \\
+IV  & Belief update preservation         & 346--386  & \texttt{csbapr\_contraction\_after\_update} \\
+V   & $n$-D generalization               & 394--443  & \texttt{scbapr\_ood\_linear\_nD} \\
+VI  & SINDy formalization                & 456--595  & \texttt{sindy\_to\_ood\_bound\_nD} \\
+VII & $n$-D quadratic OOD bound          & 597--697  & \texttt{scbapr\_ood\_quadratic\_nD} \\
+VIII& IRM causal filtering               & 699--774  & \texttt{irm\_to\_ood\_bound\_nD} \\
+IX  & NAU/NMU structural guarantees      & 776--953  & \texttt{relu\_derivative\_not\_lipschitz} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent The proof relies on Mathlib's calculus library, particularly:
+\begin{itemize}
+    \item \texttt{norm\_image\_sub\_le\_of\_norm\_deriv\_right\_le\_segment} --- 1D MVT-based segment bound.
+    \item \texttt{image\_norm\_le\_of\_norm\_deriv\_right\_le\_deriv\_boundary'} --- Gr\"onwall-style fencing theorem (1D quadratic bound).
+    \item \texttt{Convex.norm\_image\_sub\_le\_of\_norm\_fderiv\_le} --- Convex set MVT for $n$-D linear bound.
+    \item \texttt{image\_norm\_le\_of\_norm\_deriv\_right\_le\_deriv\_boundary} --- $F$-valued fencing theorem ($n$-D quadratic bound).
+\end{itemize}
+
+
+
+\section{Complete Proofs}
+\label{app:proof_main}
+
+This section provides full mathematical proofs for the key theorems stated in the main text. All proofs are also machine-verified in Lean~4.
+
+\subsection{Proof of Theorem~\ref{thm:ood_1d} (1D OOD Stability Bound)}
+
+\begin{proof}
+    Define $e: \mathbb{R} \to \mathbb{R}$ by $e(x) = \pi(x) - f_{\text{real}}(x)$. Since $\pi$ and $f_{\text{real}}$ are differentiable, so is $e$, with $e'(x) = \pi'(x) - f_{\text{real}}'(x)$.
+
+    By hypothesis, $\|e(a)\| \leq \delta$ and $\|e'(x)\| \leq \varepsilon + L(x - a)$ for all $x \in [a, b)$.
+
+    Define the comparison function $g: [a, b] \to \mathbb{R}$ by $g(x) = \delta + \varepsilon(x - a) + \frac{L}{2}(x - a)^2$.
+
+    We verify: (i) $g(a) = \delta \geq \|e(a)\|$; (ii) $g'(x) = \varepsilon + L(x - a) \geq \|e'(x)\|$ for $x \in [a, b)$.
+
+    By the Gr\"onwall-style fencing theorem (for $F$-valued functions with real envelope, formalized in Mathlib as \texttt{image\_norm\_le\_of\_norm\_deriv\_right\_le\_deriv\_boundary'}), we conclude $\|e(x)\| \leq g(x)$ for all $x \in [a, b]$.
+
+    Evaluating at $x = b$: $\|e(b)\| \leq g(b) = \delta + \varepsilon(b - a) + \frac{L}{2}(b - a)^2$.
+\end{proof}
+
+\subsection{Proof of Theorem~\ref{thm:ood_linear_nD} ($n$-D Linear Bound)}
+
+\begin{proof}
+    Define $e: E \to F$ by $e(x) = \pi(x) - f_{\text{real}}(x)$. Then $De(x) = D\pi(x) - Df_{\text{real}}(x)$, and $\|De(x)\|_{\text{op}} \leq C$ for all $x$ by hypothesis.
+
+    The convex hull of $\{x_0, x_{\text{ood}}\}$ is the line segment $[x_0, x_{\text{ood}}]$, which is convex. By the $n$-dimensional Mean Value Theorem for normed spaces (Mathlib: \texttt{Convex.norm\_image\_sub\_le\_of\_norm\_fderiv\_le}):
+    \[
+        \|e(x_{\text{ood}}) - e(x_0)\| \leq C \cdot \|x_{\text{ood}} - x_0\|.
+    \]
+    Triangle inequality:
+    \[
+        \|e(x_{\text{ood}})\| \leq \|e(x_0)\| + \|e(x_{\text{ood}}) - e(x_0)\| \leq \delta + C\|d\|.
+    \]
+\end{proof}
+
+\subsection{Proof of Theorem~\ref{thm:ood_quad_nD} ($n$-D Quadratic OOD Bound --- Main Result)}
+
+\begin{proof}
+    Let $d = x_{\text{ood}} - x_0$ and parametrize the line segment as $\gamma(t) = x_0 + td$ for $t \in [0, 1]$.
+
+    Define the pullback error function $e_{\text{path}}: [0, 1] \to F$ by $e_{\text{path}}(t) = \pi(\gamma(t)) - f_{\text{real}}(\gamma(t))$.
+
+    \textbf{Step 1 (Boundary condition):} $\|e_{\text{path}}(0)\| = \|\pi(x_0) - f_{\text{real}}(x_0)\| \leq \delta$.
+
+    \textbf{Step 2 (Derivative bound):} By the chain rule, $e_{\text{path}}'(t) = (D\pi(\gamma(t)) - Df_{\text{real}}(\gamma(t))) \cdot d$, so $\|e_{\text{path}}'(t)\| \leq \|D\pi(\gamma(t)) - Df_{\text{real}}(\gamma(t))\| \cdot \|d\|$. By hypothesis~(ii), this is bounded by $\varepsilon\|d\| + L\|d\|^2 \cdot t$.
+
+    \textbf{Step 3 (Fencing):} Define the comparison function $g(t) = \delta + \varepsilon\|d\| \cdot t + \frac{L\|d\|^2}{2} \cdot t^2$ with $g(0) = \delta \geq \|e_{\text{path}}(0)\|$ and $g'(t) = \varepsilon\|d\| + L\|d\|^2 t \geq \|e_{\text{path}}'(t)\|$. By the fencing theorem (Mathlib: \texttt{image\_norm\_le\_of\_norm\_deriv\_right\_le\_deriv\_boundary}), $\|e_{\text{path}}(t)\| \leq g(t)$ for all $t \in [0, 1]$.
+
+    \textbf{Step 4 (Evaluation):} $\|e_{\text{path}}(1)\| \leq g(1) = \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$. Since $\gamma(1) = x_{\text{ood}}$, this gives $\|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$.
+\end{proof}
+
+\subsection{Proof of Theorem~\ref{thm:csbapr_contraction} (CS-BAPR Contraction)}
+
+\begin{proof}
+    Fix $Q_1, Q_2$ with $\|Q_1 - Q_2\|_\infty \leq \varepsilon$. For each mode $h$ and state-action $(s, a)$:
+    \begin{align*}
+        &|\mathcal{T}_h^{CS} Q_1(s,a) - \mathcal{T}_h^{CS} Q_2(s,a)| \\
+        &= \gamma \left|\sum_{s'} P_h(s'|s,a)(V^{Q_1}(s') - V^{Q_2}(s'))\right|
+    \end{align*}
+    where the frozen penalty terms ($\Gamma_{\text{epi}}^h$, $\Gamma_{\text{sym}}^h$, $\kappa_{\text{ale}}$) cancel exactly because they do not depend on $Q_1$ or $Q_2$.
+
+    Since $|V^{Q_1}(s') - V^{Q_2}(s')| \leq \|Q_1 - Q_2\|_\infty = \varepsilon$ and $\sum_{s'} P_h(s'|s,a) = 1$:
+    \[
+        |\mathcal{T}_h^{CS} Q_1(s,a) - \mathcal{T}_h^{CS} Q_2(s,a)| \leq \gamma \varepsilon.
+    \]
+
+    For the belief-weighted mixture: $|\mathcal{T}_\rho^{CS} Q_1(s,a) - \mathcal{T}_\rho^{CS} Q_2(s,a)| \leq \sum_h \rho(h) \cdot \gamma\varepsilon = \gamma\varepsilon$ since $\sum_h \rho(h) = 1$. Taking the supremum over $(s,a)$ gives $\|\mathcal{T}_\rho^{CS} Q_1 - \mathcal{T}_\rho^{CS} Q_2\|_\infty \leq \gamma \varepsilon = \gamma\|Q_1 - Q_2\|_\infty$. Banach's fixed-point theorem gives the unique fixed point.
+\end{proof}
+
+
+\section{Remaining Proofs}
+\label{app:lean_statements}
+
+This section provides proofs for theorems stated in the main text that were not covered in Appendix~\ref{app:proof_main}. Each proof is paired with its Lean~4 cross-reference.
+
+\subsection{Proof of Lemma~\ref{lem:error_linear} (Linear Error Growth)}
+
+\begin{proof}
+    Define $e(x) = \pi(x) - f_{\text{real}}(x)$. Then $e'(x) = \pi'(x) - f_{\text{real}}'(x)$ and $\|e'(x)\| \leq C$ for $x \in [a, b)$.
+    Apply Mathlib's segment MVT (\texttt{norm\_image\_sub\_le\_of\_norm\_deriv\_right\_le\_segment}) to $e$ on $[a, b]$:
+    \[
+        \|e(b) - e(a)\| \leq C \cdot (b - a).
+    \]
+    Expanding: $\|(\pi(b) - f_{\text{real}}(b)) - (\pi(a) - f_{\text{real}}(a))\| \leq C(b - a)$.
+
+    \noindent\textit{Lean:} \texttt{error\_growth\_linear}, line~65.
+\end{proof}
+
+\subsection{Proof of Lemma~\ref{lem:path_fencing} (Path-Level Fencing)}
+
+\begin{proof}
+    $e_{\text{path}}: [0,1] \to F$ satisfies $\|e_{\text{path}}(0)\| \leq \delta$ and $\|e_{\text{path}}'(t)\| \leq \varepsilon_d + L_d \cdot t$ for $t \in [0,1)$.
+
+    Define the comparison function $g(t) = \delta + \varepsilon_d \cdot t + \frac{L_d}{2} t^2$. Then $g(0) = \delta \geq \|e_{\text{path}}(0)\|$ and $g'(t) = \varepsilon_d + L_d \cdot t \geq \|e_{\text{path}}'(t)\|$.
+
+    By Mathlib's fencing theorem (\texttt{image\_norm\_le\_of\_norm\_deriv\_right\_le\_deriv\_boundary}), $\|e_{\text{path}}(t)\| \leq g(t)$ for all $t \in [0,1]$.
+
+    Evaluating at $t = 1$: $\|e_{\text{path}}(1)\| \leq \delta + \varepsilon_d + L_d / 2$.
+
+    \noindent\textit{Lean:} \texttt{scbapr\_ood\_quadratic\_path}, line~629.
+\end{proof}
+
+\subsection{Proof of Theorem~\ref{thm:nau_const} (NAU Derivative Constancy)}
+
+\begin{proof}
+    NAU computes $y = \sum_j w_j x_j$, so $\partial y / \partial x_i = w_i$ for all input vectors $x$. Since $w_i$ is a fixed integer weight (independent of $x$), the derivative function $x \mapsto w_i$ is constant. Formally, $\text{deriv}(\lambda x_i.\, \sum_j w_j x_j, i) = \lambda \_.\ w_i$.
+
+    \noindent\textit{Lean:} \texttt{nau\_derivative\_is\_constant}, line~817.
+\end{proof}
+
+\subsection{Proof of Corollary~\ref{cor:sindy_tight} (Tight SINDy Consistency)}
+
+\begin{proof}
+    When the same coefficient set $\xi$ is used both for SINDy identification and for training, the triangle inequality gives: $\|D\pi(x) - Df_{\text{real}}(x)\| \leq \|D\pi(x) - Df_{\text{sym}}(x)\| + \|Df_{\text{sym}}(x) - Df_{\text{real}}(x)\| \leq \varepsilon_2 + \varepsilon_1$.
+        This is the same bound as Theorem~\ref{thm:sindy_jac} but with the explicit requirement that both error measurements use the same $f_{\text{sym}} = \sum_i \xi_i \varphi_i$.
+
+    \noindent\textit{Lean:} \texttt{sindy\_implies\_jacobian\_consistency\_tight}, line~546.
+\end{proof}
+
+\subsection{Proof of Theorem~\ref{thm:irm_pipeline} (Full IRM-to-OOD Pipeline)}
+
+\begin{proof}
+    Compose in three steps:
+    \begin{enumerate}
+        \item By IRM Consistency, $\forall x,\ \|Df_{\text{real}}^e(x) - Df_{\text{sym}}(x)\| \leq \varepsilon_{\text{irm}}$ in environment $e$.
+        \item By the training bound, $\forall x,\ \|D\pi(x) - Df_{\text{sym}}(x)\| \leq \varepsilon_{\text{pol}}$.
+        \item Triangle inequality: $\|D\pi(x) - Df_{\text{real}}^e(x)\| \leq \varepsilon_{\text{irm}} + \varepsilon_{\text{pol}}$.
+    \end{enumerate}
+    This gives $(\varepsilon_{\text{irm}} + \varepsilon_{\text{pol}})$-Jacobian Consistency with $f_{\text{real}}^e$.
+    Setting $C = \varepsilon_{\text{irm}} + \varepsilon_{\text{pol}}$ in the $n$-D linear OOD bound (Theorem~\ref{thm:ood_linear_nD}):
+    \[
+        \|\pi(x_{\text{ood}}) - f_{\text{real}}^e(x_{\text{ood}})\| \leq \delta + (\varepsilon_{\text{irm}} + \varepsilon_{\text{pol}})\|x_{\text{ood}} - x_0\|.
+    \]
+
+    \noindent\textit{Lean:} \texttt{irm\_to\_ood\_bound\_nD}, line~755.
+\end{proof}
+
+\subsection{Proof of Corollary 4.12 (Contraction After Belief Update)}
+
+\begin{proof}
+    After Bayesian update, $\rho'(h) = \rho(h) \cdot L(h) / Z$ where $L(h) \geq 0$ and $Z = \sum_h \rho(h) L(h) > 0$.
+
+    Since $\rho(h) \geq 0$ and $L(h) \geq 0$, we have $\rho'(h) \geq 0$. Since $\sum_h \rho'(h) = \sum_h \rho(h) L(h) / Z = Z / Z = 1$, $\rho'$ is a valid probability distribution.
+
+    The proof of Theorem~\ref{thm:csbapr_contraction} only requires $\rho(h) \geq 0$ and $\sum_h \rho(h) = 1$. Since $\rho'$ satisfies both conditions, $\mathcal{T}_{\rho'}^{CS\text{-}BAPR}$ is a $\gamma$-contraction.
+
+    \noindent\textit{Lean:} \texttt{csbapr\_contraction\_after\_update}, line~370.
+\end{proof}
+
+
+\section{CS-BAPR Operator: Detailed Derivation}
+\label{app:operator_detail}
+
+\subsection{Relationship to BAPR and RE-SAC operators}
+
+The CS-BAPR mode-conditional operator (Eq.~\eqref{eq:csbapr_mode}) extends the BAPR operator with a single additional frozen penalty term $\lambda_{\text{sym}} \cdot \Gamma_{\text{sym}}^h(s,a)$:
+
+\begin{center}
+\begin{tabular}{llc}
+\toprule
+\textbf{Penalty} & \textbf{Source} & \textbf{Origin} \\
+\midrule
+$\kappa_{\text{ale}} = \lambda_{\text{ale}} \sum_l \|W_l\|_1$ & Frozen target critic weights & RE-SAC \\
+$\Gamma_{\text{epi}}^h(s,a) = \text{Var}(\{Q_{\phi'_k}\})$ & Frozen target Q-ensemble & RE-SAC \\
+$\rho(h)$ belief weights & Frozen BOCD posterior & BAPR \\
+$\Gamma_{\text{sym}}^h(s,a) = \|\nabla_s \pi - \nabla_s f_{\text{sym}}\|^2$ & Frozen SINDy coefficients & \textbf{CS-BAPR} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Why $\Gamma_{\text{sym}}$ cancels in contraction}
+
+In the contraction argument (Lean: \texttt{t\_mode\_pointwise\_bound}, line~251), all terms that do not depend on the Q-function being evaluated cancel:
+\begin{align}
+    &\mathcal{T}_h^{CS} Q_1(s,a) - \mathcal{T}_h^{CS} Q_2(s,a) \notag \\
+    &= \gamma \sum_{s'} P_h(s'|s,a) \left[ V^{Q_1}(s') - V^{Q_2}(s') \right] \notag \\
+    &\quad \underbrace{- \lambda_{\text{epi}}\Gamma_{\text{epi}}^h + \lambda_{\text{epi}}\Gamma_{\text{epi}}^h}_{= 0} \underbrace{- \lambda_{\text{sym}}\Gamma_{\text{sym}}^h + \lambda_{\text{sym}}\Gamma_{\text{sym}}^h}_{= 0} \underbrace{- \kappa + \kappa}_{= 0}.
+\end{align}
+The cancellation requires that $\Gamma_{\text{sym}}$ is \emph{identical} in both $\mathcal{T}_h^{CS} Q_1$ and $\mathcal{T}_h^{CS} Q_2$, which holds precisely because the SINDy coefficients are frozen (not updated based on Q).
+
+\subsection{Frozen-parameter requirement for $\Gamma_{\text{sym}}$}
+
+In the implementation, $f_{\text{sym}}$ is a \texttt{SINDyTorchWrapper} whose coefficients are stored as non-trainable buffers (\texttt{register\_buffer}). The SINDy gradients are \texttt{detach()}-ed in the Jacobian loss computation:
+\begin{equation}
+    \Gamma_{\text{sym}} = \|\nabla_s \pi_\theta(s) - \underbrace{\nabla_s f_{\text{sym}}(s)}_{\text{detached}}\|^2.
+\end{equation}
+This ensures that $\Gamma_{\text{sym}}$ depends on the current policy parameters $\theta$ (through $\nabla_s \pi_\theta$) but \emph{not} on the Q-function being updated, satisfying the frozen-parameter condition.
+
+
+\section{SINDy Implementation Details}
+\label{app:sindy_details}
+
+\subsection{State derivative estimation}
+
+SINDy requires state derivatives $\dot{X} = ds/dt$. In the RL setting, we only observe discrete transitions $(s_t, a_t, s_{t+1})$. We use first-order finite differences:
+\begin{equation}
+    \dot{s}_t \approx \frac{s_{t+1} - s_t}{\Delta t},
+\end{equation}
+where $\Delta t$ is the environment timestep. For discrete-time SINDy (our default), we directly model $s_{t+1} = f(s_t)$, avoiding derivative estimation entirely.
+
+\subsection{SINDy-to-PyTorch bridge}
+
+The SINDy model (fitted via PySINDy in NumPy) is converted to a differentiable PyTorch module by reconstructing the polynomial basis function computation in PyTorch:
+\begin{equation}
+    f_{\text{sym}}(x) = \Theta(x) \cdot \xi^T,
+\end{equation}
+where $\Theta(x)$ is the polynomial library matrix and $\xi$ are the frozen SINDy coefficients stored as \texttt{register\_buffer}. This enables automatic differentiation for the Jacobian Consistency Loss without backpropagating through the SINDy coefficients.
+
+\subsection{Quality verification}
+
+Before proceeding to Phase~1 training, we verify the SINDy quality gate:
+\begin{equation}
+    \varepsilon_1 = \frac{1}{|D_{\text{test}}|} \sum_{x \in D_{\text{test}}} \|Df_{\text{real}}(x) - Df_{\text{sym}}(x)\| < \varepsilon_{\text{threshold}}.
+\end{equation}
+If SINDy fails this gate, the basis library degree is increased or additional exploration data is collected.
+
+
+\section{NAU/NMU Architecture Details}
+\label{app:nau_details}
+
+\subsection{NAU weight discretization}
+
+NAU layers use clamped real-valued weights with a sparsity regularizer that drives weights toward $\{-1, 0, 1\}$:
+\begin{equation}
+    \mathcal{L}_{\text{NAU}} = \sum_i \min(|w_i|, |1 - |w_i||).
+\end{equation}
+This is a continuous relaxation following Madsen \& Johansen~\cite{Madsen2020NAU}, where $w_i \in [-1, 1]$ via clamping and the regularizer encourages convergence to the discrete set.
+
+\subsection{Actor architecture}
+
+The CS-BAPR actor combines a standard feature extractor (2-layer MLP with LeakyReLU) with NAU/NMU output heads:
+\begin{align}
+    h &= \text{LeakyReLU}(W_2 \cdot \text{LeakyReLU}(W_1 \cdot s)), \\
+    a_{\text{linear}} &= \text{NAU}(h), \quad L = 0, \\
+    a_{\text{quad}} &= \text{NMU}(\text{Linear}(h)), \quad L = 2|c|, \\
+    a &= \tanh(\alpha \cdot a_{\text{linear}} + (1-\alpha) \cdot a_{\text{quad}}),
+\end{align}
+where $\alpha \in [0,1]$ is a learnable mixing coefficient.
+
+\subsection{Effective Lipschitz derivative constant $L_{\text{eff}}$}
+\label{app:leff}
+
+The effective Lipschitz derivative constant of the composed actor is bounded by:
+\begin{equation}
+    L_{\text{eff}} \leq L_{\text{feat}} \cdot L_{\text{head}} \cdot L_{\tanh},
+\end{equation}
+where each factor corresponds to a composition stage:
+\begin{itemize}
+    \item $L_{\text{feat}}$: The feature extractor's Lipschitz constant. For bounded-weight networks with LeakyReLU activations (slope $\alpha_\ell > 0$), this is finite: LeakyReLU is globally Lipschitz with constant $\max(1, \alpha_\ell) = 1$, so $L_{\text{feat}} \leq \prod_l \|W_l\|_{\text{op}}$. This is controlled via weight clamping inherited from the NAU regularizer.
+
+    \item $L_{\text{head}} = \alpha \cdot 0 + (1-\alpha) \cdot 2|c| = 2(1-\alpha)|c|$: The output head's derivative Lipschitz constant, which is a convex combination of NAU ($L=0$) and NMU ($L=2|c|$).
+
+    \item $L_{\tanh} \leq 1$: Since $|\tanh'(x)| \leq 1$ everywhere, the tanh activation does not amplify the Lipschitz constant.
+\end{itemize}
+
+Crucially, the LeakyReLU feature layers contribute a \emph{finite} $L_{\text{feat}}$ (unlike ReLU, whose derivative is discontinuous at 0). The composed $L_{\text{eff}}$ is therefore finite, preserving the quadratic OOD bound, albeit with a potentially larger constant than the isolated NAU/NMU proofs suggest. The constant can be further tightened via spectral normalization~\cite{Madsen2020NAU} or LipSDP methods.
+
+
+\section{IRM Filtering Protocol}
+\label{app:irm_protocol}
+
+\subsection{Multi-environment setup}
+
+IRM filtering requires at least $K \geq 3$ training environments with distinct dynamics parameters but shared causal structure. For each environment $e_k$:
+\begin{enumerate}
+    \item Collect exploration trajectories $\{(s_t^k, a_t^k, s_{t+1}^k)\}$.
+    \item Fit SINDy independently: $\xi_k = \text{SINDy}(X^k, \dot{X}^k)$.
+    \item Evaluate cross-environment derivative error variance:
+    \begin{equation}
+        V_{\text{IRM}} = \text{Var}_{k} \left[ \frac{1}{|D_k|} \sum_{x \in D_k} \|Df_{\text{real}}^k(x) - Df_{\text{sym}}(x)\| \right].
+    \end{equation}
+\end{enumerate}
+
+\subsection{Formula selection}
+
+The IRM-selected formula minimizes cross-environment variance:
+\begin{equation}
+    \xi_{\text{irm}} = \arg\min_{\xi \in \{\xi_1, \ldots, \xi_K\}} V_{\text{IRM}}(\xi).
+\end{equation}
+By Theorem~\ref{thm:irm_tighten}, this yields $\varepsilon_{\text{irm}} \leq \varepsilon_{\text{raw}}$, tightening the OOD bound.
+
+
+\section{Hyperparameter Configuration}
+\label{app:hyperparams}
+
+\begin{table}[H]
+\caption{CS-BAPR hyperparameters. Inherited parameters from BAPR are marked with $\dagger$.}
+\label{tab:hyperparams}
+\centering
+\begin{tabular}{llll}
+\toprule
+\textbf{Parameter} & \textbf{Symbol} & \textbf{Default} & \textbf{Lean constraint} \\
+\midrule
+\multicolumn{4}{l}{\textit{SAC core (inherited$^\dagger$)}} \\
+Discount factor$^\dagger$ & $\gamma$ & 0.99 & $0 \leq \gamma < 1$ \\
+Soft update rate$^\dagger$ & $\tau$ & 0.005 & --- \\
+Entropy coefficient$^\dagger$ & $\alpha$ & auto-tuned & --- \\
+Learning rates$^\dagger$ & $\eta$ & $3 \times 10^{-4}$ & --- \\
+Ensemble size$^\dagger$ & $K$ & 5 & --- \\
+Batch size$^\dagger$ & $B$ & 256 & --- \\
+\midrule
+\multicolumn{4}{l}{\textit{BAPR inherited$^\dagger$}} \\
+Max run length$^\dagger$ & $H$ & 20 & --- \\
+Hazard rate$^\dagger$ & $H_{\text{hazard}}$ & 0.02 & --- \\
+Epistemic weight$^\dagger$ & $\lambda_{\text{epi}}$ & 0.01 & $\geq 0$ \\
+OOD penalty$^\dagger$ & $\beta_{\text{ood}}$ & 0.1 & --- \\
+\midrule
+\multicolumn{4}{l}{\textit{CS-BAPR new}} \\
+Symbolic weight & $\lambda_{\text{sym}}$ & 0.01 & $\geq 0$ \\
+Jacobian weight & $\mu_{\text{jac}}$ & 0.1 & --- \\
+Gradient clipping & --- & 1.0 & --- \\
+SINDy threshold & --- & 0.1 & --- \\
+SINDy library degree & --- & 2 & --- \\
+NAU regularization & --- & 0.01 & --- \\
+IRM penalty weight & --- & 0.1 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\section{Proof Sketch: Component Hypotheses Imply Derivative Bound}
+\label{app:component_lemma}
+
+Lemma \texttt{deriv\_error\_bound\_from\_components} (line~157) shows how the three CS-BAPR components combine to satisfy the derivative bound hypothesis of the main theorem:
+
+\begin{lemma}
+    If the real dynamics $f_{\text{real}}$ has constant derivative (smooth physical law), the policy is $\varepsilon$-Jacobian Consistent at the training boundary $a$, and has $L$-Arithmetic Inductive Bias, then:
+    \begin{equation}
+        \forall x,\quad |(\pi'(x) - f_{\text{real}}'(x))| \leq \varepsilon + L|x - a|.
+    \end{equation}
+\end{lemma}
+
+\begin{proof}
+    By triangle inequality:
+    \begin{align}
+        |\pi'(x) - f_{\text{real}}'(x)| &= |(\pi'(x) - \pi'(a)) + (\pi'(a) - f_{\text{real}}'(a))| \\
+        &\leq |\pi'(x) - \pi'(a)| + |\pi'(a) - f_{\text{real}}'(a)| \\
+        &\leq L|x - a| + \varepsilon,
+    \end{align}
+    where the first term uses the Lipschitz derivative property (NAU/NMU) and the second uses Jacobian Consistency at $a$ (SINDy training). The constant-derivative assumption on $f_{\text{real}}$ ensures $f_{\text{real}}'(a) = f_{\text{real}}'(x)$.
+\end{proof}
+
+This lemma provides the formal bridge from CS-BAPR's three architectural/training assumptions to the hypothesis required by Theorem~\ref{thm:ood_1d}.
+
+
+\section{Formalization: Data Structure Design}
+\label{app:lean_structures}
+
+This section documents the Lean~4 data structures used to formalize CS-BAPR, explaining the mathematical rationale behind each design choice.
+
+\subsection{NAU Layer}
+
+\begin{definition}[NAU Layer, Lean line~799]
+    An NAU layer of dimension $n$ is a weight vector $w \in \{-1, 0, 1\}^n$ computing $y = \sum_{j=1}^n w_j x_j$.
+\end{definition}
+
+The discreteness constraint $w_i \in \{-1, 0, 1\}$ is essential: it ensures that the NAU computes an \emph{exact} integer linear combination, making the derivative $\partial y / \partial x_i = w_i$ trivially constant (Theorem~\ref{thm:nau_const}). Without discreteness, the NAU would be a general linear layer with no structural advantage over standard networks. In the Lean formalization, this is encoded as:
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\small\ttfamily
+structure NAULayer (n : $\mathbb{N}$) where\\
+\quad weights : Fin n $\to$ $\mathbb{Z}$\\
+\quad weight\_discrete : $\forall$ i, weights i = -1 $\lor$ weights i = 0 $\lor$ weights i = 1
+}}
+\end{center}
+
+\subsection{SINDy Coefficients and Reconstruction}
+
+\begin{definition}[SINDy Coefficients, Lean line~470]
+    Given a basis library $\{\varphi_1, \ldots, \varphi_n\}$, SINDy coefficients are a vector $\xi \in \mathbb{R}^n$ defining the symbolic formula $f_{\text{sym}}(x) = \sum_{i=1}^n \xi_i \varphi_i(x)$.
+\end{definition}
+
+The \texttt{reconstruct} function maps coefficients back to the function space, enabling direct comparison with $\pi$ and $f_{\text{real}}$. The Fr\'echet derivative of the reconstruction is $Df_{\text{sym}}(x) = \sum_i \xi_i D\varphi_i(x)$, which is used in the Jacobian Consistency definition (Definition~\ref{def:jac_consistency}). In Lean:
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\small\ttfamily
+structure SINDyCoeffs (n : $\mathbb{N}$) where\\
+\quad vals : Fin n $\to$ $\mathbb{R}$\\
+\\
+def SINDyCoeffs.reconstruct (c : SINDyCoeffs n) (lib : BasisLibrary n E F) : E $\to$ F :=\\
+\quad fun x $\Rightarrow$ $\sum$ i, c.vals i $\bullet$ lib.basis i x
+}}
+\end{center}
+
+\subsection{IRM Environment}
+
+\begin{definition}[Environment, Lean line~715]
+    An environment consists of a training domain $D_{\text{train}} \subseteq E$ and a ground-truth response function $f_{\text{real}}: E \to F$.
+\end{definition}
+
+IRM filtering (Pillar~III) requires comparing symbolic formulas across \emph{multiple} environments. Each environment shares the same state/action spaces but has distinct dynamics parameters (e.g., different masses, friction coefficients). The IRM Consistency predicate (Definition~\ref{def:irm}) requires that a single SINDy coefficient vector $\xi$ achieves low derivative error \emph{simultaneously} across all environments in the list, ensuring causal rather than spurious correlation. In Lean:
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\small\ttfamily
+structure Environment (E F : Type*)\\
+\quad[NormedAddCommGroup E] [NormedSpace $\mathbb{R}$ E]\\
+\quad[NormedAddCommGroup F] [NormedSpace $\mathbb{R}$ F] where\\
+\quad D\_train : Set E\\
+\quad f\_real : E $\to$ F
+}}
+\end{center}
+
+\subsection{NMU Unit}
+
+\begin{definition}[NMU Unit, Lean line~858]
+    An NMU unit with coefficient $c \in \mathbb{R}$ computes $f(x) = cx^2$.
+\end{definition}
+
+The single-parameter design is deliberate: the NMU's second derivative is $f''(x) = 2c$ (constant), yielding the exact Lipschitz constant $L = 2|c|$ for the first derivative (Theorem~\ref{thm:nmu_bias}). Richer polynomial units (e.g., $f(x) = c_1 x^2 + c_2 x^3$) would have \emph{non-constant} second derivatives, making the Lipschitz constant depend on the input domain and losing the global guarantee. In Lean:
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\small\ttfamily
+structure NMUUnit where\\
+\quad coeff : $\mathbb{R}$
+}}
+\end{center}
