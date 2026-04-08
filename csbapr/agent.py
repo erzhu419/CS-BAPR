@@ -97,63 +97,206 @@ class CSBAPRAgent:
         # ===== Logging =====
         self.training_steps = 0
 
-    def sindy_preidentify(self, env, policy=None):
+    def sindy_preidentify(self, env, policy=None, extra_envs=None):
         """
-        Phase 0: SINDy pre-identification.
-        
-        1. Collect exploration trajectories
-        2. Fit SINDy model
-        3. Verify quality (ε₁ < threshold)
-        4. Create PyTorch wrapper (frozen coefficients)
-        
+        Phase 0: SINDy pre-identification with optional IRM multi-env filtering.
+
+        Single-env path:
+          1. Collect exploration trajectories
+          2. Fit SINDy model
+          3. Verify quality (ε₁ < threshold)
+          4. Create PyTorch wrapper (frozen coefficients)
+
+        Multi-env path (IRM, when extra_envs provided):
+          1. Collect trajectories in EACH environment
+          2. Fit SINDy per-env → IRM coefficient selection (mean coefficients)
+          3. Quantify IRM advantage (ε_s proxy)
+          4. Create PyTorch wrapper from IRM-filtered coefficients
+
         Args:
-            env: Gymnasium environment
+            env: Primary Gymnasium environment
             policy: Optional exploration policy (None = random)
+            extra_envs: List of (env_instance, env_name) for IRM multi-env.
+                        If None or empty, falls back to single-env SINDy.
         """
         from csbapr.sindy.data_collector import collect_trajectories, prepare_sindy_data_discrete
         from csbapr.sindy.world_model import SymbolicWorldModel
         from csbapr.sindy.torch_wrapper import SINDyTorchWrapper
 
-        print("[Phase 0] Collecting exploration trajectories...")
-        X_list, U_list, X_dot_list = collect_trajectories(
-            env, policy=policy,
-            n_episodes=self.config.sindy_n_explore_episodes,
-            max_steps=self.config.max_steps_per_episode,
-        )
+        n_control = 0  # state-only dynamics
 
-        # Phase 0: Identify state-only dynamics first (simpler, more robust)
-        # Control-affine identification is Phase 3 extension
-        n_control = 0
+        # ---- Multi-env IRM path ----
+        if extra_envs and len(extra_envs) >= 1:
+            all_envs = [('primary', env)] + list(extra_envs)
+            print(f"[Phase 0-IRM] Multi-environment SINDy ({len(all_envs)} envs)")
 
-        print(f"[Phase 0] Fitting SINDy model (degree={self.config.sindy_lib_degree}, "
-              f"threshold={self.config.sindy_threshold}, state_only=True)...")
-        self.sindy_model = SymbolicWorldModel(
-            n_state=self.state_dim,
-            n_control=n_control,
-            poly_degree=self.config.sindy_lib_degree,
-            threshold=self.config.sindy_threshold,
-            discrete_time=self.config.sindy_discrete_time,
-        )
+            envs_data = {}  # for IRM coefficient selection
+            envs_eval_data = {}  # for IRM advantage estimation
 
-        if self.config.sindy_discrete_time:
-            X_trimmed, _ = prepare_sindy_data_discrete(X_list, U_list)
-            self.sindy_model.fit(
-                X_trimmed, U=None,
-                multiple_trajectories=True, t=1.0
+            for env_tag, e in all_envs:
+                print(f"[Phase 0-IRM] Collecting from env '{env_tag}'...")
+                X_list, U_list, X_dot_list = collect_trajectories(
+                    e, policy=policy,
+                    n_episodes=self.config.sindy_n_explore_episodes,
+                    max_steps=self.config.max_steps_per_episode,
+                )
+                if self.config.sindy_discrete_time:
+                    X_trimmed, _ = prepare_sindy_data_discrete(X_list, U_list)
+                    envs_data[env_tag] = (X_trimmed, None, None)
+                else:
+                    from csbapr.sindy.data_collector import compute_state_derivatives
+                    X_flat, X_dot_flat = compute_state_derivatives(X_list)
+                    envs_data[env_tag] = (None, None, None)
+                    envs_eval_data[env_tag] = (X_flat, X_dot_flat)
+
+            # Build a template model for IRM selection
+            template = SymbolicWorldModel(
+                n_state=self.state_dim,
+                n_control=n_control,
+                poly_degree=self.config.sindy_lib_degree,
+                threshold=self.config.sindy_threshold,
+                discrete_time=self.config.sindy_discrete_time,
             )
-        else:
-            from csbapr.sindy.data_collector import compute_state_derivatives
-            X_flat, X_dot_flat = compute_state_derivatives(X_list)
-            self.sindy_model.fit(X_flat, X_dot=X_dot_flat)
 
-        # Check quality
-        sparsity = self.sindy_model.sparsity
-        print(f"[Phase 0] SINDy fitted: sparsity = {sparsity:.3f}")
-        print(f"[Phase 0] Discovered equations:")
-        self.sindy_model.print_equations()
+            from csbapr.irm.causal_filter import select_best_sindy_coefficients, compute_irm_advantage
+
+            # Reformat for select_best_sindy_coefficients:
+            # expects env_name → (X_list, U_list, X_dot_list)
+            irm_fit_data = {}
+            for env_tag, e in all_envs:
+                X_list, U_list, X_dot_list = collect_trajectories(
+                    e, policy=policy,
+                    n_episodes=max(self.config.sindy_n_explore_episodes // len(all_envs), 5),
+                    max_steps=self.config.max_steps_per_episode,
+                )
+                if self.config.sindy_discrete_time:
+                    X_trimmed, _ = prepare_sindy_data_discrete(X_list, U_list)
+                    irm_fit_data[env_tag] = (X_trimmed, None, None)
+                else:
+                    irm_fit_data[env_tag] = (X_list, U_list, X_dot_list)
+
+            best_coeffs, irm_variance = select_best_sindy_coefficients(
+                template, irm_fit_data,
+                threshold=self.config.sindy_threshold,
+                verbose=True,
+            )
+
+            # Build final model with IRM-selected coefficients
+            self.sindy_model = SymbolicWorldModel(
+                n_state=self.state_dim,
+                n_control=n_control,
+                poly_degree=self.config.sindy_lib_degree,
+                threshold=self.config.sindy_threshold,
+                discrete_time=self.config.sindy_discrete_time,
+            )
+            # Fit on primary env first (to initialize model internals), then overwrite coeffs
+            X_list0, U_list0, X_dot_list0 = collect_trajectories(
+                env, policy=policy,
+                n_episodes=self.config.sindy_n_explore_episodes,
+                max_steps=self.config.max_steps_per_episode,
+            )
+            if self.config.sindy_discrete_time:
+                X_tr, _ = prepare_sindy_data_discrete(X_list0, U_list0)
+                self.sindy_model.fit(X_tr, U=None, multiple_trajectories=True, t=1.0)
+            else:
+                from csbapr.sindy.data_collector import compute_state_derivatives
+                X_f, Xd_f = compute_state_derivatives(X_list0)
+                self.sindy_model.fit(X_f, X_dot=Xd_f)
+
+            # Overwrite with IRM-selected mean coefficients
+            self.sindy_model.coeffs = best_coeffs
+            if hasattr(self.sindy_model.model, 'coefficients_'):
+                self.sindy_model.model.coefficients_ = best_coeffs
+            elif hasattr(self.sindy_model.model, 'optimizer'):
+                self.sindy_model.model.optimizer.coef_ = best_coeffs
+
+            # Compute IRM advantage if possible
+            irm_report = {'irm_variance': float(irm_variance), 'n_envs': len(all_envs)}
+            if envs_eval_data:
+                try:
+                    adv = compute_irm_advantage(self.sindy_model, envs_eval_data)
+                    irm_report.update(adv)
+                except Exception:
+                    pass
+            self._irm_report = irm_report
+
+            sparsity = self.sindy_model.sparsity
+            print(f"[Phase 0-IRM] IRM-filtered SINDy: sparsity={sparsity:.3f}, "
+                  f"coeff_var={irm_variance:.6f}, n_envs={len(all_envs)}")
+            print(f"[Phase 0-IRM] Discovered equations (IRM-filtered):")
+            self.sindy_model.print_equations()
+
+        # ---- Single-env path ----
+        else:
+            print("[Phase 0] Collecting exploration trajectories...")
+            X_list, U_list, X_dot_list = collect_trajectories(
+                env, policy=policy,
+                n_episodes=self.config.sindy_n_explore_episodes,
+                max_steps=self.config.max_steps_per_episode,
+            )
+
+            print(f"[Phase 0] Fitting SINDy model (degree={self.config.sindy_lib_degree}, "
+                  f"threshold={self.config.sindy_threshold}, state_only=True)...")
+            self.sindy_model = SymbolicWorldModel(
+                n_state=self.state_dim,
+                n_control=n_control,
+                poly_degree=self.config.sindy_lib_degree,
+                threshold=self.config.sindy_threshold,
+                discrete_time=self.config.sindy_discrete_time,
+            )
+
+            if self.config.sindy_discrete_time:
+                X_trimmed, _ = prepare_sindy_data_discrete(X_list, U_list)
+                self.sindy_model.fit(
+                    X_trimmed, U=None,
+                    multiple_trajectories=True, t=1.0
+                )
+            else:
+                from csbapr.sindy.data_collector import compute_state_derivatives
+                X_flat, X_dot_flat = compute_state_derivatives(X_list)
+                self.sindy_model.fit(X_flat, X_dot=X_dot_flat)
+
+            sparsity = self.sindy_model.sparsity
+            print(f"[Phase 0] SINDy fitted: sparsity = {sparsity:.3f}")
+            print(f"[Phase 0] Discovered equations:")
+            self.sindy_model.print_equations()
+            self._irm_report = None
 
         # Create PyTorch wrapper (frozen coefficients)
         self.f_sym_torch = SINDyTorchWrapper(self.sindy_model).to(self.device).eval()
+
+        # Store SINDy quality metrics for reporting
+        self._sindy_report = {
+            'sparsity': float(self.sindy_model.sparsity),
+            'n_coeffs': int(self.sindy_model.coeffs.size) if self.sindy_model.coeffs is not None else 0,
+            'n_nonzero': int((np.abs(self.sindy_model.coeffs) > 1e-6).sum()) if self.sindy_model.coeffs is not None else 0,
+        }
+        # Compute R² if we have data
+        try:
+            X_test, U_test, Xdot_test = collect_trajectories(
+                env, policy=policy, n_episodes=5,
+                max_steps=self.config.max_steps_per_episode,
+            )
+            if self.config.sindy_discrete_time:
+                X_tr_test, _ = prepare_sindy_data_discrete(X_test, U_test)
+                # R²: predict x_{t+1} from x_t
+                all_x = np.vstack([x[:-1] for x in X_tr_test])
+                all_y = np.vstack([x[1:] for x in X_tr_test])
+                pred_y = self.sindy_model.predict(all_x)
+                ss_res = np.sum((all_y - pred_y) ** 2)
+                ss_tot = np.sum((all_y - all_y.mean(axis=0)) ** 2)
+            else:
+                from csbapr.sindy.data_collector import compute_state_derivatives
+                all_x, all_y = compute_state_derivatives(X_test)
+                pred_y = self.sindy_model.predict(all_x)
+                ss_res = np.sum((all_y - pred_y) ** 2)
+                ss_tot = np.sum((all_y - all_y.mean(axis=0)) ** 2)
+            r2 = 1 - ss_res / max(ss_tot, 1e-10)
+            self._sindy_report['r_squared'] = float(r2)
+            print(f"[Phase 0] SINDy R² = {r2:.4f}")
+        except Exception:
+            self._sindy_report['r_squared'] = None
+
         print(f"[Phase 0] SINDyTorchWrapper created (coefficients frozen)")
         print(f"[Phase 0] ✓ Phase 0 complete")
 
@@ -370,6 +513,9 @@ class CSBAPRAgent:
             'critic_optimizer': self.critic_optimizer.state_dict(),
             'log_alpha': self.log_alpha,
             'training_steps': self.training_steps,
+            'n_train_samples': self._n_train_samples,
+            'sindy_report': getattr(self, '_sindy_report', None),
+            'irm_report': getattr(self, '_irm_report', None),
         }, path)
 
     def load(self, path: str):
@@ -381,3 +527,6 @@ class CSBAPRAgent:
         self.critic_optimizer.load_state_dict(checkpoint['critic_optimizer'])
         self.log_alpha = checkpoint['log_alpha']
         self.training_steps = checkpoint['training_steps']
+        self._n_train_samples = checkpoint.get('n_train_samples', 0)
+        self._sindy_report = checkpoint.get('sindy_report', None)
+        self._irm_report = checkpoint.get('irm_report', None)

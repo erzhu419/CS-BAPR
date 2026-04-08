@@ -3,32 +3,24 @@
 # CS-BAPR Full Experiment Suite
 # ============================================================
 #
-# Runs all experiments needed for paper submission:
-#   Phase 1: Training (all methods × all envs × 5 seeds)
-#   Phase 2: OOD Evaluation (sweep + bound comparison)
-#   Phase 3: Plot generation (Figures 1-4)
+# Phases:
+#   1. Training (all methods × all envs × 5 seeds)
+#   2. OOD Evaluation (sweep + abrupt shift, single & compound)
+#   3. Sensitivity Analysis (λ_sym, λ_jac, β_ood, nau_reg)
+#   4. Plot & Table generation (Figures 1-7, Tables 1-4)
 #
-# Estimated time:
-#   Pendulum: ~10 min/run × 7 methods × 5 seeds = ~6h
-#   Hopper:   ~2h/run × 7 methods × 5 seeds = ~70h (use GPU)
+# Methods:
+#   Core:      csbapr, bapr, sac
+#   Ablation:  csbapr-relu, csbapr-no-sindy, csbapr-no-sym,
+#              csbapr-no-jac, csbapr-no-irm
+#   External:  dr (Domain Randomization), rarl (Robust Adversarial RL)
 #
 # Usage:
-#   # Quick test (Pendulum only, 1 seed, 50 episodes)
-#   bash scripts/run_experiments.sh --quick
-#
-#   # Full Pendulum experiments
+#   bash scripts/run_experiments.sh --quick         # Pendulum, 1 seed, 50 eps
 #   bash scripts/run_experiments.sh --env Pendulum-v1
-#
-#   # Full MuJoCo experiments (needs GPU)
-#   bash scripts/run_experiments.sh --env Hopper-v4
-#
-#   # All environments
-#   bash scripts/run_experiments.sh --full
-#
-#   # Only OOD evaluation (after training)
+#   bash scripts/run_experiments.sh --full          # All envs
 #   bash scripts/run_experiments.sh --eval-only
-#
-#   # Only plotting (after evaluation)
+#   bash scripts/run_experiments.sh --sensitivity-only
 #   bash scripts/run_experiments.sh --plot-only
 
 set -e
@@ -39,8 +31,8 @@ SEEDS="${SEEDS:-0 1 2 3 4}"
 MAX_PARALLEL="${MAX_PARALLEL:-3}"
 EVAL_INTERVAL=50
 
-# Methods: full CS-BAPR + ablations + baselines
-METHODS="csbapr csbapr-relu csbapr-no-sindy csbapr-no-sym csbapr-no-jac bapr sac"
+# All methods: CS-BAPR + ablations + baselines + external
+METHODS="csbapr csbapr-relu csbapr-no-sindy csbapr-no-sym csbapr-no-jac csbapr-no-irm bapr sac dr rarl"
 
 # Parse arguments
 MODE="full"
@@ -53,21 +45,31 @@ while [[ $# -gt 0 ]]; do
             SEEDS="0"
             MAX_EPISODES="--max-episodes 50"
             ENVS="Pendulum-v1"
+            METHODS="csbapr csbapr-relu csbapr-no-irm bapr sac dr"
             shift ;;
         --env)
             ENVS="$2"
             shift 2 ;;
         --full)
-            ENVS="Pendulum-v1 Hopper-v4 HalfCheetah-v4"
+            ENVS="Pendulum-v1 Hopper-v4 HalfCheetah-v4 Walker2d-v4"
             shift ;;
         --eval-only)
             MODE="eval"
             shift ;;
+        --sensitivity-only)
+            MODE="sensitivity"
+            shift ;;
         --plot-only)
             MODE="plot"
             shift ;;
+        --train-only)
+            MODE="train"
+            shift ;;
         --seeds)
             SEEDS="$2"
+            shift 2 ;;
+        --parallel)
+            MAX_PARALLEL="$2"
             shift 2 ;;
         *)
             echo "Unknown option: $1"
@@ -163,7 +165,7 @@ if [[ "$MODE" == "full" || "$MODE" == "eval" ]]; then
     echo ""
 
     for env in $ENVS; do
-        echo "--- OOD Sweep: $env ---"
+        echo "--- OOD Evaluation: $env ---"
 
         # Determine perturbation parameter and range
         case $env in
@@ -171,15 +173,7 @@ if [[ "$MODE" == "full" || "$MODE" == "eval" ]]; then
                 PARAM="mass"
                 RANGE="0.5,1,2,5,10,20"
                 ;;
-            Hopper-v4)
-                PARAM="body_mass"
-                RANGE="0.5,1,2,4,8"
-                ;;
-            HalfCheetah-v4)
-                PARAM="body_mass"
-                RANGE="0.5,1,2,4,8"
-                ;;
-            Walker2d-v4)
+            Hopper-v4|HalfCheetah-v4|Walker2d-v4)
                 PARAM="body_mass"
                 RANGE="0.5,1,2,4,8"
                 ;;
@@ -189,7 +183,7 @@ if [[ "$MODE" == "full" || "$MODE" == "eval" ]]; then
                 ;;
         esac
 
-        # Find best checkpoints
+        # Find best checkpoints for each method
         NAU_CKPT=$(ls ${SAVE_ROOT}/${env}/csbapr/*_best.pt 2>/dev/null | head -1)
         RELU_CKPT=$(ls ${SAVE_ROOT}/${env}/bapr/*_best.pt 2>/dev/null | head -1)
 
@@ -201,7 +195,8 @@ if [[ "$MODE" == "full" || "$MODE" == "eval" ]]; then
             CKPT_ARGS="$CKPT_ARGS --checkpoint-relu $RELU_CKPT"
         fi
 
-        # Protocol A: Static parameter sweep
+        # Protocol A: Single-param static sweep
+        echo "  [A] Single-param sweep..."
         python scripts/ood_eval.py \
             --env "$env" \
             --mode sweep \
@@ -213,7 +208,20 @@ if [[ "$MODE" == "full" || "$MODE" == "eval" ]]; then
             --output "${SAVE_ROOT}/${env}/ood_sweep_results.json" \
             2>&1 | tee "${SAVE_ROOT}/logs/ood_sweep_${env}.log"
 
-        # Protocol B: Mid-episode abrupt shift (mirrors bus simulation)
+        # Protocol B: Compound mode sweep
+        echo "  [B] Compound mode sweep..."
+        python scripts/ood_eval.py \
+            --env "$env" \
+            --mode sweep \
+            --compound \
+            --seeds 5 \
+            --plot \
+            $CKPT_ARGS \
+            --output "${SAVE_ROOT}/${env}/ood_compound_results.json" \
+            2>&1 | tee "${SAVE_ROOT}/logs/ood_compound_${env}.log"
+
+        # Protocol C: Mid-episode abrupt shift (single param)
+        echo "  [C] Abrupt shift (single param)..."
         python scripts/ood_eval.py \
             --env "$env" \
             --mode shift \
@@ -226,21 +234,59 @@ if [[ "$MODE" == "full" || "$MODE" == "eval" ]]; then
             --output "${SAVE_ROOT}/${env}/ood_shift_results.json" \
             2>&1 | tee "${SAVE_ROOT}/logs/ood_shift_${env}.log"
 
-        echo "  [DONE] OOD evaluation for $env (sweep + shift)"
+        # Protocol D: Mid-episode abrupt shift (compound)
+        echo "  [D] Abrupt shift (compound)..."
+        python scripts/ood_eval.py \
+            --env "$env" \
+            --mode shift \
+            --compound \
+            --shift-step 100 \
+            --max-steps 500 \
+            --seeds 5 \
+            $CKPT_ARGS \
+            --output "${SAVE_ROOT}/${env}/ood_shift_compound_results.json" \
+            2>&1 | tee "${SAVE_ROOT}/logs/ood_shift_compound_${env}.log"
+
+        echo "  [DONE] OOD evaluation for $env"
     done
 fi
 
-# ============ Phase 3: Plot Generation ============
-if [[ "$MODE" == "full" || "$MODE" == "plot" ]]; then
+# ============ Phase 3: Sensitivity Analysis ============
+if [[ "$MODE" == "full" || "$MODE" == "sensitivity" ]]; then
     echo ""
-    echo "===== PHASE 3: PLOT GENERATION ====="
+    echo "===== PHASE 3: SENSITIVITY ANALYSIS ====="
     echo ""
 
-    python scripts/plot_results.py --results-dir "$SAVE_ROOT" 2>&1 || echo "  [WARN] plot_results.py not yet implemented or failed"
+    # Run sensitivity on the smallest env first
+    SENS_ENV="${ENVS%% *}"  # first env
+    echo "Running sensitivity analysis on $SENS_ENV..."
+
+    python scripts/sensitivity_analysis.py \
+        --env "$SENS_ENV" \
+        --seeds "0,1,2" \
+        --save-dir "${SAVE_ROOT}/sensitivity" \
+        --output-dir "paper/figures" \
+        $MAX_EPISODES \
+        2>&1 | tee "${SAVE_ROOT}/logs/sensitivity_${SENS_ENV}.log"
+
+    echo "  [DONE] Sensitivity analysis"
+fi
+
+# ============ Phase 4: Plot & Table Generation ============
+if [[ "$MODE" == "full" || "$MODE" == "plot" ]]; then
+    echo ""
+    echo "===== PHASE 4: FIGURES & TABLES ====="
+    echo ""
+
+    python scripts/plot_results.py \
+        --results-dir "$SAVE_ROOT" \
+        --output-dir "paper/figures" \
+        2>&1 || echo "  [WARN] plot_results.py failed (check results exist)"
 fi
 
 echo ""
 echo "=============================================="
 echo "  All phases complete!"
 echo "  Results: $SAVE_ROOT/"
+echo "  Figures: paper/figures/"
 echo "=============================================="

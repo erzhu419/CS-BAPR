@@ -46,17 +46,19 @@ from csbapr.config import CSBAPRConfig
 # ============================================================
 
 METHOD_PRESETS = {
-    # Full CS-BAPR
+    # Full CS-BAPR (NAU + SINDy + IRM + Jac)
     'csbapr': dict(
         use_nau_actor=True,
         weight_sym=0.01,
         jac_weight=0.1,
+        _use_irm=True,   # multi-env SINDy
     ),
     # Ablation: NAU → ReLU (test Part IX/XI)
     'csbapr-relu': dict(
         use_nau_actor=False,
         weight_sym=0.01,
         jac_weight=0.1,
+        _use_irm=True,
     ),
     # Ablation: no SINDy (random f_sym → no Jacobian alignment)
     'csbapr-no-sindy': dict(
@@ -69,12 +71,21 @@ METHOD_PRESETS = {
         use_nau_actor=True,
         weight_sym=0.0,
         jac_weight=0.1,
+        _use_irm=True,
     ),
     # Ablation: no Jacobian consistency loss (test Part X)
     'csbapr-no-jac': dict(
         use_nau_actor=True,
         weight_sym=0.01,
         jac_weight=0.0,
+        _use_irm=True,
+    ),
+    # Ablation: no IRM (single-env SINDy, tests Pillar III)
+    'csbapr-no-irm': dict(
+        use_nau_actor=True,
+        weight_sym=0.01,
+        jac_weight=0.1,
+        _use_irm=False,
     ),
     # BA-PR baseline (predecessor, no SINDy/NAU)
     'bapr': dict(
@@ -89,6 +100,20 @@ METHOD_PRESETS = {
         jac_weight=0.0,
         weight_reg=0.0,
         beta_ood=0.0,
+    ),
+    # Domain Randomization baseline (ReLU + randomized physics each episode)
+    'dr': dict(
+        use_nau_actor=False,
+        weight_sym=0.0,
+        jac_weight=0.0,
+        _domain_rand=True,
+    ),
+    # Robust Adversarial RL baseline (SAC + adversarial force perturbation)
+    'rarl': dict(
+        use_nau_actor=False,
+        weight_sym=0.0,
+        jac_weight=0.0,
+        _rarl=True,
     ),
 }
 
@@ -237,28 +262,95 @@ def make_config(env_name, method_name):
         for k, v in ENV_PRESETS[env_name].items():
             setattr(config, k, v)
 
-    # Apply method preset
+    # Apply method preset (skip internal _keys)
     if method_name in METHOD_PRESETS:
         for k, v in METHOD_PRESETS[method_name].items():
-            setattr(config, k, v)
+            if not k.startswith('_'):
+                setattr(config, k, v)
     else:
         raise ValueError(f"Unknown method: {method_name}. Available: {list(METHOD_PRESETS.keys())}")
 
     return config
 
 
+def _get_method_flag(method_name, flag):
+    """Get an internal _flag from method preset."""
+    return METHOD_PRESETS.get(method_name, {}).get(flag, False)
+
+
+# ============================================================
+# Domain Randomization helper
+# ============================================================
+
+DR_PARAM_RANGES = {
+    'Pendulum-v1': {
+        'mass': (0.3, 3.0),
+        'gravity': (0.5, 2.0),
+        'length': (0.5, 2.0),
+    },
+    'Hopper-v4': {
+        'body_mass': (0.5, 3.0),
+        'friction': (0.3, 2.0),
+        'gravity': (0.7, 1.5),
+    },
+    'HalfCheetah-v4': {
+        'body_mass': (0.5, 3.0),
+        'friction': (0.3, 2.0),
+        'gravity': (0.7, 1.5),
+    },
+    'Walker2d-v4': {
+        'body_mass': (0.5, 3.0),
+        'friction': (0.3, 2.0),
+        'gravity': (0.7, 1.5),
+    },
+}
+
+
+def randomize_env_params(env, env_name, rng):
+    """Apply random physics parameters (Domain Randomization)."""
+    ranges = DR_PARAM_RANGES.get(env_name, {})
+    mode_params = {}
+    for param, (lo, hi) in ranges.items():
+        mode_params[param] = rng.uniform(lo, hi)
+    apply_mode_to_env(env, env_name, mode_params)
+    return mode_params
+
+
+# ============================================================
+# RARL: Adversarial force perturbation
+# ============================================================
+
+def apply_rarl_perturbation(action, env, rng, adversary_strength=0.1):
+    """
+    RARL-style adversarial perturbation: add worst-case force noise.
+    Simple implementation: random direction, magnitude proportional to action range.
+    """
+    noise_scale = adversary_strength * (env.action_space.high - env.action_space.low)
+    perturbation = rng.uniform(-1, 1, size=action.shape) * noise_scale
+    return np.clip(action + perturbation, env.action_space.low, env.action_space.high)
+
+
 def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interval=50):
     """
     Train CS-BAPR agent and save checkpoints + metrics.
+
+    Supports:
+    - IRM multi-env Phase 0 (when _use_irm flag set)
+    - Domain Randomization (when _domain_rand flag set)
+    - RARL adversarial perturbation (when _rarl flag set)
+    - Standard mode-switching training
+    - Wall-clock + GPU memory overhead tracking
 
     Returns:
         dict with training metrics history
     """
     import gymnasium as gym
+    import traceback as tb
 
     # Setup
     torch.manual_seed(seed)
     np.random.seed(seed)
+    rng = np.random.RandomState(seed)
 
     config = make_config(env_name, method_name)
     if max_episodes is not None:
@@ -270,60 +362,104 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
 
     agent = CSBAPRAgent(state_dim, action_dim, config)
 
+    use_irm = _get_method_flag(method_name, '_use_irm')
+    use_dr = _get_method_flag(method_name, '_domain_rand')
+    use_rarl = _get_method_flag(method_name, '_rarl')
+
     # Phase 0: SINDy pre-identification
-    if method_name not in ('sac', 'bapr', 'csbapr-no-sindy'):
+    skip_sindy_methods = ('sac', 'bapr', 'csbapr-no-sindy', 'dr', 'rarl')
+    if method_name not in skip_sindy_methods:
         try:
-            agent.sindy_preidentify(env)
+            extra_envs = None
+            if use_irm:
+                # Create IRM training environments with different physics
+                irm_modes = list(MUJOCO_MODE_PROFILES.get(env_name, {}).items())
+                # Use non-normal modes as extra environments
+                extra_envs = []
+                for mode_name, mode_params in irm_modes:
+                    if mode_name == 'normal':
+                        continue
+                    irm_env = gym.make(env_name)
+                    apply_mode_to_env(irm_env, env_name, mode_params)
+                    extra_envs.append((mode_name, irm_env))
+                print(f"[IRM] Created {len(extra_envs)} extra environments for IRM filtering")
+
+            agent.sindy_preidentify(env, extra_envs=extra_envs)
+
+            # Close IRM envs
+            if extra_envs:
+                for _, e in extra_envs:
+                    e.close()
         except Exception as e:
             print(f"[WARN] SINDy Phase 0 failed: {e}. Continuing without SINDy.")
+            tb.print_exc()
 
     # Training loop
     run_name = f"{method_name}_{env_name}_{seed}"
     print(f"\n[TRAIN] {run_name}")
     print(f"  Config: NAU={config.use_nau_actor}, weight_sym={config.weight_sym}, "
-          f"jac_weight={config.jac_weight}")
+          f"jac_weight={config.jac_weight}, IRM={use_irm}, DR={use_dr}, RARL={use_rarl}")
 
     history = {
         'episode_rewards': [],
         'eval_rewards': [],
         'training_metrics': [],
         'L_eff_history': [],
+        'overhead': [],  # wall-clock per episode
     }
 
     best_eval_reward = -float('inf')
     start_time = time.time()
+    total_steps = 0
+
+    # Track peak GPU memory
+    gpu_mem_peak = 0.0
+    if torch.cuda.is_available():
+        torch.cuda.reset_peak_memory_stats()
 
     # Mode switching setup (mirrors bus simulation mode_profiles)
     mode_profiles = MUJOCO_MODE_PROFILES.get(env_name, {})
     mode_names = list(mode_profiles.keys()) if mode_profiles else []
     current_mode = 'normal'
-    next_switch_ep = np.random.randint(*MODE_SWITCH_INTERVAL) if mode_names else config.max_episodes + 1
+    next_switch_ep = rng.randint(*MODE_SWITCH_INTERVAL) if mode_names else config.max_episodes + 1
 
-    if mode_names:
+    if mode_names and not use_dr:
         print(f"  Mode switching: {len(mode_names)} modes, "
               f"switch every {MODE_SWITCH_INTERVAL[0]}-{MODE_SWITCH_INTERVAL[1]} episodes")
         apply_mode_to_env(env, env_name, mode_profiles.get('normal', {}))
 
     for episode in range(config.max_episodes):
-        # === Mode switch (like bus simulation's random mode switching) ===
-        if mode_names and episode >= next_switch_ep:
-            current_mode = np.random.choice(mode_names)
+        ep_start = time.time()
+
+        # === Domain Randomization: randomize every episode ===
+        if use_dr:
+            dr_params = randomize_env_params(env, env_name, rng)
+        # === Standard mode switch ===
+        elif mode_names and episode >= next_switch_ep:
+            current_mode = rng.choice(mode_names)
             apply_mode_to_env(env, env_name, mode_profiles[current_mode])
-            next_switch_ep = episode + np.random.randint(*MODE_SWITCH_INTERVAL)
+            next_switch_ep = episode + rng.randint(*MODE_SWITCH_INTERVAL)
 
         state, _ = env.reset(seed=seed * 10000 + episode)
         episode_reward = 0.0
         done = False
+        ep_steps = 0
 
         while not done:
             action = agent.select_action(state)
             scaled_action = np.clip(action * env.action_space.high[0],
                                     env.action_space.low[0], env.action_space.high[0])
+
+            # === RARL: adversarial perturbation on executed action ===
+            if use_rarl:
+                scaled_action = apply_rarl_perturbation(scaled_action, env, rng)
+
             next_state, reward, terminated, truncated, _ = env.step(scaled_action)
             done = terminated or truncated
             agent.replay_buffer.push(state, action, reward, next_state, float(done))
             state = next_state
             episode_reward += reward
+            ep_steps += 1
 
             # Update
             if agent.replay_buffer.size >= config.batch_size:
@@ -331,7 +467,9 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
                 if metrics:
                     history['training_metrics'].append(metrics)
 
+        total_steps += ep_steps
         history['episode_rewards'].append(episode_reward)
+        history['overhead'].append(time.time() - ep_start)
 
         # Periodic evaluation
         if (episode + 1) % eval_interval == 0:
@@ -366,7 +504,11 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
                 })
 
             elapsed = time.time() - start_time
-            mode_str = f", mode={current_mode}" if mode_names else ""
+            mode_str = f", mode={current_mode}" if mode_names and not use_dr else ""
+            if use_dr:
+                mode_str = ", DR=on"
+            if use_rarl:
+                mode_str += ", RARL=on"
             print(f"  Ep {episode+1}/{config.max_episodes}: "
                   f"train={np.mean(history['episode_rewards'][-eval_interval:]):.1f}, "
                   f"eval={mean_eval:.1f}, L_eff={L_eff:.3f}{mode_str}, "
@@ -378,7 +520,12 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
                 os.makedirs(save_dir, exist_ok=True)
                 agent.save(os.path.join(save_dir, f"{run_name}_best.pt"))
 
+    # GPU memory tracking
+    if torch.cuda.is_available():
+        gpu_mem_peak = torch.cuda.max_memory_allocated() / (1024 ** 2)  # MB
+
     # Save final
+    total_time = time.time() - start_time
     os.makedirs(save_dir, exist_ok=True)
     agent.save(os.path.join(save_dir, f"{run_name}_final.pt"))
 
@@ -392,14 +539,20 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
             'eval_rewards': history['eval_rewards'],
             'L_eff_history': history['L_eff_history'],
             'best_eval_reward': best_eval_reward,
-            'total_time': time.time() - start_time,
+            'total_time': total_time,
+            'total_steps': total_steps,
+            'mean_episode_time': float(np.mean(history['overhead'])),
+            'gpu_memory_peak_mb': gpu_mem_peak,
+            'sindy_report': getattr(agent, '_sindy_report', None),
+            'irm_report': getattr(agent, '_irm_report', None),
             'config': {k: v for k, v in vars(config).items()
                        if isinstance(v, (int, float, str, bool))},
         }, f, indent=2)
 
     env.close()
     print(f"[DONE] {run_name}: best_eval={best_eval_reward:.1f}, "
-          f"time={time.time()-start_time:.0f}s")
+          f"time={total_time:.0f}s, steps={total_steps}, "
+          f"gpu_mem={gpu_mem_peak:.0f}MB")
     return history
 
 
