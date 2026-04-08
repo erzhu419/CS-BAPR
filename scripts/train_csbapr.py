@@ -128,6 +128,7 @@ ENV_PRESETS = {
         num_critics=3,
         sindy_n_explore_episodes=10,
         sindy_lib_degree=2,
+        sindy_threshold=0.01,  # Pendulum needs lower threshold (small coefficients)
     ),
     'Hopper-v4': dict(
         max_episodes=2000,

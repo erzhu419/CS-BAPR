@@ -271,7 +271,8 @@ class CSBAPRAgent:
             'n_coeffs': int(self.sindy_model.coeffs.size) if self.sindy_model.coeffs is not None else 0,
             'n_nonzero': int((np.abs(self.sindy_model.coeffs) > 1e-6).sum()) if self.sindy_model.coeffs is not None else 0,
         }
-        # Compute R² if we have data
+        # Compute R² on held-out trajectories
+        # PySINDy 2.x: predict() returns x_dot (derivatives), so compare against derivatives
         try:
             X_test, U_test, Xdot_test = collect_trajectories(
                 env, policy=policy, n_episodes=5,
@@ -279,18 +280,15 @@ class CSBAPRAgent:
             )
             if self.config.sindy_discrete_time:
                 X_tr_test, _ = prepare_sindy_data_discrete(X_test, U_test)
-                # R²: predict x_{t+1} from x_t
                 all_x = np.vstack([x[:-1] for x in X_tr_test])
-                all_y = np.vstack([x[1:] for x in X_tr_test])
-                pred_y = self.sindy_model.predict(all_x)
-                ss_res = np.sum((all_y - pred_y) ** 2)
-                ss_tot = np.sum((all_y - all_y.mean(axis=0)) ** 2)
+                # Ground-truth derivatives: x_{t+1} - x_t
+                all_y = np.vstack([x[1:] - x[:-1] for x in X_tr_test])
             else:
                 from csbapr.sindy.data_collector import compute_state_derivatives
                 all_x, all_y = compute_state_derivatives(X_test)
-                pred_y = self.sindy_model.predict(all_x)
-                ss_res = np.sum((all_y - pred_y) ** 2)
-                ss_tot = np.sum((all_y - all_y.mean(axis=0)) ** 2)
+            pred_y = self.sindy_model.predict(all_x)
+            ss_res = np.sum((all_y - pred_y) ** 2)
+            ss_tot = np.sum((all_y - all_y.mean(axis=0)) ** 2)
             r2 = 1 - ss_res / max(ss_tot, 1e-10)
             self._sindy_report['r_squared'] = float(r2)
             print(f"[Phase 0] SINDy R² = {r2:.4f}")
@@ -516,6 +514,8 @@ class CSBAPRAgent:
             'n_train_samples': self._n_train_samples,
             'sindy_report': getattr(self, '_sindy_report', None),
             'irm_report': getattr(self, '_irm_report', None),
+            'config': {k: v for k, v in vars(self.config).items()
+                       if isinstance(v, (int, float, str, bool))},
         }, path)
 
     def load(self, path: str):

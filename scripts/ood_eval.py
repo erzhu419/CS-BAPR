@@ -395,12 +395,38 @@ def gym_abrupt_shift_sweep(env_name, param_name, shift_mults,
 
 
 def load_policy(checkpoint_path, state_dim, action_dim, use_nau=True):
-    """Load trained policy from checkpoint. Returns (agent, policy_fn)."""
+    """Load trained policy from checkpoint. Returns (agent, policy_fn).
+
+    Infers hidden_dim and num_critics from checkpoint to avoid size mismatch.
+    """
     import torch
     from csbapr.agent import CSBAPRAgent
     from csbapr.config import CSBAPRConfig
 
-    config = CSBAPRConfig(use_nau_actor=use_nau)
+    checkpoint = torch.load(checkpoint_path, map_location='cpu')
+
+    # Infer hidden_dim from saved actor weights
+    hidden_dim = 256  # default
+    for key, tensor in checkpoint.get('actor', {}).items():
+        if 'feature_net.0.weight' in key:
+            hidden_dim = tensor.shape[0]
+            break
+
+    # Infer num_critics from saved critic weights
+    num_critics = 5
+    saved_config = checkpoint.get('config', {})
+    if isinstance(saved_config, dict):
+        num_critics = saved_config.get('num_critics', num_critics)
+        hidden_dim = saved_config.get('hidden_dim', hidden_dim)
+    else:
+        # Count critic heads from state dict
+        critic_keys = [k for k in checkpoint.get('critic', {}).keys()
+                       if k.startswith('critics.') and k.endswith('.0.weight')]
+        if critic_keys:
+            num_critics = len(critic_keys)
+
+    config = CSBAPRConfig(use_nau_actor=use_nau, hidden_dim=hidden_dim,
+                          num_critics=num_critics)
     agent = CSBAPRAgent(state_dim, action_dim, config)
     agent.load(checkpoint_path)
     agent.actor.eval()
