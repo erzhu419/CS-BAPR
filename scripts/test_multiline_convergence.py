@@ -2,25 +2,21 @@
 """
 test_multiline_convergence.py
 
-CS-BAPR on BusSimEnv (7X SUMO-calibrated) + cross-line OOD evaluation.
+CS-BAPR on MultiLineEnv (12 SUMO-calibrated lines simultaneously).
 
-Train on 7X (BusSimEnv, ~3-5s/ep), evaluate on:
-  - 7X     (in-distribution)
-  - 102S   (OOD: 40-station, different demand)
-  - 311X   (OOD: 43-station, longer route)
-  - 705X   (OOD: 48-station, 21 buses)
+Train and eval both use MultiLineEnv.step_to_event() — all 12 lines
+step together each tick, sharing the same co_line_buses context.
+Single policy handles all lines (state_dim=15 is shared).
 
-All lines share state_dim=15:
-  [0] line_idx    [1] bus_id    [2] station_id  [3] time_period  [4] direction
-  [5] fwd_hw      [6] bwd_hw   [7] waiting_pax  [8] target_hw   [9] base_stop_dur
-  [10] sim_time   [11] gap      [12] co_fwd_hw  [13] co_bwd_hw  [14] seg_speed
-
-This is the MultiLineEnv / SUMO-calibrated version of test_bus_convergence.py.
-NAU-only (no JC) is the method being validated.
+OOD meaning here: the agent trains on ALL lines at once. Per-line
+eval reward shows how well the shared policy handles each route's
+different demand pattern, stop spacing, and timetable.
 
 Usage:
     cd /home/erzhu419/mine_code/CS-BAPR
-    python -u scripts/test_multiline_convergence.py --episodes 50 --seed 0 --method csbapr
+    python -u scripts/test_multiline_convergence.py --episodes 50 --method csbapr
+
+Timing estimate: ~120s/ep (12 lines) → 50 ep ≈ 100 min
 """
 
 import argparse
@@ -28,45 +24,40 @@ import os
 import sys
 import time
 import warnings
+from collections import defaultdict
 import numpy as np
 
 warnings.filterwarnings('ignore')
 
-# ── Paths ──
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
 OFFLINE_SUMO_ENV = '/home/erzhu419/mine_code/offline-sumo/env'
 sys.path.insert(0, OFFLINE_SUMO_ENV)
 
-from envs.bus_sim_env import BusSimEnv
 from sim_core.sim import MultiLineEnv, env_bus
 
 from csbapr.config import CSBAPRConfig
 from csbapr.agent import CSBAPRAgent
-
 import torch
 
 # ─────────────────────────────────────────────────────────────
-# Obs normalization
+# Obs normalisation (15-dim, shared across all lines)
 # ─────────────────────────────────────────────────────────────
 
-# Normalisation constants for each of the 15 obs dims.
-# Categorical dims (0-4): divide by cardinality upper bound.
-# Continuous dims (5-14): divide by typical max value (soft scale).
 _OBS_SCALE = np.array([
-    12.0,     # [0] line_idx  (0-11)
-    25.0,     # [1] bus_id    (0-24)
-    55.0,     # [2] station_id (max 48 across all lines, use 55 for margin)
-    24.0,     # [3] time_period (0-23 hours)
-    1.0,      # [4] direction (0/1)
-    600.0,    # [5] fwd_headway (s)   — target is 360s, burst up to ~600
+    12.0,     # [0] line_idx  (0–11)
+    25.0,     # [1] bus_id    (0–24)
+    55.0,     # [2] station_id (max 48 + margin)
+    24.0,     # [3] time_period (hour)
+    1.0,      # [4] direction
+    600.0,    # [5] fwd_headway (s)
     600.0,    # [6] bwd_headway (s)
     80.0,     # [7] waiting_pax
-    600.0,    # [8] target_hw = 360 constant
+    600.0,    # [8] target_hw
     120.0,    # [9] base_stop_dur (s)
-    72000.0,  # [10] sim_time (s, max 20h)
-    600.0,    # [11] gap = target - fwd_hw
+    72000.0,  # [10] sim_time (s)
+    600.0,    # [11] gap
     600.0,    # [12] co_fwd_hw
     600.0,    # [13] co_bwd_hw
     20.0,     # [14] seg_speed (m/s)
@@ -74,183 +65,110 @@ _OBS_SCALE = np.array([
 
 
 def normalize_obs(obs_raw):
-    """Normalise raw 15-dim obs to roughly [-1, 1] / [0, 1]."""
-    arr = np.array(obs_raw, dtype=np.float32)
-    return arr / _OBS_SCALE
+    return np.array(obs_raw, dtype=np.float32) / _OBS_SCALE
 
 
 # ─────────────────────────────────────────────────────────────
-# Episode runner — BusSimEnv (step_to_event event-driven API)
+# Episode runner — MultiLineEnv (all 12 lines simultaneously)
 # ─────────────────────────────────────────────────────────────
 
-def run_episode_sim(env, agent, deterministic=False, train=True, config=None,
-                    train_freq=20):
+def run_episode_multiline(env, agent, deterministic=False, train=True,
+                          config=None, train_freq=20):
     """
-    Run one episode on BusSimEnv (or any env_bus with step_to_event).
+    Run one episode on MultiLineEnv.
 
-    Uses the event-driven loop from H2Oplus/bus_h2o/train_sim.py:
-      - step_to_event() skips idle ticks → much faster than step-by-step
-      - pending dict tracks (state, action) pairs; settles when station changes
+    All 12 lines step together each tick via step_to_event().
+    A single shared policy handles all bus decisions across lines.
 
-    Returns: (episode_reward, episode_decisions, train_steps)
+    Transitions are collected per (line_id, bus_id) using the pending-dict
+    pattern: a transition is settled when station_id (obs[2]) changes.
+
+    Returns:
+        reward_by_line : dict[line_id → float]   cumulative reward per line
+        ep_decisions   : int                      total transitions collected
+        train_steps    : int
     """
     env.reset()
     state_dict, _, _ = env.initialize_state()
 
-    action_dict = {k: None for k in range(env.max_agent_num)}
-    pending = {}       # bus_id → (norm_state, action_arr)
-    ep_reward = 0.0
+    # action_dict: {line_id: {bus_id: float}}
+    action_dict = {lid: {i: 0.0 for i in range(le.max_agent_num)}
+                   for lid, le in env.line_map.items()}
+
+    pending = {}          # (line_id, bus_id) → (sv_old, action_arr)
+    reward_by_line = defaultdict(float)
     ep_decisions = 0
     train_steps = 0
     _update_counter = 0
 
-    # Seed first actions from initial state
-    for bus_id, obs_list in state_dict.items():
-        if not obs_list:
-            continue
-        sv = normalize_obs(obs_list[-1])
-        raw = agent.select_action(sv, deterministic=deterministic)
-        hold = float((raw[0] + 1.0) / 2.0 * 60.0)
-        action_dict[bus_id] = np.clip(hold, 0.0, 60.0)
-        pending[bus_id] = (sv, np.array([raw[0]], dtype=np.float32))
+    # Seed initial actions from initialize_state() output
+    for line_id, bus_dict in state_dict.items():
+        for bus_id, obs_list in bus_dict.items():
+            if not obs_list:
+                continue
+            sv = normalize_obs(obs_list[-1])
+            raw = agent.select_action(sv, deterministic=deterministic)
+            hold = float((raw[0] + 1.0) / 2.0 * 60.0)
+            action_dict[line_id][bus_id] = np.clip(hold, 0.0, 60.0)
+            pending[(line_id, bus_id)] = (sv, np.array([raw[0]], dtype=np.float32))
 
     done = False
     while not done:
         cur_state, reward_dict, done = env.step_to_event(action_dict)
 
-        # Reset pending actions
-        for k in action_dict:
-            action_dict[k] = None
+        # Reset actions after each event tick
+        for lid in action_dict:
+            for k in action_dict[lid]:
+                action_dict[lid][k] = 0.0
 
-        for bus_id, obs_list in cur_state.items():
-            if not obs_list:
-                continue
-            sv_new = normalize_obs(obs_list[-1])
-            r_raw = float(reward_dict.get(bus_id, 0.0))
+        for line_id, bus_dict in cur_state.items():
+            line_reward = reward_dict.get(line_id, {})
+            for bus_id, obs_list in bus_dict.items():
+                if not obs_list:
+                    continue
+                sv_new = normalize_obs(obs_list[-1])
+                r_raw = float(line_reward.get(bus_id, 0.0))
 
-            if bus_id in pending:
-                sv_old, a_old = pending[bus_id]
-                # Settle transition when station changes (obs[2] = station_id)
-                if int(sv_old[2] * 55) != int(sv_new[2] * 55):
-                    pending.pop(bus_id)
-                    if train:
-                        agent.replay_buffer.push(sv_old, a_old, r_raw, sv_new, 0.0)
-                    ep_reward += r_raw
-                    ep_decisions += 1
-                    _update_counter += 1
+                key = (line_id, bus_id)
+                if key in pending:
+                    sv_old, a_old = pending[key]
+                    # Settle when station_id changes
+                    if int(sv_old[2] * 55) != int(sv_new[2] * 55):
+                        pending.pop(key)
+                        if train:
+                            agent.replay_buffer.push(sv_old, a_old, r_raw, sv_new, 0.0)
+                        reward_by_line[line_id] += r_raw
+                        ep_decisions += 1
+                        _update_counter += 1
 
-                    raw = agent.select_action(sv_new, deterministic=deterministic)
-                    hold = float((raw[0] + 1.0) / 2.0 * 60.0)
-                    action_dict[bus_id] = np.clip(hold, 0.0, 60.0)
-                    pending[bus_id] = (sv_new, np.array([raw[0]], dtype=np.float32))
-            else:
                 raw = agent.select_action(sv_new, deterministic=deterministic)
                 hold = float((raw[0] + 1.0) / 2.0 * 60.0)
-                action_dict[bus_id] = np.clip(hold, 0.0, 60.0)
-                pending[bus_id] = (sv_new, np.array([raw[0]], dtype=np.float32))
+                action_dict[line_id][bus_id] = np.clip(hold, 0.0, 60.0)
+                pending[key] = (sv_new, np.array([raw[0]], dtype=np.float32))
 
-        # Train every train_freq decisions
         if train and _update_counter >= train_freq:
             _update_counter = 0
             if config and agent.replay_buffer.size >= config.batch_size:
                 agent.update()
                 train_steps += 1
 
-    return ep_reward, ep_decisions, train_steps
+    return reward_by_line, ep_decisions, train_steps
 
 
 # ─────────────────────────────────────────────────────────────
-# Evaluation on a raw env_bus line (no step_to_event)
+# Evaluation
 # ─────────────────────────────────────────────────────────────
 
-def _step_to_event_raw(env, action_dict):
-    """
-    Loop env.step() until at least one bus emits an obs, or episode ends.
-    Equivalent to BusSimEnv.step_to_event() for raw env_bus instances.
-    """
-    while True:
-        state, reward, done = env.step(action_dict)
-        if done or any(v for v in state.values()):
-            return state, reward, done
-
-
-def run_episode_envbus(env, agent, deterministic=False, train=False, config=None,
-                       train_freq=20):
-    """
-    Run one episode on a raw env_bus instance (no BusSimEnv wrapper).
-
-    Uses pending-dict transition detection (same as train_sim.py):
-      - _step_to_event_raw() skips idle ticks
-      - Transition is settled when station_id (obs[2]) changes
-
-    Works for both in-distribution (7X) and OOD (102S, 311X, 705X) eval.
-    """
-    env.reset()
-    state_dict, _, _ = env.initialize_state()
-
-    from collections import defaultdict
-    action_dict = defaultdict(lambda: 0.0)
-    pending = {}    # bus_id → (sv_old, action_arr)
-    ep_reward = 0.0
-    ep_decisions = 0
-    _update_counter = 0
-
-    # Seed initial actions from initialize_state() output
-    for bus_id, obs_list in state_dict.items():
-        if not obs_list:
-            continue
-        sv = normalize_obs(obs_list[-1])
-        raw = agent.select_action(sv, deterministic=deterministic)
-        hold = float((raw[0] + 1.0) / 2.0 * 60.0)
-        action_dict[bus_id] = np.clip(hold, 0.0, 60.0)
-        pending[bus_id] = (sv, np.array([raw[0]], dtype=np.float32))
-
-    done = False
-    while not done:
-        cur_state, reward_dict, done = _step_to_event_raw(env, action_dict)
-
-        # Reset all actions after each step
-        for k in list(action_dict.keys()):
-            action_dict[k] = 0.0
-
-        for bus_id, obs_list in cur_state.items():
-            if not obs_list:
-                continue
-            sv_new = normalize_obs(obs_list[-1])
-            r_raw = float(reward_dict.get(bus_id, 0.0))
-
-            if bus_id in pending:
-                sv_old, a_old = pending[bus_id]
-                # Settle transition when station_id changes (obs[2])
-                if int(sv_old[2] * 55) != int(sv_new[2] * 55):
-                    pending.pop(bus_id)
-                    if train:
-                        agent.replay_buffer.push(sv_old, a_old, r_raw, sv_new, 0.0)
-                    ep_reward += r_raw
-                    ep_decisions += 1
-                    _update_counter += 1
-
-            # Issue next action
-            raw = agent.select_action(sv_new, deterministic=deterministic)
-            hold = float((raw[0] + 1.0) / 2.0 * 60.0)
-            action_dict[bus_id] = np.clip(hold, 0.0, 60.0)
-            pending[bus_id] = (sv_new, np.array([raw[0]], dtype=np.float32))
-
-        if train and _update_counter >= train_freq:
-            _update_counter = 0
-            if config and agent.replay_buffer.size >= config.batch_size:
-                agent.update()
-
-    return ep_reward, ep_decisions
-
-
-def evaluate_line(line_env, agent, n_eval=3):
-    """Evaluate agent on a specific line (env_bus instance)."""
-    rewards = []
+def evaluate(env, agent, n_eval=3):
+    """Run n_eval episodes, return mean/std reward per line."""
+    all_rewards = defaultdict(list)
     for _ in range(n_eval):
-        r, _ = run_episode_envbus(line_env, agent, deterministic=True)
-        rewards.append(r)
-    return np.mean(rewards), np.std(rewards)
+        r_by_line, _, _ = run_episode_multiline(
+            env, agent, deterministic=True, train=False, config=None
+        )
+        for lid, r in r_by_line.items():
+            all_rewards[lid].append(r)
+    return {lid: (np.mean(v), np.std(v)) for lid, v in all_rewards.items()}
 
 
 # ─────────────────────────────────────────────────────────────
@@ -300,61 +218,57 @@ def main():
     print(f"Config: state={config.state_dim}, action={config.action_dim}, "
           f"hidden={config.hidden_dim}, NAU={config.use_nau_actor}")
 
-    # ── Load BusSimEnv (7X) for training ──
-    print(f"\nLoading BusSimEnv (7X) from {args.env_path}")
+    # ── Load MultiLineEnv (all 12 lines) ──
+    print(f"\nLoading MultiLineEnv from {args.env_path}")
     env_bus._DATA_CACHE.clear()
-    train_env = BusSimEnv(path=args.env_path)
-    print(f"7X: max_agent={train_env.max_agent_num}, stations={len(train_env.stations)}")
-
-    # ── Load all lines for OOD eval ──
-    print("\nLoading MultiLineEnv for cross-line OOD eval...")
-    env_bus._DATA_CACHE.clear()
-    multi_env = MultiLineEnv(args.env_path)
-    eval_lines = ['7X', '102S', '311X', '705X']
-    print(f"OOD eval lines: {eval_lines}")
+    env = MultiLineEnv(args.env_path)
+    n_lines = len(env.line_map)
+    total_buses = sum(le.max_agent_num for le in env.line_map.values())
+    print(f"Lines: {list(env.line_map.keys())}")
+    print(f"Total buses: {total_buses}, ~120s/ep estimated")
 
     # ── Training ──
-    best_reward = -float('inf')
+    best_total = -float('inf')
     history = []
     start = time.time()
 
     print(f"\n{'='*60}")
-    print(f"Training: {args.method} on 7X, {args.episodes} episodes")
+    print(f"Training: {args.method} on MultiLineEnv ({n_lines} lines), {args.episodes} ep")
     print(f"{'='*60}")
 
     for ep in range(args.episodes):
-        ep_reward, ep_decisions, train_steps = run_episode_sim(
-            train_env, agent,
-            deterministic=False, train=True, config=config,
+        r_by_line, ep_decisions, train_steps = run_episode_multiline(
+            env, agent, deterministic=False, train=True, config=config,
             train_freq=20
         )
-        history.append(ep_reward)
+        ep_total = sum(r_by_line.values())
+        history.append(ep_total)
 
-        if ep_reward > best_reward:
-            best_reward = ep_reward
+        if ep_total > best_total:
+            best_total = ep_total
             os.makedirs('/tmp/multiline_ckpt', exist_ok=True)
             agent.save(f'/tmp/multiline_ckpt/{args.method}_best.pt')
 
         if (ep + 1) % 5 == 0:
             elapsed = time.time() - start
             recent = np.mean(history[-5:]) if len(history) >= 5 else np.mean(history)
-            print(f"  ep{ep+1:4d}: reward={ep_reward:8.1f}, recent_5={recent:8.1f}, "
-                  f"best={best_reward:8.1f}, decisions={ep_decisions}, "
-                  f"buffer={agent.replay_buffer.size}, time={elapsed:.0f}s")
+            per_line = ', '.join(f'{lid}:{r:.0f}' for lid, r in sorted(r_by_line.items()))
+            print(f"  ep{ep+1:4d}: total={ep_total:9.0f}, recent_5={recent:9.0f}, "
+                  f"best={best_total:9.0f}, dec={ep_decisions}, "
+                  f"buf={agent.replay_buffer.size}, t={elapsed:.0f}s")
+            print(f"          {per_line}")
 
-    # ── Cross-line OOD Evaluation ──
+    # ── Evaluation ──
     print(f"\n{'='*60}")
-    print(f"Cross-line OOD Evaluation (train: 7X)")
+    print(f"Per-line Evaluation")
     print(f"{'='*60}")
 
-    for line_id in eval_lines:
-        if line_id not in multi_env.line_map:
-            print(f"  {line_id}: not found")
-            continue
-        line_env = multi_env.line_map[line_id]
-        mean_r, std_r = evaluate_line(line_env, agent, n_eval=3)
-        tag = "(ID)" if line_id == '7X' else "(OOD)"
-        print(f"  {line_id:6s} {tag}: {mean_r:8.1f} ± {std_r:.1f}")
+    results = evaluate(env, agent, n_eval=3)
+    total_mean = sum(m for m, _ in results.values())
+    for lid in sorted(results.keys()):
+        m, s = results[lid]
+        print(f"  {lid:6s}: {m:8.1f} ± {s:.1f}")
+    print(f"  {'TOTAL':6s}: {total_mean:8.1f}")
 
     total = time.time() - start
     print(f"\nTotal time: {total:.0f}s")

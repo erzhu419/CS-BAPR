@@ -326,9 +326,14 @@ class CSBAPRAgent:
         next_state = torch.FloatTensor(next_states).to(self.device)
         done = torch.FloatTensor(dones).unsqueeze(1).to(self.device)
 
-        # Evaluate policy on current and next states
+        # Evaluate policy on current states (graph needed for policy loss)
         new_action, log_prob, _, _, _ = self.actor.evaluate(state)
-        new_next_action, next_log_prob, _, _, _ = self.actor.evaluate(next_state)
+
+        # Evaluate on next states for target Q — no_grad: target computation
+        # must NOT accumulate a computation graph (would never be freed by
+        # q_loss.backward() since target is detached, causing a memory leak).
+        with torch.no_grad():
+            new_next_action, next_log_prob, _, _, _ = self.actor.evaluate(next_state)
 
         # Normalize rewards
         reward_std = reward.std()
