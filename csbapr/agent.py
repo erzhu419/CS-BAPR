@@ -66,7 +66,10 @@ class CSBAPRAgent:
         self.target_critic = deepcopy(self.critic)
 
         # ===== Optimizers =====
-        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=self.config.lr_actor)
+        self.actor_optimizer = optim.Adam(
+            self.actor.parameters(), lr=self.config.lr_actor,
+            weight_decay=self.config.actor_weight_decay
+        )
         self.critic_optimizer = optim.Adam(self.critic.parameters(), lr=self.config.lr_critic)
 
         # ===== SAC entropy =====
@@ -385,21 +388,23 @@ class CSBAPRAgent:
         self.critic_optimizer.step()
 
         # ===== Step 4: Policy loss (with Jacobian consistency) =====
-        new_action2, log_prob2, _, _, _ = self.actor.evaluate(state)
-        
-        q_values = self.critic(state, new_action2)
+        # Reuse new_action/log_prob from L330: alpha_loss uses log_prob.detach(),
+        # and q_loss.backward() only touches critic params — actor graph still intact.
+        q_values = self.critic(state, new_action)
         q_mean = q_values.mean(dim=0)
         q_std = q_values.std(dim=0)
-        
+
         # Adaptive beta from belief (directly from BAPR)
         effective_beta = -2.0 - w_lambda * 5.0
-        policy_loss = -(q_mean + effective_beta * q_std - self.alpha * log_prob2).mean()
+        policy_loss = -(q_mean + effective_beta * q_std - self.alpha * log_prob).mean()
 
         # CS-BAPR: Add Jacobian consistency loss
         jac_loss_val = 0.0
-        if self.f_sym_torch is not None:
+        if self.f_sym_torch is not None and self.config.jac_weight > 0:
             jac_loss = compute_jacobian_loss(self.actor, self.f_sym_torch, state)
-            policy_loss = policy_loss + self.config.jac_weight * jac_loss
+            # Clamp JC loss to [0, 2.0] to prevent runaway gradients when L_eff is large
+            jac_loss_clamped = torch.clamp(jac_loss, max=2.0)
+            policy_loss = policy_loss + self.config.jac_weight * jac_loss_clamped
             jac_loss_val = jac_loss.item()
 
         # NAU regularization

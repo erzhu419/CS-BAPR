@@ -50,14 +50,14 @@ METHOD_PRESETS = {
     'csbapr': dict(
         use_nau_actor=True,
         weight_sym=0.01,
-        jac_weight=0.1,
+        jac_weight=0.01,   # reduced from 0.1; curriculum warm-up via jac_curriculum_start
         _use_irm=True,   # multi-env SINDy
     ),
     # Ablation: NAU → ReLU (test Part IX/XI)
     'csbapr-relu': dict(
         use_nau_actor=False,
         weight_sym=0.01,
-        jac_weight=0.1,
+        jac_weight=0.01,
         _use_irm=True,
     ),
     # Ablation: no SINDy (random f_sym → no Jacobian alignment)
@@ -70,7 +70,7 @@ METHOD_PRESETS = {
     'csbapr-no-sym': dict(
         use_nau_actor=True,
         weight_sym=0.0,
-        jac_weight=0.1,
+        jac_weight=0.01,
         _use_irm=True,
     ),
     # Ablation: no Jacobian consistency loss (test Part X)
@@ -84,7 +84,7 @@ METHOD_PRESETS = {
     'csbapr-no-irm': dict(
         use_nau_actor=True,
         weight_sym=0.01,
-        jac_weight=0.1,
+        jac_weight=0.01,
         _use_irm=False,
     ),
     # BA-PR baseline (predecessor, no SINDy/NAU)
@@ -129,6 +129,17 @@ ENV_PRESETS = {
         sindy_n_explore_episodes=10,
         sindy_lib_degree=2,
         sindy_threshold=0.01,  # Pendulum needs lower threshold (small coefficients)
+    ),
+    'InvertedPendulum-v4': dict(
+        max_episodes=300,
+        max_steps_per_episode=1000,
+        warmup_steps=1000,
+        batch_size=128,
+        hidden_dim=128,
+        num_critics=3,
+        sindy_n_explore_episodes=10,
+        sindy_lib_degree=2,
+        sindy_threshold=0.001,
     ),
     'Hopper-v4': dict(
         max_episodes=2000,
@@ -178,6 +189,13 @@ MUJOCO_MODE_PROFILES = {
         'high_grav':   {'mass': 1.0, 'gravity': 1.5, 'length': 1.0},
         'long_arm':    {'mass': 1.0, 'gravity': 1.0, 'length': 1.5},
     },
+    'InvertedPendulum-v4': {
+        'normal':      {'body_mass': 1.0, 'gravity': 1.0},
+        'heavy':       {'body_mass': 2.0, 'gravity': 1.0},
+        'light':       {'body_mass': 0.5, 'gravity': 1.0},
+        'high_grav':   {'body_mass': 1.0, 'gravity': 1.5},
+        'compound':    {'body_mass': 1.5, 'gravity': 1.3},
+    },
     'Hopper-v4': {
         'normal':      {'body_mass': 1.0, 'friction': 1.0, 'gravity': 1.0},
         'heavy':       {'body_mass': 2.0, 'friction': 1.0, 'gravity': 1.0},
@@ -207,6 +225,11 @@ MUJOCO_OOD_PROFILES = {
         'extreme_heavy':  {'mass': 10.0, 'gravity': 1.0, 'length': 1.0},
         'extreme_grav':   {'mass': 1.0, 'gravity': 5.0, 'length': 1.0},
         'compound_ood':   {'mass': 5.0, 'gravity': 2.0, 'length': 2.0},
+    },
+    'InvertedPendulum-v4': {
+        'extreme_heavy':  {'body_mass': 10.0, 'gravity': 1.0},
+        'extreme_grav':   {'body_mass': 1.0,  'gravity': 5.0},
+        'compound_ood':   {'body_mass': 5.0,  'gravity': 2.0},
     },
     'Hopper-v4': {
         'extreme_heavy':  {'body_mass': 5.0, 'friction': 1.0, 'gravity': 1.0},
@@ -289,6 +312,10 @@ DR_PARAM_RANGES = {
         'gravity': (0.5, 2.0),
         'length': (0.5, 2.0),
     },
+    'InvertedPendulum-v4': {
+        'body_mass': (0.3, 3.0),
+        'gravity': (0.5, 2.0),
+    },
     'Hopper-v4': {
         'body_mass': (0.5, 3.0),
         'friction': (0.3, 2.0),
@@ -305,6 +332,34 @@ DR_PARAM_RANGES = {
         'gravity': (0.7, 1.5),
     },
 }
+
+
+def make_sindy_exploration_policy(env_name):
+    """
+    Return a stabilizing exploration policy for SINDy data collection.
+
+    For envs where random actions cause early termination (e.g. InvertedPendulum),
+    a simple PD controller keeps the system in a useful state range so SINDy
+    can collect informative trajectories.
+
+    Returns None (random policy) for envs that work fine with random exploration.
+    """
+    if 'InvertedPendulum' in env_name:
+        # State: [x, x_dot, theta, theta_dot]
+        # PD controller stabilizes around theta=0 (upright).
+        # Add small sinusoidal cart perturbation to excite full dynamics.
+        import math
+        _t = [0]
+        def inverted_pendulum_policy(state):
+            _t[0] += 1
+            x, x_dot, theta, theta_dot = state
+            # PD on angle
+            u = -(50.0 * theta + 5.0 * theta_dot)
+            # Small cart perturbation to excite translational modes
+            u += 0.5 * math.sin(0.05 * _t[0])
+            return np.clip(np.array([u], dtype=np.float32), -3.0, 3.0)
+        return inverted_pendulum_policy
+    return None
 
 
 def randomize_env_params(env, env_name, rng):
@@ -385,7 +440,8 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
                     extra_envs.append((mode_name, irm_env))
                 print(f"[IRM] Created {len(extra_envs)} extra environments for IRM filtering")
 
-            agent.sindy_preidentify(env, extra_envs=extra_envs)
+            sindy_policy = make_sindy_exploration_policy(env_name)
+            agent.sindy_preidentify(env, policy=sindy_policy, extra_envs=extra_envs)
 
             # Close IRM envs
             if extra_envs:

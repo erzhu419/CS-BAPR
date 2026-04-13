@@ -47,8 +47,10 @@ class CSBAPRConfig:
 
     # ===== CS-BAPR New =====
     weight_sym: float = 0.01      # λ_sym — symbolic consistency penalty (Lean: p.lam_sym ≥ 0)
-    jac_weight: float = 0.1       # Jacobian consistency weight in policy loss
+    jac_weight: float = 0.01      # Jacobian consistency weight in policy loss (reduced 0.1→0.01)
     grad_clip: float = 1.0        # gradient clipping for Jacobian loss (trap #1)
+    jac_curriculum_start: int = 100  # episodes before JC loss is enabled (curriculum warm-up)
+    actor_weight_decay: float = 1e-4  # weight decay on actor optimizer (prevents K_g explosion)
 
     # ===== SINDy =====
     sindy_threshold: float = 0.1  # STLSQ sparsity threshold
