@@ -7,6 +7,7 @@ Corresponds to CSBAPR.lean §8: κ-driven Bayesian update.
 
 import torch
 import numpy as np
+from collections import deque
 
 
 class SurpriseComputer:
@@ -18,14 +19,14 @@ class SurpriseComputer:
         self.ema_alpha = ema_alpha
         self.ema_surprise = 0.0
         self.reward_window = reward_window
-        self.reward_history = []
+        self.reward_history = deque(maxlen=reward_window)
         self.reward_ema = 0.0
         self.reward_var_ema = 1.0
         self.prev_q_std = None
 
     def reset(self):
         self.ema_surprise = 0.0
-        self.reward_history = []
+        self.reward_history = deque(maxlen=self.reward_window)
         self.reward_ema = 0.0
         self.reward_var_ema = 1.0
         self.prev_q_std = None
@@ -50,9 +51,7 @@ class SurpriseComputer:
 
         # Signal 1: Reward z-score
         batch_reward_mean = reward_batch.mean().item()
-        self.reward_history.append(batch_reward_mean)
-        if len(self.reward_history) > self.reward_window:
-            self.reward_history = self.reward_history[-self.reward_window:]
+        self.reward_history.append(batch_reward_mean)  # deque auto-caps at reward_window
 
         self.reward_ema = 0.9 * self.reward_ema + 0.1 * batch_reward_mean
         deviation = (batch_reward_mean - self.reward_ema) ** 2

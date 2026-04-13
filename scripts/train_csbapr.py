@@ -29,6 +29,7 @@ import json
 import os
 import sys
 import time
+from collections import deque
 from pathlib import Path
 
 import numpy as np
@@ -460,7 +461,7 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
     history = {
         'episode_rewards': [],
         'eval_rewards': [],
-        'training_metrics': [],
+        'training_metrics': deque(maxlen=1000),  # keep only last 1000 update metrics
         'L_eff_history': [],
         'overhead': [],  # wall-clock per episode
     }
