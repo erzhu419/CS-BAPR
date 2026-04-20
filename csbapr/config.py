@@ -44,6 +44,8 @@ class CSBAPRConfig:
     surprise_ema: float = 0.1     # surprise EMA decay α
     weight_reg: float = 0.01      # λ_epi — epistemic penalty weight (Lean: p.lam_epi)
     beta_ood: float = 0.1         # OOD Q-std penalty weight
+    beta_bc: float = 0.001        # behavior cloning weight (RE-SAC dual reg, prevents policy drift)
+    actor_type: str = None        # None→NAU/MLP (via use_nau_actor), 'kan'→KAN actor
 
     # ===== CS-BAPR New =====
     weight_sym: float = 0.01      # λ_sym — symbolic consistency penalty (Lean: p.lam_sym ≥ 0)

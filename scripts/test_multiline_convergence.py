@@ -26,6 +26,7 @@ import time
 import warnings
 from collections import defaultdict
 import numpy as np
+import torch
 
 warnings.filterwarnings('ignore')
 
@@ -39,7 +40,6 @@ from sim_core.sim import MultiLineEnv, env_bus
 
 from csbapr.config import CSBAPRConfig
 from csbapr.agent import CSBAPRAgent
-import torch
 
 # ─────────────────────────────────────────────────────────────
 # Obs normalisation (15-dim, shared across all lines)
@@ -171,6 +171,41 @@ def evaluate(env, agent, n_eval=3):
     return {lid: (np.mean(v), np.std(v)) for lid, v in all_rewards.items()}
 
 
+def evaluate_ood(agent, env_path, od_mults, n_eval=3):
+    """OOD eval: sweep od_mult values, report total reward mean/std."""
+    results = {}
+    for mult in od_mults:
+        env_bus._DATA_CACHE.clear()
+        env_ood = MultiLineEnv(env_path, od_mult=mult)
+        rewards = []
+        for _ in range(n_eval):
+            r_by_line, _, _ = run_episode_multiline(
+                env_ood, agent, deterministic=True, train=False, config=None
+            )
+            rewards.append(sum(r_by_line.values()))
+        results[mult] = (np.mean(rewards), np.std(rewards))
+        print(f"  od_{mult:4.0f}x: {np.mean(rewards):9.1f} ± {np.std(rewards):.1f}")
+    return results
+
+
+def evaluate_abrupt(agent, env_path, bursts, inject_time=3600, n_eval=3):
+    """Abrupt shift eval: normal OD → sudden burst at inject_time seconds."""
+    results = {}
+    for burst in bursts:
+        env_bus._DATA_CACHE.clear()
+        env_ab = MultiLineEnv(env_path, od_mult=1.0)
+        env_ab.set_ood_burst(inject_time=inject_time, burst_mult=burst)
+        rewards = []
+        for _ in range(n_eval):
+            r_by_line, _, _ = run_episode_multiline(
+                env_ab, agent, deterministic=True, train=False, config=None
+            )
+            rewards.append(sum(r_by_line.values()))
+        results[burst] = (np.mean(rewards), np.std(rewards))
+        print(f"  burst_{burst:4.0f}x @ t={inject_time}s: {np.mean(rewards):9.1f} ± {np.std(rewards):.1f}")
+    return results
+
+
 # ─────────────────────────────────────────────────────────────
 # Main
 # ─────────────────────────────────────────────────────────────
@@ -180,7 +215,7 @@ def main():
     parser.add_argument('--episodes', type=int, default=50)
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--method', type=str, default='csbapr',
-                        choices=['csbapr', 'bapr'])
+                        choices=['csbapr', 'bapr', 'csbapr-kan', 'csbapr-no-nau'])
     parser.add_argument('--env_path', type=str,
                         default='/home/erzhu419/mine_code/offline-sumo/env/calibrated_env')
     args = parser.parse_args()
@@ -199,14 +234,34 @@ def main():
     config.lr_actor = 3e-4
     config.lr_critic = 3e-4
 
-    if args.method == 'csbapr':
+    if args.method == 'csbapr-kan':
+        config.actor_type = 'kan'
+        config.use_nau_actor = False
+        config.jac_weight = 0.0
+        config.weight_sym = 0.0
+        config.nau_reg_weight = 0.001  # KAN 内部 spline L1+entropy 正则权重
+        config.actor_weight_decay = 1e-4
+        config.beta_bc = 0.0  # KAN spline 平滑性已防 drift，无需 bc_loss
+        print(f"[CS-BAPR-KAN] KAN actor (spline edges, smooth extrapolation)")
+    elif args.method == 'csbapr':
         config.use_nau_actor = True
         config.jac_weight = 0.0
         config.weight_sym = 0.0
         config.nau_reg_weight = 0.01
         config.actor_weight_decay = 1e-4
+        config.beta_bc = 0.0  # NAU 架构约束已足够防 drift，bc_loss 会过正则化
         print(f"[CS-BAPR] NAU actor (Lipschitz-constrained)")
-    else:
+    elif args.method == 'csbapr-no-nau':
+        # Ablation: remove NAU, test whether fixes alone (min-Q+reward scaling+alpha floor)
+        # explain the CS-BAPR advantage, or NAU actually contributes
+        config.use_nau_actor = False
+        config.jac_weight = 0.0
+        config.weight_sym = 0.0
+        config.nau_reg_weight = 0.0
+        config.actor_weight_decay = 1e-4
+        config.beta_bc = 0.0
+        print(f"[CS-BAPR-no-NAU] MLP actor + training fixes (isolate NAU contribution)")
+    else:  # bapr
         config.use_nau_actor = False
         config.jac_weight = 0.0
         config.weight_sym = 0.0
@@ -258,9 +313,9 @@ def main():
                   f"buf={agent.replay_buffer.size}, t={elapsed:.0f}s")
             print(f"          {per_line}")
 
-    # ── Evaluation ──
+    # ── In-distribution Evaluation ──
     print(f"\n{'='*60}")
-    print(f"Per-line Evaluation")
+    print(f"Per-line Evaluation (ID, od_mult=1x)")
     print(f"{'='*60}")
 
     results = evaluate(env, agent, n_eval=3)
@@ -269,6 +324,19 @@ def main():
         m, s = results[lid]
         print(f"  {lid:6s}: {m:8.1f} ± {s:.1f}")
     print(f"  {'TOTAL':6s}: {total_mean:8.1f}")
+
+    # ── OOD Evaluation (parametric OD sweep) ──
+    print(f"\n{'='*60}")
+    print(f"OOD Evaluation (parametric OD sweep)")
+    print(f"{'='*60}")
+    evaluate_ood(agent, args.env_path, od_mults=[1, 2, 5, 10, 20, 50], n_eval=3)
+
+    # ── Abrupt Shift Evaluation (mega_event-style burst mid-episode) ──
+    print(f"\n{'='*60}")
+    print(f"Abrupt Shift Evaluation (burst at t=3600s)")
+    print(f"{'='*60}")
+    evaluate_abrupt(agent, args.env_path, bursts=[5, 10, 20, 50],
+                    inject_time=3600, n_eval=3)
 
     total = time.time() - start
     print(f"\nTotal time: {total:.0f}s")

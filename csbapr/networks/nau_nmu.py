@@ -240,3 +240,93 @@ class NAU_NMU_Actor(nn.Module):
             L_g = 0.0
 
         return L_h * K_g * B_g + L_g
+
+
+class KAN_Actor(nn.Module):
+    """
+    KAN-based actor replacing NAU/NMU heads with learnable spline activations.
+
+    Motivation: KAN combines function discovery + smooth extrapolation in a
+    single architecture via per-edge splines, replacing SINDy(discovery) +
+    NAU/NMU(extrapolation). Splines are C^k smooth by construction, giving
+    bounded derivatives naturally — aligns with CS-BAPR's Lipschitz needs
+    without the rigid ±1/0 weight constraint that conflicts with bc_loss.
+
+    Architecture:
+      KAN([state_dim, hidden, hidden, action_dim]) → mean
+      MLP(hidden) → log_std
+
+    Interface matches NAU_NMU_Actor: forward/evaluate/get_action/regularization_loss.
+    """
+    def __init__(self, state_dim: int, action_dim: int, hidden_dim: int = 64,
+                 log_std_min: float = -20, log_std_max: float = 2,
+                 grid_size: int = 5, spline_order: int = 3):
+        super().__init__()
+        from efficient_kan import KAN
+        self.action_dim = action_dim
+        self.log_std_min = log_std_min
+        self.log_std_max = log_std_max
+
+        # KAN for mean: splines on every edge provide smooth OOD extrapolation
+        self.kan_mean = KAN(
+            layers_hidden=[state_dim, hidden_dim, action_dim],
+            grid_size=grid_size,
+            spline_order=spline_order,
+        )
+
+        # Separate MLP for log_std (KAN overkill on scalar spread output)
+        self.log_std_net = nn.Sequential(
+            nn.Linear(state_dim, hidden_dim),
+            nn.LeakyReLU(0.01),
+            nn.Linear(hidden_dim, action_dim),
+        )
+        nn.init.uniform_(self.log_std_net[-1].weight, -3e-3, 3e-3)
+        nn.init.uniform_(self.log_std_net[-1].bias, -3e-3, 3e-3)
+
+    def forward(self, state: torch.Tensor):
+        mean = self.kan_mean(state)
+        log_std = self.log_std_net(state)
+        log_std = torch.clamp(log_std, self.log_std_min, self.log_std_max)
+        return mean, log_std
+
+    def evaluate(self, state: torch.Tensor, epsilon: float = 1e-6):
+        mean, log_std = self.forward(state)
+        std = log_std.exp()
+        normal = torch.distributions.Normal(0, 1)
+        z = normal.sample(mean.shape).to(state.device)
+        action_0 = torch.tanh(mean + std * z)
+        action = action_0
+        log_prob = (torch.distributions.Normal(mean, std)
+                    .log_prob(mean + std * z)
+                    - torch.log(1. - action_0.pow(2) + epsilon))
+        log_prob = log_prob.sum(dim=1)
+        return action, log_prob, z, mean, log_std
+
+    def get_action(self, state: torch.Tensor, deterministic: bool = False):
+        if state.dim() == 1:
+            state = state.unsqueeze(0)
+        with torch.no_grad():
+            mean, log_std = self.forward(state)
+            if deterministic:
+                action = torch.tanh(mean)
+            else:
+                std = log_std.exp()
+                z = torch.randn_like(mean)
+                action = torch.tanh(mean + std * z)
+        return action.squeeze(0).cpu().numpy()
+
+    def regularization_loss(self) -> torch.Tensor:
+        """KAN's built-in spline L1 + entropy regularization."""
+        return self.kan_mean.regularization_loss(
+            regularize_activation=1.0, regularize_entropy=1.0
+        )
+
+    def compute_L_eff(self) -> float:
+        """Approx Lipschitz via sum of layer weight spectral norms."""
+        with torch.no_grad():
+            L = 1.0
+            for layer in self.kan_mean.layers:
+                if hasattr(layer, 'base_weight'):
+                    s = torch.linalg.svdvals(layer.base_weight)
+                    L *= (s[0].item() + 1.0)  # +1 for spline contribution
+        return float(L)

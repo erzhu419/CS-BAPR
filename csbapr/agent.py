@@ -26,7 +26,7 @@ import torch.optim as optim
 from copy import deepcopy
 
 from csbapr.config import CSBAPRConfig
-from csbapr.networks.nau_nmu import NAU_NMU_Actor
+from csbapr.networks.nau_nmu import NAU_NMU_Actor, KAN_Actor
 from csbapr.networks.critic import EnsembleQNet
 from csbapr.networks.policy import GaussianPolicy
 from csbapr.belief.tracker import BeliefTracker
@@ -51,7 +51,12 @@ class CSBAPRAgent:
         self.action_dim = action_dim
 
         # ===== Networks =====
-        if self.config.use_nau_actor:
+        actor_type = getattr(self.config, 'actor_type', None)
+        if actor_type == 'kan':
+            self.actor = KAN_Actor(
+                state_dim, action_dim, self.config.hidden_dim
+            ).to(self.device)
+        elif self.config.use_nau_actor:
             self.actor = NAU_NMU_Actor(
                 state_dim, action_dim, self.config.hidden_dim
             ).to(self.device)
@@ -335,10 +340,11 @@ class CSBAPRAgent:
         with torch.no_grad():
             new_next_action, next_log_prob, _, _, _ = self.actor.evaluate(next_state)
 
-        # Normalize rewards
-        reward_std = reward.std()
-        if reward_std > 1e-6:
-            reward = (reward - reward.mean()) / reward_std
+        # Reward scaling: divide by running std (no mean shift — preserves sign)
+        self._reward_ema_var = getattr(self, '_reward_ema_var', 1.0)
+        batch_var = reward.var().item()
+        self._reward_ema_var = 0.99 * self._reward_ema_var + 0.01 * batch_var
+        reward = reward / max(self._reward_ema_var ** 0.5, 1e-6)
 
         # ===== Step 1: Surprise + Belief (inherited BA-PR) =====
         with torch.no_grad():
@@ -360,7 +366,7 @@ class CSBAPRAgent:
             self.alpha_optimizer.zero_grad()
             alpha_loss.backward()
             self.alpha_optimizer.step()
-            self.alpha = self.log_alpha.exp().item()
+            self.alpha = max(self.log_alpha.exp().item(), 0.01)  # floor: prevent entropy collapse
 
         # ===== Step 3: Q-loss (CS-BAPR, with Γ_sym) =====
         if self.f_sym_torch is not None:
@@ -403,6 +409,11 @@ class CSBAPRAgent:
         effective_beta = -2.0 - w_lambda * 5.0
         policy_loss = -(q_mean + effective_beta * q_std - self.alpha * log_prob).mean()
 
+        # Behavior cloning regularization (RE-SAC dual reg, prevents policy drift
+        # from replay buffer distribution after buffer saturation)
+        bc_loss = nn.MSELoss()(new_action, action)
+        policy_loss = policy_loss + self.config.beta_bc * bc_loss
+
         # CS-BAPR: Add Jacobian consistency loss
         jac_loss_val = 0.0
         if self.f_sym_torch is not None and self.config.jac_weight > 0:
@@ -413,7 +424,7 @@ class CSBAPRAgent:
             jac_loss_val = jac_loss.item()
 
         # NAU regularization
-        if self.config.use_nau_actor and hasattr(self.actor, 'regularization_loss'):
+        if hasattr(self.actor, 'regularization_loss') and self.config.nau_reg_weight > 0:
             nau_reg = self.actor.regularization_loss()
             policy_loss = policy_loss + self.config.nau_reg_weight * nau_reg
 
@@ -431,7 +442,7 @@ class CSBAPRAgent:
 
         # L_eff logging (Part XI: composed_deriv_lipschitz_simple)
         L_eff = 0.0
-        if self.config.use_nau_actor and hasattr(self.actor, 'compute_L_eff'):
+        if hasattr(self.actor, 'compute_L_eff'):
             L_eff = self.actor.compute_L_eff()
 
         return {
@@ -488,19 +499,23 @@ class CSBAPRAgent:
         target_q_next = self.target_critic(next_state, new_next_action)
         num_critics = self.critic.num_critics
 
-        next_log_prob_expanded = next_log_prob.unsqueeze(0).repeat(num_critics, 1)
-
         belief = torch.tensor(self.belief_tracker.belief, dtype=torch.float32, device=self.device)
         penalty_schedule = torch.exp(-0.1 * torch.arange(self.belief_tracker.max_H, dtype=torch.float32, device=self.device))
         weighted_lambda = (belief * penalty_schedule).sum()
 
+        # Conservative target: min over ensemble BEFORE applying per-critic penalties
+        # Prevents coordinated Q-overestimation across critics after buffer saturation
+        target_q_min = target_q_next.min(dim=0, keepdim=True)[0]  # [1, batch]
+        target_q_min = target_q_min.expand(num_critics, -1)        # [ensemble, batch]
+
+        next_log_prob_expanded = next_log_prob.unsqueeze(0).repeat(num_critics, 1)
         reg_norm_expanded = reg_norm.unsqueeze(-1).repeat(1, batch_size)
 
-        target_q_next = (target_q_next
-                         - self.alpha * next_log_prob_expanded
-                         + self.config.weight_reg * reg_norm_expanded)
+        target_q_min = (target_q_min
+                        - self.alpha * next_log_prob_expanded
+                        + self.config.weight_reg * reg_norm_expanded)
 
-        target_q_value = reward + (1 - done) * self.config.gamma * target_q_next.unsqueeze(-1)
+        target_q_value = reward + (1 - done) * self.config.gamma * target_q_min.unsqueeze(-1)
         ood_loss = predicted_q.std(0).mean()
         q_loss = nn.MSELoss()(predicted_q, target_q_value.squeeze(-1).detach())
         loss = q_loss + self.config.beta_ood * ood_loss
