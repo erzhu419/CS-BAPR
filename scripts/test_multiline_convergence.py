@@ -212,6 +212,71 @@ def evaluate_abrupt(agent, env_path, bursts, inject_time=3600, n_eval=3):
     return results
 
 
+# Oscillating within-episode OOD schedules. Each schedule is a list of
+# (t_seconds, multiplier) pairs applied in order; between entries the
+# multiplier stays constant. Episodes are ~18000 s on SUMO-calibrated data.
+OSCILLATING_SCHEDULES = {
+    # Commuter day: morning peak → off-peak → noon surge → evening → dinner event
+    'commuter_day': [
+        (0,     1.0),
+        (3600,  10.0),   # +1h: morning peak
+        (7200,  2.0),    # +2h: off-peak
+        (10800, 20.0),   # +3h: noon surge
+        (14400, 5.0),    # +4h: evening
+        (16200, 50.0),   # +4.5h: extreme dinner event
+    ],
+    # Square wave: rapid on/off switching to stress the belief tracker
+    'square_wave_20x': [
+        (0,     1.0),
+        (1800,  20.0),
+        (3600,  1.0),
+        (5400,  20.0),
+        (7200,  1.0),
+        (9000,  20.0),
+        (10800, 1.0),
+        (12600, 20.0),
+        (14400, 1.0),
+        (16200, 20.0),
+    ],
+    # Escalating: each step 10x bigger than the last (4 jumps in 18000s)
+    'escalating_10x': [
+        (0,     1.0),
+        (3600,  2.0),
+        (7200,  5.0),
+        (10800, 15.0),
+        (14400, 50.0),
+    ],
+}
+
+
+def evaluate_oscillating(agent, env_path, schedules=None, n_eval=3):
+    """Multi-burst within-episode oscillation eval.
+
+    Tests the policy under piecewise-constant demand schedules that change
+    multiple times within a single episode. Mirrors real operational
+    non-stationarity (peak vs off-peak vs events).
+    """
+    if schedules is None:
+        schedules = OSCILLATING_SCHEDULES
+    results = {}
+    for name, schedule in schedules.items():
+        env_bus._DATA_CACHE.clear()
+        env_osc = MultiLineEnv(env_path, od_mult=1.0)
+        env_osc.set_ood_schedule(schedule)
+        rewards = []
+        for _ in range(n_eval):
+            r_by_line, _, _ = run_episode_multiline(
+                env_osc, agent, deterministic=True, train=False, config=None
+            )
+            rewards.append(sum(r_by_line.values()))
+        results[name] = (np.mean(rewards), np.std(rewards))
+        peak_mult = max(m for _, m in schedule)
+        n_switches = len(schedule) - 1
+        print(f"  osc_{name:<18} ({n_switches:2d} switches, peak {peak_mult:5.1f}x): "
+              f"{np.mean(rewards):9.1f} ± {np.std(rewards):.1f}")
+    return results
+
+
 # ─────────────────────────────────────────────────────────────
 # Main
 # ─────────────────────────────────────────────────────────────
@@ -343,6 +408,12 @@ def main():
     print(f"{'='*60}")
     evaluate_abrupt(agent, args.env_path, bursts=[5, 10, 20, 50],
                     inject_time=3600, n_eval=3)
+
+    # ── Oscillating OOD (multi-burst within-episode schedule) ──
+    print(f"\n{'='*60}")
+    print(f"Oscillating OOD Evaluation (within-episode demand schedules)")
+    print(f"{'='*60}")
+    evaluate_oscillating(agent, args.env_path, n_eval=3)
 
     total = time.time() - start
     print(f"\nTotal time: {total:.0f}s")

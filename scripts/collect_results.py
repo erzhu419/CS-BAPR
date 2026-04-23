@@ -14,9 +14,9 @@ import numpy as np
 
 
 def parse_log(path):
-    """Extract ID eval and OOD sweep from a run log."""
+    """Extract ID eval, OOD sweep, abrupt burst, and oscillating eval from a run log."""
     text = path.read_text()
-    result = {'id_total': None, 'ood': {}, 'abrupt': {}}
+    result = {'id_total': None, 'ood': {}, 'abrupt': {}, 'oscillating': {}}
 
     # ID total: "TOTAL : -619368.7"
     m = re.search(r'TOTAL\s*:\s*(-?\d+\.?\d*)', text)
@@ -33,6 +33,14 @@ def parse_log(path):
         burst, mean, std = int(m.group(1)), float(m.group(2)), float(m.group(3))
         result['abrupt'][burst] = (mean, std)
 
+    # Oscillating: "osc_commuter_day       ( 5 switches, peak  50.0x): -645404.6 ± 10733.1"
+    for m in re.finditer(
+        r'osc_([a-zA-Z0-9_]+?)\s*\(\s*\d+ switches,\s*peak\s*[\d.]+x\):\s*(-?\d+\.?\d*)\s*±\s*(\d+\.?\d*)',
+        text,
+    ):
+        name, mean, std = m.group(1), float(m.group(2)), float(m.group(3))
+        result['oscillating'][name] = (mean, std)
+
     return result
 
 
@@ -47,6 +55,7 @@ def aggregate(results_per_method):
             'n_seeds': len(id_totals),
             'ood': {},
             'abrupt': {},
+            'oscillating': {},
         }
         all_od = set()
         for r in runs:
@@ -63,6 +72,14 @@ def aggregate(results_per_method):
             vals = [r['abrupt'][burst][0] for r in runs if burst in r['abrupt']]
             if vals:
                 agg[method]['abrupt'][burst] = (float(np.mean(vals)), float(np.std(vals)))
+
+        all_osc = set()
+        for r in runs:
+            all_osc.update(r['oscillating'].keys())
+        for name in sorted(all_osc):
+            vals = [r['oscillating'][name][0] for r in runs if name in r['oscillating']]
+            if vals:
+                agg[method]['oscillating'][name] = (float(np.mean(vals)), float(np.std(vals)))
     return agg
 
 
@@ -110,6 +127,25 @@ def print_markdown(agg):
             for burst in sorted(all_burst):
                 if burst in agg[m]['abrupt']:
                     mean, std = agg[m]['abrupt'][burst]
+                    row.append(f"{mean:,.0f}±{std:,.0f}")
+                else:
+                    row.append('—')
+            print("| " + " | ".join(row) + " |")
+
+    # Oscillating within-episode schedules
+    all_osc = set()
+    for a in agg.values():
+        all_osc.update(a['oscillating'].keys())
+    if all_osc:
+        print("\n## Oscillating OOD Evaluation (within-episode demand schedules)\n")
+        header = "| Method | " + " | ".join(sorted(all_osc)) + " |"
+        print(header)
+        print("|" + "---|" * (len(all_osc) + 1))
+        for m in methods:
+            row = [m]
+            for name in sorted(all_osc):
+                if name in agg[m]['oscillating']:
+                    mean, std = agg[m]['oscillating'][name]
                     row.append(f"{mean:,.0f}±{std:,.0f}")
                 else:
                     row.append('—')
