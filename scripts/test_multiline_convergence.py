@@ -33,7 +33,13 @@ warnings.filterwarnings('ignore')
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
-OFFLINE_SUMO_ENV = '/home/erzhu419/mine_code/offline-sumo/env'
+OFFLINE_SUMO_ENV = os.environ.get(
+    'OFFLINE_SUMO_ENV',
+    os.path.join(os.path.dirname(project_root), 'offline-sumo', 'env'),
+)
+if not os.path.isdir(OFFLINE_SUMO_ENV):
+    # Fallback to author's local path
+    OFFLINE_SUMO_ENV = '/home/erzhu419/mine_code/offline-sumo/env'
 sys.path.insert(0, OFFLINE_SUMO_ENV)
 
 from sim_core.sim import MultiLineEnv, env_bus
