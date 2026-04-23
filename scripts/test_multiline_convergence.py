@@ -353,16 +353,69 @@ def main():
     print(f"Lines: {list(env.line_map.keys())}")
     print(f"Total buses: {total_buses}, ~120s/ep estimated")
 
-    # ── Training ──
+    # ── Checkpoint paths (per method × seed) ──
+    ckpt_dir = os.environ.get('CKPT_DIR', '/tmp/multiline_ckpt')
+    os.makedirs(ckpt_dir, exist_ok=True)
+    tag = f"{args.method}_seed{args.seed}"
+    last_ckpt = os.path.join(ckpt_dir, f"{tag}_last.pt")
+    best_ckpt = os.path.join(ckpt_dir, f"{tag}_best.pt")
+    meta_path = os.path.join(ckpt_dir, f"{tag}_meta.json")
+    SAVE_EVERY = int(os.environ.get('CKPT_EVERY', '10'))   # episodes
+
+    # ── Resume from last checkpoint if present ──
+    import json as _json
+    start_ep = 0
     best_total = -float('inf')
     history = []
+    if os.path.exists(last_ckpt) and os.path.exists(meta_path):
+        try:
+            agent.load(last_ckpt)
+            with open(meta_path) as _f:
+                meta = _json.load(_f)
+            start_ep = int(meta.get('next_ep', 0))
+            best_total = float(meta.get('best_total', -float('inf')))
+            history = list(meta.get('history', []))
+            # Reward-EMA state (if the agent tracks it)
+            ema = meta.get('reward_ema_var', None)
+            if ema is not None:
+                agent._reward_ema_var = float(ema)
+            print(f"[RESUME] {tag}: loaded {last_ckpt}, starting at ep {start_ep}, "
+                  f"best_so_far={best_total:.0f}, history_len={len(history)}")
+            if start_ep >= args.episodes:
+                print(f"[RESUME] already completed {start_ep}/{args.episodes} episodes, skipping training")
+        except Exception as e:
+            print(f"[RESUME] failed to load {last_ckpt}: {e}")
+            print(f"[RESUME] starting from scratch")
+            start_ep = 0
+            best_total = -float('inf')
+            history = []
+
+    def _atomic_save_meta():
+        """Write meta JSON via tmp file to survive crashes during save."""
+        tmp = meta_path + '.tmp'
+        with open(tmp, 'w') as _f:
+            _json.dump({
+                'next_ep': ep + 1,
+                'best_total': best_total,
+                'history': history,
+                'reward_ema_var': getattr(agent, '_reward_ema_var', None),
+                'method': args.method,
+                'seed': args.seed,
+            }, _f)
+        os.replace(tmp, meta_path)
+
     start = time.time()
 
     print(f"\n{'='*60}")
-    print(f"Training: {args.method} on MultiLineEnv ({n_lines} lines), {args.episodes} ep")
+    if start_ep > 0:
+        print(f"Training: {args.method} on MultiLineEnv ({n_lines} lines), "
+              f"resume ep {start_ep}/{args.episodes}")
+    else:
+        print(f"Training: {args.method} on MultiLineEnv ({n_lines} lines), {args.episodes} ep")
     print(f"{'='*60}")
 
-    for ep in range(args.episodes):
+    ep = start_ep - 1  # so _atomic_save_meta's `ep + 1` is correct at first save
+    for ep in range(start_ep, args.episodes):
         r_by_line, ep_decisions, train_steps = run_episode_multiline(
             env, agent, deterministic=False, train=True, config=config,
             train_freq=20
@@ -372,8 +425,14 @@ def main():
 
         if ep_total > best_total:
             best_total = ep_total
-            os.makedirs('/tmp/multiline_ckpt', exist_ok=True)
-            agent.save(f'/tmp/multiline_ckpt/{args.method}_best.pt')
+            agent.save(best_ckpt + '.tmp')
+            os.replace(best_ckpt + '.tmp', best_ckpt)
+
+        # Periodic last-checkpoint save (for resume); every SAVE_EVERY eps
+        if (ep + 1) % SAVE_EVERY == 0 or (ep + 1) == args.episodes:
+            agent.save(last_ckpt + '.tmp')
+            os.replace(last_ckpt + '.tmp', last_ckpt)
+            _atomic_save_meta()
 
         if (ep + 1) % 5 == 0:
             elapsed = time.time() - start

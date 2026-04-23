@@ -2,6 +2,8 @@
 # Auto-resource-aware experiment runner.
 # Detects free GPU memory + CPU cores, schedules 12 runs adaptively.
 # Skips runs whose log already shows "Total time" (idempotent resumption).
+# Interrupted runs automatically resume from the latest checkpoint
+# (see CKPT_DIR below; test_multiline_convergence.py handles resume).
 
 set -e
 LOGDIR=${LOGDIR:-/tmp/csbapr_exp}
@@ -9,8 +11,12 @@ EPISODES=${EPISODES:-500}
 MEM_PER_RUN_MB=${MEM_PER_RUN_MB:-500}   # Conservative GPU reservation per run
 CORES_PER_RUN=${CORES_PER_RUN:-3}       # CPU cores each env simulation eats
 RESERVE_CORE_FRAC=${RESERVE_CORE_FRAC:-25}  # Leave this % of cores for other users
+# Checkpoint directory is inherited by each python invocation.
+# Default lives beside the log directory so everything stays in one place.
+export CKPT_DIR=${CKPT_DIR:-$LOGDIR/ckpt}
+export CKPT_EVERY=${CKPT_EVERY:-10}
 
-mkdir -p "$LOGDIR"
+mkdir -p "$LOGDIR" "$CKPT_DIR"
 cd "$(dirname "$0")/.."
 
 # ── Detect resources ──
@@ -48,6 +54,7 @@ echo "Resources: CPU cores=$total_cores (usable=$usable_cores)"
 echo "           GPU slots=$gpu_slots (500MB each), CPU slots=$cpu_slots"
 echo "           → max_parallel=$max_parallel"
 echo "Logdir: $LOGDIR"
+echo "Ckptdir: $CKPT_DIR (resume-aware, save every $CKPT_EVERY eps)"
 echo "Episodes per run: $EPISODES"
 echo "===================================================="
 
@@ -77,11 +84,19 @@ for method in "${METHODS[@]}"; do
         fi
         wait_for_slot
         gpu=$(pick_best_gpu)
-        echo "[LAUNCH] $method seed=$seed on GPU=$gpu → $log"
+        # Append log marker so prior partial output (e.g. from a killed run)
+        # is preserved; the python script will auto-resume from checkpoint.
+        if [ -s "$log" ]; then
+            echo "[LAUNCH] $method seed=$seed on GPU=$gpu → $log (appending, resume expected)"
+            echo >> "$log"
+            echo "===== RELAUNCH $(date -Iseconds) =====" >> "$log"
+        else
+            echo "[LAUNCH] $method seed=$seed on GPU=$gpu → $log (fresh)"
+        fi
         CUDA_VISIBLE_DEVICES=$gpu OMP_NUM_THREADS=$CORES_PER_RUN \
             python -u scripts/test_multiline_convergence.py \
                 --episodes "$EPISODES" --seed "$seed" --method "$method" \
-                > "$log" 2>&1 &
+                >> "$log" 2>&1 &
         pids+=($!)
         sleep 10  # stagger: avoids GPU-memory spike during init overlap
     done
