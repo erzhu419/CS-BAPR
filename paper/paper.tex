@@ -76,13 +76,13 @@
 \begin{abstract}
 Standard reinforcement learning policies trained on bounded state regions fail catastrophically when deployed in out-of-distribution (OOD) regimes. A key yet underexplored source of this failure is \emph{architectural}: ReLU-based policy networks exhibit derivative discontinuities that permit unbounded error growth in extrapolation regions---a structural deficiency that no amount of data can remedy.
 
-We propose \textbf{CS-BAPR}, a framework that extends BAPR~\cite{Zhang2025BAPR} with a \emph{Neural Arithmetic Unit} (NAU/NMU) actor head providing architecturally guaranteed finite derivative Lipschitz constants, together with a set of training-stabilization techniques---min-$Q$ ensemble targets, running-EMA reward normalization, and an entropy-temperature floor---that make the constrained NAU actor converge reliably in the SAC framework. The NAU head combined with these stabilizers is the paper's \emph{primary} contribution.
+We propose \textbf{CS-BAPR}, a framework that extends BAPR~\cite{Zhang2025BAPR} along two axes: (i)~a set of \emph{training-stabilization techniques}---min-$Q$ ensemble targets, running-EMA reward normalization, and an entropy-temperature floor---that address late-training collapse of SAC ensembles in sparse-reward transit control; and (ii)~a choice of \emph{actor-head architecture}---Neural Arithmetic Unit (NAU/NMU), Kolmogorov-Arnold Network (KAN), or plain MLP---with the first two providing finite or zero derivative Lipschitz constants, and thus the architectural foothold for a polynomial OOD bound. We present these as a family of closely-related methods rather than claiming a single architecture dominates; our ablation on a 12-line SUMO-calibrated transit benchmark shows that the training-stabilization fixes account for the bulk of the improvement over the BAPR baseline, while the architectural choices trade off ID quality, OOD stability, and run-to-run variance in non-uniform ways.
 
-Our main theoretical result is the \textbf{OOD Extrapolation Stability Bound}: if the policy achieves base accuracy $\delta$ on the training domain, derivative error $\varepsilon$ at the training boundary, and derivative Lipschitz constant $L$, then the OOD prediction error at distance $\|d\|$ from a reference point satisfies $\|\pi(x_{\text{ood}}) - \pi_{\text{ref}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$, where $\pi_{\text{ref}}$ is any differentiable reference function that the policy is regularized toward. We further prove that ReLU networks \emph{provably lack} any finite $L$, establishing a sharp architectural boundary under this bound---ReLU cannot instantiate the bound at all, while NAU gives $L = 0$ and NMU gives $L = 2|c|$. The CS-BAPR Bellman operator preserves BAPR's $\gamma$-contraction guarantee. All results are machine-verified in Lean~4 with no \texttt{sorry} (954~lines, 34~theorems).
+Our main theoretical result is the \textbf{OOD Extrapolation Stability Bound}: if the policy achieves base accuracy $\delta$ on the training domain, derivative error $\varepsilon$ at the training boundary, and derivative Lipschitz constant $L$, then the OOD prediction error at distance $\|d\|$ from a reference point satisfies $\|\pi(x_{\text{ood}}) - \pi_{\text{ref}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$, where $\pi_{\text{ref}}$ is any differentiable reference function. We further prove that ReLU networks \emph{provably lack} any finite $L$, establishing a sharp architectural boundary under this bound---ReLU cannot instantiate the bound at all, while NAU gives $L = 0$ and NMU gives $L = 2|c|$. The CS-BAPR Bellman operator preserves BAPR's $\gamma$-contraction guarantee. All results are machine-verified in Lean~4 with no \texttt{sorry} (954~lines, 34~theorems).
 
-As \emph{optional framework extensions}, we formalize a SINDy-based Jacobian Consistency pipeline and an IRM causal-filtering step that can tighten the $\varepsilon$ term when the environment admits sparse, invariant dynamics \emph{and} the optimal policy is aligned with the identified dynamics structure. These extensions are verified in Lean but are \emph{not} required for the core NAU bound, and whether they empirically help is domain-dependent; we discuss the conditions under which they are or are not expected to help (\Cref{sec:scope}).
+As \emph{optional framework extensions}, we formalize a SINDy-based Jacobian Consistency pipeline and an IRM causal-filtering step that can tighten the $\varepsilon$ term when the environment admits sparse, invariant dynamics \emph{and} the optimal policy is aligned with the identified dynamics structure. These extensions are verified in Lean but are \emph{not} required for the core bound, and whether they empirically help is domain-dependent; they are not activated on our primary benchmark (\Cref{sec:scope}).
 
-We evaluate the primary pipeline on a SUMO-calibrated 12-line transit holding benchmark with demand-magnitude OOD (up to $50{\times}$ in-distribution flow), where the task calls for \emph{counteracting} rather than \emph{aligning with} the underlying dynamics---a setting in which the optional symbolic extensions are not expected to help, and indeed an earlier variant including $\Gamma_{\text{sym}}$ degraded performance. The NAU actor with training-stabilization fixes improves OOD return over the ReLU BAPR baseline by \tbd{}\%\ at $5{-}20{\times}$ and by \tbd{}\%\ at $50{\times}$, consistent with the polynomial (rather than catastrophic) degradation predicted by our bound.
+We evaluate on a SUMO-calibrated 12-line transit holding benchmark with demand-magnitude OOD (up to $50{\times}$ in-distribution flow), an abrupt-burst shift protocol (single step change at $t{=}3600$s), and a within-episode piecewise-constant oscillation protocol (multiple switches per episode, peak $20{-}50{\times}$). Across all three protocols and across three variants (NAU, KAN, MLP-plus-fixes), every member of the CS-BAPR family outperforms the BAPR baseline at every OOD level we evaluated, with the MLP-plus-fixes variant providing the most consistent and lowest-variance behaviour at the extreme end ($20{\times}{-}50{\times}$), the NAU variant providing the best mid-range OOD ($5{\times}$) at the cost of higher run-to-run variance, and the KAN variant providing the best in-distribution accuracy.
 \end{abstract}
 
 
@@ -103,30 +103,36 @@ Reinforcement learning (RL) has achieved remarkable success in domains where tra
     The bound of Theorem~\ref{thm:ood_quad_nD} rules out (i) (giving polynomial rather than super-polynomial growth), and the NAU architecture (\Cref{sec:nau}) rules out (ii) (giving a constant derivative rather than saturating/jumping).
 \end{definition}
 
-This failure mode is \emph{architecturally determined}---it arises not from insufficient data or poor training, but from the structural properties of the function class used to represent the policy. We identify one primary root cause and its solution, and two secondary representational issues that admit optional framework-level remedies:
+This failure mode arises from two orthogonal sources: (a)~\emph{training-time instability} that pushes the actor toward poorly-calibrated Q-value estimates and eventually toward degenerate policies under the SAC objective, and (b)~\emph{architectural} properties of the function class---specifically, the inability of ReLU-based heads to admit polynomial OOD bounds even in principle. CS-BAPR addresses both:
 
 \begin{enumerate}
-    \item \textbf{(Primary) ReLU derivative discontinuity (architectural):} Standard ReLU networks have piecewise-linear activations whose derivatives are discontinuous at breakpoints. In OOD regions, the derivative can change arbitrarily between 0 and 1, causing the policy's response to ``freeze'' or ``jump'' unpredictably. We prove (machine-verified) that no finite Lipschitz constant $L$ exists for ReLU derivatives, making polynomial OOD error bounds \emph{of the form} $\delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$ structurally impossible for ReLU policies (Theorem~\ref{thm:relu_impossible}). We replace the ReLU output layer with a Neural Arithmetic Unit (NAU), yielding a constant derivative and hence $L = 0$ at the head; with a bounded (e.g., spectrally clamped) feature extractor, the composed actor has finite $L$ and satisfies the bound. We complement the architectural change with training-stabilization fixes (min-$Q$ ensemble targets, running-EMA reward normalization, entropy-temperature floor) that are necessary in practice because NAU's constrained $\{-1,0,1\}$ weight space is less forgiving than an unconstrained MLP: without these fixes, the NAU actor collapses during long runs. \textbf{This architectural-plus-stabilization pipeline is the paper's primary contribution.}
+    \item \textbf{Training-stabilization fixes.} Extending BAPR's RE-SAC backbone, we introduce four interacting fixes that together keep the ensemble critic and the actor from late-run collapse on the transit benchmark: (i)~a \emph{min-$Q$ ensemble target} to suppress over-optimism during the Q-backup, (ii)~\emph{running-EMA reward normalization} (divide by EMA of batch std, no mean shift) to keep TD magnitudes scale-invariant under late-training reward drift, (iii)~an \emph{entropy-temperature floor} ($\alpha \geq 0.01$) to prevent entropy collapse, and (iv)~disabling the BAPR-inherited behavioural-cloning anchor ($\beta_{\text{bc}} = 0$) for the constrained-head variants, where the architecture itself already bounds policy drift. These fixes are architecture-agnostic and, as our ablation shows, account for the majority of the improvement over the BAPR baseline under demand OOD.
 
-    \item \textbf{(Optional) Lack of physical structure (representational):} When the environment admits sparse analytic laws (e.g., $F = ma$, ballistic equations) \emph{and} the optimal policy is structurally aligned with those laws, a purely data-driven policy has no mechanism to exploit this. We formalize---in the Lean~4 proof, and as an optional code path in the algorithm---a SINDy-based symbolic discovery pipeline that extracts sparse differential equations from trajectory data and conditions the policy's gradient via a Jacobian Consistency Loss to align with the discovered reference. Whether this helps is domain-specific: it helps when the policy should \emph{track} the physical reference (e.g., classical control with analytic optimal laws), and can \emph{hurt} when the policy should \emph{counteract} it (e.g., transit holding control, where the controller's job is to oppose demand-driven headway drift rather than mirror its structure). We delineate the applicability regime in \Cref{sec:scope}.
+    \item \textbf{Architecturally-varied actor head.} CS-BAPR admits three interchangeable head choices for the actor, each with a different OOD profile:
+    \begin{itemize}
+        \item \emph{NAU/NMU}~\cite{Madsen2020NAU}: constant derivative ($L = 0$ at the head), giving the \emph{tightest} instance of our polynomial OOD bound (\Cref{thm:ood_quad_nD}).
+        \item \emph{KAN}~\cite{Liu2024KAN}: learnable B-spline edges with smooth (bounded-Lipschitz) derivatives, giving a bounded but nonzero $L$ via the spline grid.
+        \item \emph{Plain MLP with tanh head}: simplest baseline; supports the bound under standard spectral-normalization of the feature extractor.
+    \end{itemize}
+    For the ReLU alternative, we prove (machine-verified) that no finite $L$ exists---polynomial OOD error bounds of the form $\delta + \varepsilon\|d\| + \tfrac{L}{2}\|d\|^2$ are structurally impossible for ReLU policies (\Cref{thm:relu_impossible}). In our experiments, the three architecture choices trade off ID accuracy, mid-OOD stability, and run-to-run variance in non-uniform ways: we present them as a \emph{family} of closely-related methods rather than asserting a single winner.
 
-    \item \textbf{(Optional) Spurious correlations (statistical):} A formula discovered from a single training environment may capture environment-specific correlations. We formalize an Invariant Risk Minimization (IRM)~\cite{Arjovsky2019IRM} filtering step for symbolic candidates. Like Pillar~II, this is a framework extension: it activates only when the SINDy path is active and multiple environments are available.
+    \item \textbf{(Optional) Symbolic extensions.} We also formalize a SINDy-based Jacobian Consistency pipeline~\cite{Brunton2016SINDy} and an Invariant Risk Minimization (IRM)~\cite{Arjovsky2019IRM} filtering step for symbolic formula candidates. These tighten the $\varepsilon$ term in the OOD bound when the environment admits sparse, invariant dynamics \emph{and} the optimal policy is structurally aligned with those dynamics. Our primary transit benchmark does not satisfy the alignment condition---transit holding is a counteraction task, not a tracking task---so we do not activate the symbolic extensions on it. They are Lean-verified and available as optional framework components for future benchmarks in the tracking regime (see \Cref{sec:scope}).
 \end{enumerate}
 
 Building upon the robust ensemble framework of RE-SAC~\cite{Zhang2025RESAC} and the Bayesian change-point adaptation of BAPR~\cite{Zhang2025BAPR}, our contributions are:
 
 \begin{itemize}
-    \item \textbf{NAU-stabilized BAPR actor with convergence fixes:} A practical pipeline that replaces the BAPR actor's ReLU head with an NAU/NMU head and adds the minimum set of training-stabilization fixes (min-$Q$, reward-EMA, entropy floor) needed for the constrained architecture to converge reliably in SAC-style training. Empirically, this pipeline beats the ReLU BAPR baseline by \tbd{}\%\ at $5{-}20{\times}$ demand OOD on a 12-line SUMO-calibrated transit benchmark.
+    \item \textbf{CS-BAPR family of methods.} A practical training recipe (four stabilization fixes) plus three interchangeable architectural variants (NAU, KAN, MLP-with-tanh). All four CS-BAPR variants (including \texttt{csbapr-no-nau}, the MLP + fixes variant) outperform the ReLU BAPR baseline at every OOD level on the 12-line SUMO-calibrated transit benchmark. The NAU variant gives the best mid-range OOD ($5{\times}$, +23\% over BAPR) with the caveat of higher run-to-run variance; the MLP + fixes variant gives the most consistent behaviour and the best extreme-OOD numbers ($20{-}50{\times}$, +13-19\% over BAPR); KAN is best on in-distribution return (+5.5\% over BAPR) but middling on OOD.
 
-    \item \textbf{OOD Extrapolation Stability Bound (Theorem~\ref{thm:ood_quad_nD}):} Under boundary Jacobian Consistency with a chosen reference ($\varepsilon$) and bounded derivative Lipschitz constant ($L < \infty$), the OOD error from the reference satisfies $\|\pi(x_{\text{ood}}) - \pi_{\text{ref}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$. For the NAU-only configuration (no symbolic extension), the reference is the policy's own linear extrapolation from the training domain and $\varepsilon$ degenerates to the fitting-error term; the quadratic coefficient $L/2$ is controlled by architecture. For the SINDy-extended configuration, the reference is the identified symbolic formula and $\varepsilon$ is additionally bounded by SINDy quality. The bound is machine-verified in Lean~4.
+    \item \textbf{OOD Extrapolation Stability Bound (\Cref{thm:ood_quad_nD}).} Under boundary Jacobian Consistency with a chosen reference ($\varepsilon$) and bounded derivative Lipschitz constant ($L < \infty$), the OOD error satisfies $\|\pi(x_{\text{ood}}) - \pi_{\text{ref}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$. The quadratic coefficient $L/2$ is controlled by architecture: $L = 0$ for NAU, $L = 2|c|$ for NMU, bounded for KAN and spectrally-normalized MLP, unbounded for ReLU. The bound is machine-verified in Lean~4 and instantiable by any of the three CS-BAPR architectural variants.
 
-    \item \textbf{ReLU Impossibility Theorem (Theorem~\ref{thm:relu_impossible}):} $\neg\exists L,\ \text{HasArithmeticInductiveBias}(\text{ReLU}, L)$. Machine-verified in Lean~4, showing that ReLU cannot instantiate the above bound at all. We further contrast this with smooth activations (GELU, Softplus, tanh), which \emph{do} admit finite $L$ but pay an expressivity penalty discussed in \Cref{sec:nau}.
+    \item \textbf{ReLU Impossibility Theorem (\Cref{thm:relu_impossible}).} $\nexists L,\ \text{HasArithmeticInductiveBias}(\text{ReLU}, L)$. Machine-verified in Lean~4, showing that ReLU cannot instantiate the above bound at all. This is the sharp \emph{structural} boundary between the three CS-BAPR heads (which instantiate the bound) and the BAPR ReLU baseline (which cannot).
 
-    \item \textbf{CS-BAPR Bellman Contraction (Theorem~\ref{thm:csbapr_contraction}):} The CS-BAPR operator, extending BAPR with an (optional, frozen) symbolic consistency penalty $\Gamma_{\text{sym}}$, is a $\gamma$-contraction in $L_\infty$. The contraction holds whether or not $\Gamma_{\text{sym}}$ is enabled, as long as it (and $\Gamma_{\text{epi}}$, $\kappa$) are frozen during each backup.
+    \item \textbf{CS-BAPR Bellman Contraction (\Cref{thm:csbapr_contraction}).} The CS-BAPR operator, extending BAPR with an (optional, frozen) symbolic consistency penalty $\Gamma_{\text{sym}}$, is a $\gamma$-contraction in $L_\infty$. The contraction holds whether or not $\Gamma_{\text{sym}}$ is enabled, as long as it (and $\Gamma_{\text{epi}}$, $\kappa$) are frozen during each backup, and does not depend on the choice of actor head.
 
-    \item \textbf{Formalized framework extensions (SINDy and IRM, machine-verified but empirically optional):} Full Lean formalization of the SINDy-to-OOD pipeline (Theorem~\ref{thm:sindy_pipeline}) and an IRM causal-filtering statement (Theorem~\ref{thm:irm_causal}). We deliberately present these as \emph{extensions}: whether they help empirically depends on whether the optimal policy is aligned with the identified dynamics, and our primary benchmark (transit holding) is a counterexample to this alignment.
+    \item \textbf{Formalized symbolic extensions (empirically optional).} Full Lean formalization of the SINDy-to-OOD pipeline (\Cref{thm:sindy_pipeline}) and an IRM causal-filtering statement (\Cref{thm:irm_causal}). These are off on the transit benchmark; they are retained as framework-level components for future applications where the policy-dynamics alignment condition holds.
 
-    \item \textbf{Machine verification:} All results are formally verified in Lean~4 with no \texttt{sorry} (\texttt{CSBAPR.lean}: 954~lines, 34~definitions/theorems/lemmas), using Mathlib's calculus library including the convex Mean Value Theorem and the Gr\"onwall-style fencing theorem.
+    \item \textbf{Machine verification.} All theoretical results are formally verified in Lean~4 with no \texttt{sorry} (\texttt{CSBAPR.lean}: 954~lines, 34~definitions/theorems/lemmas), using Mathlib's calculus library including the convex Mean Value Theorem and the Gr\"onwall-style fencing theorem.
 \end{itemize}
 
 
@@ -864,37 +870,63 @@ Method & ID total return \\
 
 \begin{table}[t]
 \centering
-\small
-\caption{Static OOD demand sweep. Total episode return. Mean over 3 seeds. $m = 1$ is in-distribution.}
+\scriptsize
+\caption{Static OOD demand sweep. Total episode return (K, higher is better). Mean $\pm$ s.d.\ over 3 seeds. $m = 1$ is in-distribution. \textbf{Bold}: best in column.}
 \label{tab:ood_sweep}
 \begin{tabular}{lrrrrrr}
 \toprule
 Method & $m{=}1$ & $m{=}2$ & $m{=}5$ & $m{=}10$ & $m{=}20$ & $m{=}50$ \\
 \midrule
-\texttt{bapr}              & \tbd & \tbd & \tbd & \tbd & \tbd & \tbd \\
-\texttt{csbapr-no-nau}     & \tbd & \tbd & \tbd & \tbd & \tbd & \tbd \\
-\texttt{csbapr}            & \tbd & \tbd & \tbd & \tbd & \tbd & \tbd \\
-\texttt{csbapr-kan}        & \tbd & \tbd & \tbd & \tbd & \tbd & \tbd \\
+\texttt{bapr} (ReLU, no fixes)    & $-820{\pm}47$   & $-833{\pm}31$   & $-1044{\pm}192$ & $-1397{\pm}498$ & $-1381{\pm}363$ & $-1519{\pm}318$ \\
+\texttt{csbapr-no-nau} (MLP+fixes) & $-788{\pm}48$   & $-800{\pm}31$   & $-848{\pm}42$   & $\mathbf{-966{\pm}92}$    & $\mathbf{-1114{\pm}122}$   & $\mathbf{-1318{\pm}94}$ \\
+\texttt{csbapr} (NAU+fixes)       & $-778{\pm}24$   & $\mathbf{-775{\pm}22}$  & $\mathbf{-805{\pm}83}$  & $-970{\pm}211$  & $-1353{\pm}481$ & $-1400{\pm}201$ \\
+\texttt{csbapr-kan} (KAN+fixes)   & $\mathbf{-775{\pm}29}$  & $-816{\pm}39$   & $-936{\pm}57$   & $-1114{\pm}31$  & $-1255{\pm}36$  & $-1484{\pm}28$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{table}[t]
 \centering
-\small
-\caption{Abrupt-burst protocol: $m = 1$ for $t \in [0, 3600)$ s, then switch to the specified multiplier.}
+\scriptsize
+\caption{Abrupt-burst protocol: $m = 1$ for $t \in [0, 3600)$ s, then abrupt switch to the specified multiplier. Total episode return (K), mean $\pm$ s.d.\ over 3 seeds.}
 \label{tab:abrupt}
 \begin{tabular}{lrrrr}
 \toprule
 Method & burst $5{\times}$ & burst $10{\times}$ & burst $20{\times}$ & burst $50{\times}$ \\
 \midrule
-\texttt{bapr}              & \tbd & \tbd & \tbd & \tbd \\
-\texttt{csbapr-no-nau}     & \tbd & \tbd & \tbd & \tbd \\
-\texttt{csbapr}            & \tbd & \tbd & \tbd & \tbd \\
-\texttt{csbapr-kan}        & \tbd & \tbd & \tbd & \tbd \\
+\texttt{bapr}             & $-918{\pm}47$   & $-1202{\pm}355$ & $-1332{\pm}417$ & $-1442{\pm}299$ \\
+\texttt{csbapr-no-nau}    & $-838{\pm}32$   & $\mathbf{-901{\pm}65}$  & $\mathbf{-1019{\pm}79}$ & $\mathbf{-1185{\pm}118}$ \\
+\texttt{csbapr}           & $\mathbf{-790{\pm}59}$  & $-869{\pm}111$  & $-1109{\pm}284$ & $-1363{\pm}317$ \\
+\texttt{csbapr-kan}       & $-894{\pm}48$   & $-1012{\pm}50$  & $-1146{\pm}55$  & $-1393{\pm}28$ \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Oscillating OOD protocol: within-episode piecewise-constant demand schedule. Total episode return (K), mean $\pm$ s.d.\ over 3 seeds. Schedules: \texttt{commuter\_day} has 5 switches with peak $50{\times}$; \texttt{square\_wave\_20x} has 9 switches with peak $20{\times}$; \texttt{escalating\_10x} has 4 switches with peak $50{\times}$.}
+\label{tab:oscillating}
+\begin{tabular}{lrrr}
+\toprule
+Method & \texttt{commuter\_day} & \texttt{square\_wave\_20x} & \texttt{escalating\_10x} \\
+\midrule
+\texttt{bapr}             & $-1115{\pm}266$ & $-1332{\pm}467$ & $-1017{\pm}133$ \\
+\texttt{csbapr-no-nau}    & $-893{\pm}39$   & $\mathbf{-965{\pm}92}$  & $-892{\pm}59$ \\
+\texttt{csbapr}           & $\mathbf{-877{\pm}117}$ & $-968{\pm}207$  & $\mathbf{-885{\pm}93}$ \\
+\texttt{csbapr-kan}       & $-1016{\pm}47$  & $-1112{\pm}52$  & $-988{\pm}47$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Reading the tables.} All three CS-BAPR variants (\texttt{-no-nau}, \texttt{}, \texttt{-kan}) outperform the \texttt{bapr} baseline at every cell in Tables~\ref{tab:ood_sweep}--\ref{tab:oscillating}. Among the three variants:
+\begin{itemize}
+    \item \textbf{In-distribution} ($m{=}1$): all three variants are within 2\% of each other; \texttt{csbapr-kan} is nominally best but the spread is inside the noise floor.
+    \item \textbf{Mid-range OOD} ($m{=}2{-}5$, burst $5{\times}$): \texttt{csbapr} (NAU) is best at $m{=}5$ and \texttt{burst\_5x}; this is the regime in which NAU's zero-Lipschitz derivative most matches the benchmark's near-linear demand scaling.
+    \item \textbf{Extreme OOD} ($m{=}10{-}50$, burst $\geq 10{\times}$): \texttt{csbapr-no-nau} is most consistent and has the lowest mean degradation. Notably, \texttt{csbapr} (NAU) has high run-to-run variance here---one of the three seeds (seed 1) landed in a poor optimization basin at $m{=}20$ ($-2{,}033$K vs.\ the other two seeds' $-1{,}022$K and $-1{,}004$K), which the constrained $\{-1,0,1\}$ weight space of NAU was unable to escape. We report the unfiltered mean, but note that the median NAU performance at $m{=}20$ ($-1{,}022$K) is competitive with \texttt{csbapr-no-nau} ($-1{,}114$K).
+    \item \textbf{Oscillating OOD} (\Cref{tab:oscillating}): within-episode schedules with peak $\geq 20{\times}$ are where the BAPR baseline suffers most (ReLU has unbounded derivative drift as the demand multiplier jumps). All CS-BAPR variants close most of this gap; \texttt{csbapr} and \texttt{csbapr-no-nau} are indistinguishable here, both $\approx {-}880{-}965$K across the three schedules versus BAPR's ${-}1015{-}1332$K.
+\end{itemize}
+We read these results not as identifying a single winner but as confirming the paper's decomposition: \textbf{the training-stabilization fixes account for the majority of the BAPR-to-CS-BAPR improvement, and are in turn refined by the architectural choices} in ways that depend on the OOD regime and the run-to-run stability one is willing to accept.
 
 \subsection{Theory-experiment alignment (Q4)}
 \label{sec:bound_alignment}
@@ -907,8 +939,8 @@ where $\delta$ and $\varepsilon$ are the measured ID boundary errors, $L_{\text{
 
 \begin{figure}[t]
     \centering
-    \fbox{\parbox{0.75\linewidth}{\centering\vspace{4em}\textcolor{red}{\textbf{[TBD: Figure 1]}} Theory-experiment alignment plot.\\\textit{Generated post-server-run by \texttt{scripts/plot\_figure1.py}.}\vspace{4em}}}
-    \caption{Theory-experiment alignment on the MultiLineEnv benchmark. Markers: measured OOD reward degradation for each method at $m \in \{1, 2, 5, 10, 20, 50\}$, averaged over 3 seeds. Dashed curves: theoretical envelope $\delta + (\varepsilon + L_{\text{eff}} d) d$ evaluated with measured $L_{\text{eff}}$ for \texttt{csbapr} (NAU, tight envelope) and \texttt{bapr} (ReLU, envelope not instantiable and replaced with an empirical saturation cap).}
+    \includegraphics[width=0.82\linewidth]{figures/figure1.pdf}
+    \caption{Theory-experiment alignment on the MultiLineEnv benchmark. Markers: measured OOD reward degradation $|R_{\text{ID}} - R_{\text{OOD}}|$ for each method at $d = m - 1 \in \{0, 1, 4, 9, 19, 49\}$, averaged over 3 seeds (shaded: $\pm$s.d.). Dashed curves: theoretical envelope $\delta + (\varepsilon + L_{\text{eff}} d)\,d$ evaluated with representative $L_{\text{eff}}$ values---$L{=}8$ for \texttt{csbapr} (NAU; the envelope is tight) and $L{=}100$ for \texttt{bapr} (a large stand-in for ``ReLU does not admit a finite $L$''). All three CS-BAPR variants stay below the baseline envelope; BAPR escapes into the wide-variance regime characteristic of unbounded derivative drift. Note that the envelope is relative to the policy's own linear reference (no symbolic extension active in these runs), so $\varepsilon$ is the measured ID boundary error.}
     \label{fig:bound}
 \end{figure}
 
@@ -922,17 +954,21 @@ where $\delta$ and $\varepsilon$ are the measured ID boundary errors, $L_{\text{
 \section{Conclusion}
 \label{sec:conclusion}
 
-This paper presents CS-BAPR, a framework for OOD extrapolation in reinforcement learning whose primary contribution is an NAU/NMU actor head combined with a small set of training-stabilization fixes (min-$Q$ ensemble targets, running-EMA reward normalization, entropy-temperature floor) that together yield an architecturally guaranteed polynomial OOD bound and a practical training recipe that converges reliably despite the constrained $\{-1, 0, 1\}$ weight space. Alongside this primary pipeline, we formalize two optional framework extensions (SINDy-based Jacobian Consistency and IRM causal filtering) for domains where the optimal policy is structurally aligned with identifiable dynamics; these extensions are machine-verified in Lean~4 but are not empirically claimed to help on our primary benchmark, whose task structure (counteracting demand-driven dynamics) places it outside the applicability regime of the symbolic extensions (\Cref{sec:scope}).
+This paper presents CS-BAPR, a \emph{family} of methods for OOD extrapolation in reinforcement learning built around two components: (i)~a set of four training-stabilization fixes---min-$Q$ ensemble targets, running-EMA reward normalization, entropy-temperature floor, and disabling the BAPR behavioural-cloning anchor for constrained heads---and (ii)~an architecturally-varied actor head chosen from NAU/NMU, KAN, or plain MLP-with-tanh. The theoretical core, machine-verified in Lean~4, is the \emph{OOD Extrapolation Stability Bound} $\|\pi(x_{\text{ood}}) - \pi_{\text{ref}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \tfrac{L}{2}\|d\|^2$ (\Cref{thm:ood_quad_nD}) together with the \emph{ReLU Impossibility Theorem} $\nexists L,\ \text{HasArithmeticInductiveBias}(\text{ReLU}, L)$ (\Cref{thm:relu_impossible}) and the \emph{CS-BAPR Bellman contraction} (\Cref{thm:csbapr_contraction}). The bound is instantiable by any of the three CS-BAPR heads (NAU gives $L{=}0$, NMU gives $L{=}2|c|$, KAN and spectrally-normalized MLP give finite bounded $L$) but not by the ReLU baseline.
 
-Our theoretical contributions are the \emph{OOD Extrapolation Stability Bound} $\|\pi(x_{\text{ood}}) - \pi_{\text{ref}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \tfrac{L}{2}\|d\|^2$, the \emph{ReLU Impossibility Theorem} ($\nexists L,\ \text{HasArithmeticInductiveBias}(\text{ReLU}, L)$), and the \emph{CS-BAPR Bellman contraction}, all machine-verified in Lean~4 with no \texttt{sorry} (954~lines, 34~theorems in \texttt{CSBAPR.lean}). Empirically, on a 12-line SUMO-calibrated transit holding benchmark with demand multipliers up to $50{\times}$, the NAU actor plus stabilization fixes improves over the ReLU BAPR baseline by \tbd\%\ at $5{-}20{\times}$ and by \tbd\%\ at $50{\times}$.
+Empirically, on a 12-line SUMO-calibrated transit holding benchmark evaluated under three OOD protocols (static demand sweep to $50{\times}$, abrupt burst at $t{=}3600$s, within-episode piecewise-constant oscillation with up to 9 switches per episode and peak $50{\times}$), all three CS-BAPR variants outperform the BAPR (ReLU, no fixes) baseline at every OOD cell we measured. Among the three CS-BAPR variants, we observe a trade-off: the NAU variant gives the best mid-range OOD ($5{\times}$, +23\% over BAPR) at the cost of higher run-to-run variance; the MLP-with-fixes variant gives the most consistent and lowest-variance behaviour at the extreme end ($20{-}50{\times}$, +13-19\%); and the KAN variant is best on in-distribution return but middling on OOD. Rather than nominate a single winner, we report the three as a coherent family whose choice depends on the deployment regime and the variance tolerance of the operator.
+
+The symbolic framework extensions (SINDy-based Jacobian Consistency and IRM causal filtering) are formalized and machine-verified in Lean, but deliberately not activated on this benchmark: transit holding is a counteraction task, not a tracking task, and an early variant including $\Gamma_{\text{sym}}$ under-performed the simpler NAU-only configuration. The extensions are retained as framework-level components for future applications in the tracking regime.
 
 \textbf{Limitations.}
-\emph{Architectural scope.} The derivative-Lipschitz bound is specific to bounds of the form $\delta + \varepsilon\|d\| + (L/2)\|d\|^2$; alternative frameworks (e.g., piecewise-linear extrapolation analysis) may yield different guarantees for ReLU networks. Smooth activations (GELU, Softplus, tanh) admit finite $L$ and are compatible with the bound, but pay a nonzero quadratic-term cost that NAU avoids by construction.
-\emph{Symbolic extensions are optional and domain-restricted.} The SINDy pipeline only helps when the optimal policy tracks identified dynamics; tasks that counteract dynamics (including our primary benchmark) are outside this regime, and we do not claim the symbolic extensions help there. A benchmark whose optimal policy is an analytic function of state (e.g., energy-shaping pendulum swing-up, LQR tracking) is needed to empirically validate the SINDy extension; this is future work.
-\emph{Single benchmark.} The empirical results are on one transit corridor. Generalization across corridors, across task structures (e.g., vehicle routing vs.\ holding), and across fleet sizes remains to be verified.
-\emph{Feature-extractor Lipschitz bound is assumed, not enforced.} Assumption~\ref{assump:feature_lip} requires $L_{\text{feat}} < \infty$. In our implementation this is achieved by weight clamping during training; a principled use of spectral normalization or LipSDP bounds would tighten the composed $L$ and is a natural refinement.
+\emph{Architectural scope.} The derivative-Lipschitz bound is specific to bounds of the form $\delta + \varepsilon\|d\| + (L/2)\|d\|^2$; alternative frameworks (e.g., piecewise-linear extrapolation analysis) may yield different guarantees for ReLU networks. Smooth activations (GELU, Softplus, tanh) also admit finite $L$ and are compatible with the bound.
+\emph{Training-stabilization fixes carry most of the empirical load.} Our ablation (\texttt{csbapr-no-nau}) isolates the four training-stabilization fixes from the architectural change; the result is that a plain MLP-with-tanh head plus the four fixes already recovers most of the OOD improvement over BAPR. The architectural $L$-bound guarantees from NAU/NMU/KAN are real but do not reliably dominate the MLP-with-fixes variant in our experiments---they trade off ID quality, mid-OOD peak performance, and variance.
+\emph{Run-to-run variance on NAU.} In one of three seeds, the NAU actor landed in a poor optimization basin that the $\{-1,0,1\}$ weight constraint could not escape from, yielding an outlier at $m{=}20$. We report the unfiltered mean but flag this as a practical caveat of the constrained-weight architecture.
+\emph{Symbolic extensions are optional and domain-restricted.} A benchmark whose optimal policy is an analytic function of state (e.g., energy-shaping pendulum swing-up, LQR tracking) is needed to empirically validate the SINDy extension; this is future work.
+\emph{Single benchmark.} The empirical results are on one transit corridor. Generalization across corridors, task structures, and fleet sizes remains to be verified.
+\emph{Feature-extractor Lipschitz bound is assumed, not enforced.} Assumption~\ref{assump:feature_lip} requires $L_{\text{feat}} < \infty$; our implementation uses weight clamping, and a principled use of spectral normalization or LipSDP bounds would tighten the composed $L$.
 
-\textbf{Future work.} We plan to (i) validate the symbolic extensions on a tracking-style benchmark where they are predicted to help, and quantify the $\varepsilon$-reduction empirically; (ii) investigate online SINDy refinement with formal re-verification of the frozen-parameter condition; (iii) extend the $L$ analysis to end-to-end NAU + spectral-normalized feature extractor via LipSDP; and (iv) integrate the primary NAU pipeline with a distributional-RL backbone for risk-sensitive OOD deployment.
+\textbf{Future work.} (i)~Larger-scale seed sweeps ($\geq 10$) to resolve whether NAU's higher variance disappears or persists; (ii)~a tracking-regime benchmark (pendulum swing-up, LQR) to empirically validate the SINDy and IRM extensions; (iii)~principled Lipschitz enforcement on the feature extractor via spectral normalization or LipSDP, which would tighten the composed~$L$; (iv)~online SINDy refinement with formal re-verification of the frozen-parameter condition; and (v)~integrating the CS-BAPR family with distributional RL for risk-sensitive OOD deployment.
 
 \section*{Acknowledgments}
 This work was supported by the National Natural Science Foundation of China (Grant No. 72371251), the Natural Science Foundation for Distinguished Young Scholars of Hunan Province (Grant No. 2024JJ2080), and the Key Research and Development Program of Hunan Province of China (Grant No. 2024JK2007).
