@@ -405,8 +405,17 @@ class CSBAPRAgent:
         q_mean = q_values.mean(dim=0)
         q_std = q_values.std(dim=0)
 
-        # Adaptive beta from belief (directly from BAPR)
-        effective_beta = -2.0 - w_lambda * 5.0
+        # Adaptive beta from belief (directly from BAPR, with v10 fix).
+        # P0: during warmup, force w_lambda=0 so β_eff=-2 (pure RE-SAC).
+        #     BOCD belief is uniform + Q-std is tiny in early training,
+        #     giving a spurious w_lambda that over-conservativizes the
+        #     policy before it can explore. Particularly bad for NAU,
+        #     whose {-1,0,1} weight constraint locks bad early basins.
+        # P1: penalty_scale is configurable (default 2.0 per BAPR v10)
+        #     instead of hardcoded 5.0, reducing over-conservatism at
+        #     steady-state too.
+        w_lambda_eff = 0.0 if self.training_steps < self.config.bapr_warmup_iters else w_lambda
+        effective_beta = -2.0 - w_lambda_eff * self.config.penalty_scale
         policy_loss = -(q_mean + effective_beta * q_std - self.alpha * log_prob).mean()
 
         # Behavior cloning regularization (RE-SAC dual reg, prevents policy drift
@@ -453,6 +462,7 @@ class CSBAPRAgent:
             'q_std': q_std.mean().item(),
             'alpha': self.alpha,
             'weighted_lambda': w_lambda,
+            'weighted_lambda_effective': w_lambda_eff,   # 0 during BAPR warmup, else = w_lambda
             'sym_penalty': sym_p,
             'jac_loss': jac_loss_val,
             'surprise': surprise,

@@ -47,6 +47,20 @@ class CSBAPRConfig:
     beta_bc: float = 0.001        # behavior cloning weight (RE-SAC dual reg, prevents policy drift)
     actor_type: str = None        # None→NAU/MLP (via use_nau_actor), 'kan'→KAN actor
 
+    # ===== BAPR v10 fix (P0 + P1) — early-training stability =====
+    # P0: force w_lambda=0 for the first bapr_warmup_iters training iterations.
+    # Early in training the BOCD belief is uniform and Q-std is tiny, which
+    # gives a spurious non-zero w_lambda that over-biases β_eff before the
+    # ensemble has diverged. Under NAU's {-1,0,1} weight constraint this
+    # bad-basin lock-in is not recoverable; ~40% of NAU seeds crashed at 20x
+    # OOD in the 10-seed study before this fix.
+    bapr_warmup_iters: int = 100
+    # P1: penalty_scale — multiplicative factor on w_lambda in effective_beta.
+    # Was hardcoded 5.0 (inherited from BAPR v9); BAPR v10 lowered to 2.0
+    # because steady-state w_lambda≈0.3 × scale=5 → β_eff=-3.5 is too
+    # conservative. scale=2.0 → β_eff ∈ [-3.2, -2] is much milder.
+    penalty_scale: float = 2.0
+
     # ===== CS-BAPR New =====
     weight_sym: float = 0.01      # λ_sym — symbolic consistency penalty (Lean: p.lam_sym ≥ 0)
     jac_weight: float = 0.01      # Jacobian consistency weight in policy loss (reduced 0.1→0.01)
