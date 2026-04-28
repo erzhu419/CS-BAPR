@@ -53,7 +53,14 @@ class CSBAPRConfig:
     # transitions from the on-policy rollout instead of the random replay
     # batch (which can be dominated by stale transitions under non-
     # stationarity). The q_std spike is also one-sided in surprise.py.
-    surprise_window: int = 1024
+    #
+    # Default 256 matches batch_size — the rollout-surprise then costs the
+    # same critic forward as the previous replay-based path, no extra
+    # overhead. (BAPR v14's 1024 default is for its iter-level multi_update
+    # which is called ~once per 4000-step iter; CS-BAPR's update() is
+    # called every train_freq=20 decisions, ~450 times per ep, so a
+    # smaller window keeps total compute bounded.)
+    surprise_window: int = 256
 
     # ===== BAPR v10 fix (P0 + P1) — early-training stability =====
     # P0: force w_lambda=0 for the first bapr_warmup_iters training iterations.
