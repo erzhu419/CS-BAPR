@@ -59,8 +59,10 @@ echo "Episodes per run: $EPISODES"
 echo "===================================================="
 
 # ── Run queue ──
-METHODS=("csbapr" "bapr" "csbapr-kan" "csbapr-no-nau")
-SEEDS=(0 1 2)
+# METHODS / SEEDS can be overridden via env var (space-separated string).
+# Example: METHODS='csbapr' SEEDS='3 4 5 6 7 8 9' bash run_smart_CS-BAPR.sh
+METHODS=(${METHODS:-csbapr bapr csbapr-kan csbapr-no-nau})
+SEEDS=(${SEEDS:-0 1 2})
 pids=()
 
 wait_for_slot() {
