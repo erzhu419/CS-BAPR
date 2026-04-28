@@ -60,11 +60,15 @@ class SurpriseComputer:
         reward_zscore = abs(batch_reward_mean - self.reward_ema) / reward_std
         signals.append(reward_zscore)
 
-        # Signal 2: Q-std spike
+        # Signal 2: Q-std spike (one-sided; per BAPR v14 / GPT-5.5 review v2)
+        # Old version used abs(...) which also fired when ensemble was
+        # *converging* (Q-std dropping), polluting BOCD with false positives.
+        # The actual signal of regime change is Q-std *spiking up*, so we keep
+        # only the positive deviation.
         current_q_std = q_std.mean().item() if isinstance(q_std, torch.Tensor) else q_std
         if self.prev_q_std is not None and self.prev_q_std > 1e-6:
-            q_std_change = abs(current_q_std - self.prev_q_std) / self.prev_q_std
-            signals.append(q_std_change)
+            q_std_spike = max(current_q_std / self.prev_q_std - 1.0, 0.0)
+            signals.append(q_std_spike)
         self.prev_q_std = current_q_std
 
         # Signal 3: reg_norm divergence

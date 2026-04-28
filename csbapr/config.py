@@ -47,6 +47,14 @@ class CSBAPRConfig:
     beta_bc: float = 0.001        # behavior cloning weight (RE-SAC dual reg, prevents policy drift)
     actor_type: str = None        # None→NAU/MLP (via use_nau_actor), 'kan'→KAN actor
 
+    # ===== BAPR v14 fix — rollout-based surprise =====
+    # When the training script can supply `recent_rollout` to update(), the
+    # surprise signal is computed over the latest `surprise_window`
+    # transitions from the on-policy rollout instead of the random replay
+    # batch (which can be dominated by stale transitions under non-
+    # stationarity). The q_std spike is also one-sided in surprise.py.
+    surprise_window: int = 1024
+
     # ===== BAPR v10 fix (P0 + P1) — early-training stability =====
     # P0: force w_lambda=0 for the first bapr_warmup_iters training iterations.
     # Early in training the BOCD belief is uniform and Q-std is tiny, which

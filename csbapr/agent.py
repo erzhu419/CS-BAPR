@@ -306,7 +306,7 @@ class CSBAPRAgent:
         print(f"[Phase 0] SINDyTorchWrapper created (coefficients frozen)")
         print(f"[Phase 0] ✓ Phase 0 complete")
 
-    def update(self, batch_size: int = None):
+    def update(self, batch_size: int = None, recent_rollout: dict = None):
         """
         Single CS-BAPR update step.
         
@@ -347,17 +347,44 @@ class CSBAPRAgent:
         reward = reward / max(self._reward_ema_var ** 0.5, 1e-6)
 
         # ===== Step 1: Surprise + Belief (inherited BA-PR) =====
-        with torch.no_grad():
-            pre_q = self.critic(state, action)
-            q_std_signal = pre_q.std(dim=0)
-
+        # By default, surprise uses the current random replay batch. Per BAPR
+        # v14 / GPT-5.5 review, this is suboptimal under non-stationarity:
+        # the replay batch may be dominated by old-regime transitions, masking
+        # the new-regime signal. When `recent_rollout` is supplied (a dict
+        # with at least `state` and `action` arrays from the most-recent
+        # on-policy rollout), we instead compute Q-std and reward signals
+        # from that rollout's most recent surprise_window transitions.
         reg_norm = compute_reg_norm(self.target_critic)
         current_reg_norm = compute_reg_norm(self.critic)
 
-        surprise = self.surprise_computer.compute(
-            reward, q_std_signal,
-            reg_norm_current=current_reg_norm, reg_norm_target=reg_norm
-        )
+        if recent_rollout is not None and len(recent_rollout.get("reward", [])) >= 8:
+            surprise_window = int(getattr(self.config, "surprise_window", 1024))
+            r_arr = np.asarray(recent_rollout["reward"], dtype=np.float32)
+            s_arr = np.asarray(recent_rollout["state"], dtype=np.float32)
+            a_arr = np.asarray(recent_rollout["action"], dtype=np.float32)
+            tail = min(surprise_window, len(r_arr))
+            r_arr = r_arr[-tail:]
+            s_arr = s_arr[-tail:]
+            a_arr = a_arr[-tail:]
+            with torch.no_grad():
+                rs = torch.from_numpy(s_arr).to(self.device)
+                ra = torch.from_numpy(a_arr).to(self.device)
+                pre_q = self.critic(rs, ra)
+                q_std_signal = pre_q.std(dim=0)
+            r_tensor = torch.from_numpy(r_arr).unsqueeze(1).to(self.device)
+            r_tensor = r_tensor / max(self._reward_ema_var ** 0.5, 1e-6)
+            surprise = self.surprise_computer.compute(
+                r_tensor, q_std_signal,
+                reg_norm_current=current_reg_norm, reg_norm_target=reg_norm,
+            )
+        else:
+            with torch.no_grad():
+                pre_q = self.critic(state, action)
+                q_std_signal = pre_q.std(dim=0)
+            surprise = self.surprise_computer.compute(
+                reward, q_std_signal,
+                reg_norm_current=current_reg_norm, reg_norm_target=reg_norm,
+            )
         self.belief_tracker.update(surprise)
 
         # ===== Step 2: Alpha loss =====

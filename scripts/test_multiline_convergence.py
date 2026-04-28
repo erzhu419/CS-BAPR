@@ -24,7 +24,7 @@ import os
 import sys
 import time
 import warnings
-from collections import defaultdict
+from collections import defaultdict, deque
 import numpy as np
 import torch
 
@@ -106,6 +106,11 @@ def run_episode_multiline(env, agent, deterministic=False, train=True,
     ep_decisions = 0
     train_steps = 0
     _update_counter = 0
+    # Rolling on-policy rollout for v14 surprise computation.
+    surprise_window = int(getattr(config, "surprise_window", 1024)) if config else 1024
+    rollout_states = deque(maxlen=surprise_window)
+    rollout_actions = deque(maxlen=surprise_window)
+    rollout_rewards = deque(maxlen=surprise_window)
 
     # Seed initial actions from initialize_state() output
     for line_id, bus_dict in state_dict.items():
@@ -143,6 +148,9 @@ def run_episode_multiline(env, agent, deterministic=False, train=True,
                         pending.pop(key)
                         if train:
                             agent.replay_buffer.push(sv_old, a_old, r_raw, sv_new, 0.0)
+                            rollout_states.append(sv_old)
+                            rollout_actions.append(a_old)
+                            rollout_rewards.append(r_raw)
                         reward_by_line[line_id] += r_raw
                         ep_decisions += 1
                         _update_counter += 1
@@ -155,7 +163,14 @@ def run_episode_multiline(env, agent, deterministic=False, train=True,
         if train and _update_counter >= train_freq:
             _update_counter = 0
             if config and agent.replay_buffer.size >= config.batch_size:
-                agent.update()
+                rollout_kwarg = None
+                if len(rollout_rewards) >= 8:
+                    rollout_kwarg = {
+                        "state": list(rollout_states),
+                        "action": list(rollout_actions),
+                        "reward": list(rollout_rewards),
+                    }
+                agent.update(recent_rollout=rollout_kwarg)
                 train_steps += 1
 
     return reward_by_line, ep_decisions, train_steps
