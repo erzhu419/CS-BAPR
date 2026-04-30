@@ -15,24 +15,43 @@ from torch.distributions import Normal
 class GaussianPolicy(nn.Module):
     """
     SAC-style Gaussian policy with reparameterization trick.
-    
+
     Adapted from BAPR's PolicyNetwork but without categorical embeddings.
     Used as fallback when use_nau_actor=False.
+
+    Args:
+        activation: hidden-layer activation function. 'relu' (default) for the
+            standard SAC tanh-Gaussian baseline (with ReLU hidden + tanh output);
+            'tanh' / 'gelu' / 'softplus' for smooth-activation hidden layers,
+            which give the policy a finite derivative-Lipschitz constant
+            independent of weight magnitudes (relevant for the OOD bound).
     """
     def __init__(self, state_dim: int, action_dim: int, hidden_dim: int = 256,
                  action_range: float = 1.0,
-                 log_std_min: float = -20, log_std_max: float = 2):
+                 log_std_min: float = -20, log_std_max: float = 2,
+                 activation: str = "relu"):
         super().__init__()
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
         self.action_range = action_range
         self.action_dim = action_dim
+        self.activation_name = activation
+
+        act_map = {
+            "relu": nn.ReLU,
+            "tanh": nn.Tanh,
+            "gelu": nn.GELU,
+            "softplus": nn.Softplus,
+        }
+        if activation not in act_map:
+            raise ValueError(f"Unsupported activation: {activation}. Choose from {list(act_map)}")
+        Act = act_map[activation]
 
         self.net = nn.Sequential(
             nn.Linear(state_dim, hidden_dim),
-            nn.ReLU(),
+            Act(),
             nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
+            Act(),
         )
         self.mean_linear = nn.Linear(hidden_dim, action_dim)
         self.log_std_linear = nn.Linear(hidden_dim, action_dim)

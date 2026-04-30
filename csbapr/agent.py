@@ -60,9 +60,18 @@ class CSBAPRAgent:
             self.actor = NAU_NMU_Actor(
                 state_dim, action_dim, self.config.hidden_dim
             ).to(self.device)
-        else:
+        elif actor_type in ("tanh-mlp", "gelu-mlp", "softplus-mlp"):
+            # Smooth-activation MLP fallback (for the four-way head ablation).
+            # The activation is the prefix; e.g., 'tanh-mlp' → tanh hidden layers.
             self.actor = GaussianPolicy(
-                state_dim, action_dim, self.config.hidden_dim
+                state_dim, action_dim, self.config.hidden_dim,
+                activation=actor_type.split("-")[0],
+            ).to(self.device)
+        else:
+            # Default: ReLU-hidden tanh-output (the SAC baseline used by BAPR).
+            self.actor = GaussianPolicy(
+                state_dim, action_dim, self.config.hidden_dim,
+                activation="relu",
             ).to(self.device)
 
         self.critic = EnsembleQNet(
@@ -131,7 +140,14 @@ class CSBAPRAgent:
         from csbapr.sindy.world_model import SymbolicWorldModel
         from csbapr.sindy.torch_wrapper import SINDyTorchWrapper
 
-        n_control = 0  # state-only dynamics
+        # SINDy fit: state-only by default, action-aware when
+        # config.sindy_with_control = True. Action-aware fits
+        # dx/dt ≈ f(x) + B u, identifying both the open-loop dynamics and
+        # the input matrix B; this is the prerequisite for the closed-loop
+        # Jacobian-Consistency target ∇π ≈ -K (the LQR-style optimal
+        # feedback gain) rather than the open-loop ∇π ≈ A used by the
+        # state-only fit.
+        n_control = self.action_dim if getattr(self.config, "sindy_with_control", False) else 0
 
         # ---- Multi-env IRM path ----
         if extra_envs and len(extra_envs) >= 1:
@@ -340,11 +356,13 @@ class CSBAPRAgent:
         with torch.no_grad():
             new_next_action, next_log_prob, _, _, _ = self.actor.evaluate(next_state)
 
-        # Reward scaling: divide by running std (no mean shift — preserves sign)
+        # Reward scaling: divide by running std (no mean shift — preserves sign).
+        # Group-A2 fix; toggle via config.enable_reward_ema.
         self._reward_ema_var = getattr(self, '_reward_ema_var', 1.0)
-        batch_var = reward.var().item()
-        self._reward_ema_var = 0.99 * self._reward_ema_var + 0.01 * batch_var
-        reward = reward / max(self._reward_ema_var ** 0.5, 1e-6)
+        if getattr(self.config, "enable_reward_ema", True):
+            batch_var = reward.var().item()
+            self._reward_ema_var = 0.99 * self._reward_ema_var + 0.01 * batch_var
+            reward = reward / max(self._reward_ema_var ** 0.5, 1e-6)
 
         # ===== Step 1: Surprise + Belief (inherited BA-PR) =====
         # By default, surprise uses the current random replay batch. Per BAPR
@@ -357,7 +375,16 @@ class CSBAPRAgent:
         reg_norm = compute_reg_norm(self.target_critic)
         current_reg_norm = compute_reg_norm(self.critic)
 
-        if recent_rollout is not None and len(recent_rollout.get("reward", [])) >= 8:
+        # v14 rollout-surprise: only enabled when both the toggle is on AND the
+        # caller actually provided a recent_rollout dict. Setting
+        # config.enable_rollout_surprise = False forces the legacy replay-batch
+        # path (Group-B7 ablation).
+        use_rollout = (
+            getattr(self.config, "enable_rollout_surprise", True)
+            and recent_rollout is not None
+            and len(recent_rollout.get("reward", [])) >= 8
+        )
+        if use_rollout:
             surprise_window = int(getattr(self.config, "surprise_window", 1024))
             r_arr = np.asarray(recent_rollout["reward"], dtype=np.float32)
             s_arr = np.asarray(recent_rollout["state"], dtype=np.float32)
@@ -393,7 +420,10 @@ class CSBAPRAgent:
             self.alpha_optimizer.zero_grad()
             alpha_loss.backward()
             self.alpha_optimizer.step()
-            self.alpha = max(self.log_alpha.exp().item(), 0.01)  # floor: prevent entropy collapse
+            # Group-A3: entropy floor, toggle via config.enable_entropy_floor.
+            raw_alpha = self.log_alpha.exp().item()
+            floor = float(getattr(self.config, "entropy_floor", 0.01))
+            self.alpha = max(raw_alpha, floor) if getattr(self.config, "enable_entropy_floor", True) else raw_alpha
 
         # ===== Step 3: Q-loss (CS-BAPR, with Γ_sym) =====
         if self.f_sym_torch is not None:
@@ -411,6 +441,7 @@ class CSBAPRAgent:
                 penalty_decay_rate=0.1,
                 device=self.device,
                 batch_size=batch_size,
+                enable_min_q_target=getattr(self.config, "enable_min_q_target", True),
             )
         else:
             # Fallback: BA-PR Q-loss without Γ_sym
@@ -540,10 +571,13 @@ class CSBAPRAgent:
         penalty_schedule = torch.exp(-0.1 * torch.arange(self.belief_tracker.max_H, dtype=torch.float32, device=self.device))
         weighted_lambda = (belief * penalty_schedule).sum()
 
-        # Conservative target: min over ensemble BEFORE applying per-critic penalties
-        # Prevents coordinated Q-overestimation across critics after buffer saturation
-        target_q_min = target_q_next.min(dim=0, keepdim=True)[0]  # [1, batch]
-        target_q_min = target_q_min.expand(num_critics, -1)        # [ensemble, batch]
+        # Group-A1 fix: conservative target via elementwise min over ensemble.
+        # Toggle via config.enable_min_q_target. Vanilla SAC ensemble = False.
+        if getattr(self.config, "enable_min_q_target", True):
+            target_q_min = target_q_next.min(dim=0, keepdim=True)[0]  # [1, batch]
+            target_q_min = target_q_min.expand(num_critics, -1)        # [ensemble, batch]
+        else:
+            target_q_min = target_q_next  # per-critic targets, no min reduction
 
         next_log_prob_expanded = next_log_prob.unsqueeze(0).repeat(num_critics, 1)
         reg_norm_expanded = reg_norm.unsqueeze(-1).repeat(1, batch_size)

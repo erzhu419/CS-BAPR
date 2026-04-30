@@ -301,7 +301,9 @@ def main():
     parser.add_argument('--episodes', type=int, default=50)
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--method', type=str, default='csbapr',
-                        choices=['csbapr', 'bapr', 'csbapr-kan', 'csbapr-no-nau'])
+                        choices=['csbapr', 'bapr', 'csbapr-kan', 'csbapr-no-nau',
+                                 'csbapr-tanh', 'csbapr-gelu', 'csbapr-softplus',
+                                 'bapr-pristine'])
     parser.add_argument('--env_path', type=str,
                         default='/home/erzhu419/mine_code/offline-sumo/env/calibrated_env')
     args = parser.parse_args()
@@ -338,22 +340,54 @@ def main():
         config.beta_bc = 0.0  # NAU 架构约束已足够防 drift，bc_loss 会过正则化
         print(f"[CS-BAPR] NAU actor (Lipschitz-constrained)")
     elif args.method == 'csbapr-no-nau':
-        # Ablation: remove NAU, test whether fixes alone (min-Q+reward scaling+alpha floor)
-        # explain the CS-BAPR advantage, or NAU actually contributes
+        # Ablation: remove NAU, test whether the 6 fixes alone explain the
+        # CS-BAPR advantage. ReLU hidden + tanh output (the SAC default).
         config.use_nau_actor = False
         config.jac_weight = 0.0
         config.weight_sym = 0.0
         config.nau_reg_weight = 0.0
         config.actor_weight_decay = 1e-4
         config.beta_bc = 0.0
-        print(f"[CS-BAPR-no-NAU] MLP actor + training fixes (isolate NAU contribution)")
-    else:  # bapr
+        print(f"[CS-BAPR-no-NAU] ReLU-MLP actor + 6 fixes (isolate NAU contribution)")
+    elif args.method in ('csbapr-tanh', 'csbapr-gelu', 'csbapr-softplus'):
+        # Smooth-activation MLP variants — defangs the ReLU-strawman objection by
+        # comparing against MLPs whose hidden activations have bounded Lipschitz
+        # derivatives (so they CAN instantiate the OOD bound, unlike ReLU).
+        prefix = args.method.split('-')[1]
+        config.actor_type = f"{prefix}-mlp"
+        config.use_nau_actor = False
+        config.jac_weight = 0.0
+        config.weight_sym = 0.0
+        config.nau_reg_weight = 0.0
+        config.actor_weight_decay = 1e-4
+        config.beta_bc = 0.0
+        print(f"[CS-BAPR-{prefix}] {prefix.title()}-MLP actor + 6 fixes (smooth-activation comparison)")
+    elif args.method == 'bapr-pristine':
+        # Honest pristine BAPR baseline: disable all 6 CS-BAPR fixes so the
+        # comparison against csbapr-no-nau truly isolates the fixes' contribution.
         config.use_nau_actor = False
         config.jac_weight = 0.0
         config.weight_sym = 0.0
         config.nau_reg_weight = 0.0
         config.actor_weight_decay = 0.0
-        print(f"[BAPR] Standard MLP actor")
+        config.beta_bc = 0.001  # original BAPR's BC anchor
+        # Disable Group A
+        config.enable_min_q_target = False
+        config.enable_reward_ema = False
+        config.enable_entropy_floor = False
+        # Disable Group B (v10 + v14)
+        config.bapr_warmup_iters = 0
+        config.penalty_scale = 5.0
+        config.enable_rollout_surprise = False
+        print(f"[BAPR-pristine] Pre-fix MLP baseline (all 6 toggles OFF)")
+    else:  # bapr (legacy: MLP + Group-A fixes baked in by default)
+        config.use_nau_actor = False
+        config.jac_weight = 0.0
+        config.weight_sym = 0.0
+        config.nau_reg_weight = 0.0
+        config.actor_weight_decay = 0.0
+        config.beta_bc = 0.0
+        print(f"[BAPR] MLP actor (Group-A fixes from agent.py default; for backward-compat)")
 
     agent = CSBAPRAgent(config.state_dim, config.action_dim, config)
     print(f"Config: state={config.state_dim}, action={config.action_dim}, "

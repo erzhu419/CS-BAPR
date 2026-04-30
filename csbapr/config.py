@@ -45,7 +45,16 @@ class CSBAPRConfig:
     weight_reg: float = 0.01      # λ_epi — epistemic penalty weight (Lean: p.lam_epi)
     beta_ood: float = 0.1         # OOD Q-std penalty weight
     beta_bc: float = 0.001        # behavior cloning weight (RE-SAC dual reg, prevents policy drift)
-    actor_type: str = None        # None→NAU/MLP (via use_nau_actor), 'kan'→KAN actor
+    actor_type: str = None        # None→NAU/MLP (via use_nau_actor), 'kan'→KAN, 'tanh-mlp'→smooth-activation MLP
+
+    # ===== Toggles for the four CS-BAPR base training-stabilization fixes =====
+    # These default ON (matching CS-BAPR's recipe). Setting them all OFF gives
+    # an honest "pristine BAPR" baseline for ablation.
+    enable_min_q_target: bool = True       # Group-A1: elementwise min-Q across ensemble
+    enable_reward_ema: bool = True         # Group-A2: divide reward by EMA std (no mean shift)
+    enable_entropy_floor: bool = True      # Group-A3: alpha = max(exp(log_alpha), entropy_floor)
+    entropy_floor: float = 0.01            # floor value when enable_entropy_floor is True
+    enable_rollout_surprise: bool = True   # Group-B7 (v14, part 1): use recent on-policy rollout
 
     # ===== BAPR v14 fix — rollout-based surprise =====
     # When the training script can supply `recent_rollout` to update(), the
@@ -84,6 +93,7 @@ class CSBAPRConfig:
     actor_weight_decay: float = 1e-4  # weight decay on actor optimizer (prevents K_g explosion)
 
     # ===== SINDy =====
+    sindy_with_control: bool = False  # if True, fit dx/dt = f(x) + B u (action-aware)
     sindy_threshold: float = 0.1  # STLSQ sparsity threshold
     sindy_lib_degree: int = 2     # polynomial library degree (1-4)
     sindy_discrete_time: bool = True  # prefer discrete mode (trap #10)

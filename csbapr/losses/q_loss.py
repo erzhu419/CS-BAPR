@@ -45,6 +45,7 @@ def compute_q_loss_csbapr(
     penalty_decay_rate: float,
     device: str = 'cpu',
     batch_size: int = 256,
+    enable_min_q_target: bool = True,
 ):
     """
     CS-BAPR Q-loss = BA-PR Q-loss + λ_sym · Γ_sym
@@ -81,9 +82,12 @@ def compute_q_loss_csbapr(
     # sym_penalty: scalar (batch-aggregated Jacobian deviation)
     sym_penalty = compute_jacobian_loss(policy_net, f_sym_torch, next_state)
 
-    # Conservative target: min over ensemble before per-critic penalties
-    target_q_min = target_q_next.min(dim=0, keepdim=True)[0]  # [1, batch]
-    target_q_next = target_q_min.expand(num_critics, -1)       # [ensemble, batch]
+    # Group-A1 fix: conservative target via elementwise min over ensemble.
+    # When enable_min_q_target = False, fall back to per-critic targets
+    # (vanilla SAC ensemble behavior).
+    if enable_min_q_target:
+        target_q_min = target_q_next.min(dim=0, keepdim=True)[0]  # [1, batch]
+        target_q_next = target_q_min.expand(num_critics, -1)       # [ensemble, batch]
 
     # Target Q with all penalties
     # Note: epistemic penalty moved to policy loss (BAPR design, prevents Q-std explosion)

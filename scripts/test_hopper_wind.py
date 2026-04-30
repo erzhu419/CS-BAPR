@@ -92,7 +92,8 @@ def main():
         "--method",
         type=str,
         default="csbapr",
-        choices=["csbapr", "csbapr-no-nau", "csbapr-relu", "bapr"],
+        choices=["csbapr", "csbapr-no-nau", "csbapr-tanh", "csbapr-gelu",
+                 "bapr", "bapr-pristine"],
     )
     parser.add_argument("--max-steps", type=int, default=1000)
     args = parser.parse_args()
@@ -122,26 +123,37 @@ def main():
         config.actor_type = None
         config.nau_reg_weight = 0.01
         config.actor_weight_decay = 1e-4
-        print("[CS-BAPR] NAU actor + training fixes (no SINDy on Hopper)")
+        print("[CS-BAPR] NAU actor + 6 fixes (no SINDy on Hopper)")
     elif args.method == "csbapr-no-nau":
+        config.use_nau_actor = False
+        config.actor_type = None  # default ReLU-MLP
+        config.nau_reg_weight = 0.0
+        config.actor_weight_decay = 1e-4
+        print("[CS-BAPR-no-NAU] ReLU-MLP + 6 fixes (architecture ablation)")
+    elif args.method in ("csbapr-tanh", "csbapr-gelu"):
+        prefix = args.method.split("-")[1]
+        config.actor_type = f"{prefix}-mlp"
         config.use_nau_actor = False
         config.nau_reg_weight = 0.0
         config.actor_weight_decay = 1e-4
-        print("[CS-BAPR-no-NAU] MLP + training fixes (architecture ablation)")
-    elif args.method == "csbapr-relu":
-        # NAU's structural alternative — still gets the training fixes.
+        print(f"[CS-BAPR-{prefix}] {prefix.title()}-MLP + 6 fixes (smooth-activation comparison)")
+    elif args.method == "bapr-pristine":
         config.use_nau_actor = False
         config.nau_reg_weight = 0.0
         config.actor_weight_decay = 0.0
-        print("[CS-BAPR-ReLU] MLP + training fixes (= csbapr-no-nau without weight decay)")
-    else:  # bapr
+        config.beta_bc = 0.001
+        config.enable_min_q_target = False
+        config.enable_reward_ema = False
+        config.enable_entropy_floor = False
+        config.bapr_warmup_iters = 0
+        config.penalty_scale = 5.0
+        config.enable_rollout_surprise = False
+        print("[BAPR-pristine] Pre-fix MLP baseline (all 6 toggles OFF)")
+    else:  # bapr (legacy: MLP + Group-A fixes baked in by default; matches old runs)
         config.use_nau_actor = False
         config.nau_reg_weight = 0.0
         config.actor_weight_decay = 0.0
-        # Disable the four training-stabilization fixes too: this is the true
-        # pre-fix baseline. The agent's effective_beta still uses the v10
-        # warmup/penalty_scale defaults, but nothing else.
-        print("[BAPR] Plain MLP baseline")
+        print("[BAPR] MLP actor (Group-A fixes from agent.py default; for backward-compat)")
 
     agent = CSBAPRAgent(state_dim, action_dim, config)
     print(
