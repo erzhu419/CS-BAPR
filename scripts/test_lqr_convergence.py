@@ -167,6 +167,14 @@ def main():
     env = LQREnv(amplitude=1.0, seed=args.seed)
 
     # ── SINDy Phase 0 (collect random trajectories, fit linear basis) ──
+    # Action-aware SINDy toggle (the closed-loop-target fix flagged in §5.5
+    # of the paper). Enables fitting dx/dt = f(x) + B u jointly so the
+    # symbolic reference encodes both the open-loop dynamics A and the
+    # input matrix B (still a state-only Jac-Consistency target until the
+    # full closed-loop alignment is implemented).
+    if os.environ.get("SINDY_WITH_CONTROL", "0") == "1":
+        config.sindy_with_control = True
+        print("[Config] sindy_with_control = True (action-aware Phase-0 fit)")
     use_sindy = (args.method in ("csbapr", "csbapr-no-nau"))
     if use_sindy:
         try:
