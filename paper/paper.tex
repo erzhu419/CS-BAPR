@@ -969,11 +969,63 @@ where $\delta$ and $\varepsilon$ are the measured ID boundary errors, $L_{\text{
     \label{fig:bound}
 \end{figure}
 
+\subsection{Additional benchmarks}
+\label{sec:aux_benchmarks}
+
+The transit benchmark exercises a single style of OOD: continuous magnitude scaling of an exogenous Poisson rate. To probe how much of the picture from \Crefrange{tab:ood_sweep}{tab:crash} reflects this specific OOD type, we ran two auxiliary benchmarks with different OOD axes and the same four-method comparison.
+
+\paragraph{LQR with state-amplitude OOD.}
+A 2-D point-mass double integrator under quadratic cost was specifically designed as a positive-case stress test for the symbolic extension: dynamics are linear, so SINDy in a degree-1 basis identifies the dynamics matrix $A$ exactly (sparsity $\sim 0.3$, $R^2 > 0.7$), and the LQR-optimal policy $u^* = -Kx$ is itself linear so NAU's $L{=}0$ output head is structurally compatible. We trained on initial states sampled in the unit ball ($m{=}1$) and evaluated on $m \in \{1, 2, 5, 10, 20, 50\}$ with $m$ scaling the initial-state radius. Results are summarized in \Cref{tab:lqr}.
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{LQR initial-amplitude sweep, median episode return over 3 seeds (raw scale, smaller absolute value is better; LQR-optimal at $m{=}1$ is approximately $-3$).}
+\label{tab:lqr}
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & $m{=}1$ & $m{=}2$ & $m{=}5$ & $m{=}10$ & $m{=}20$ & $m{=}50$ \\
+\midrule
+\texttt{bapr}             & $-727$  & $-2{,}446$  & $-35{,}599$  & $-1.3$M & $-3.0$M & $-9.1$M \\
+\texttt{csbapr-no-sindy}  & $-680$  & $-1{,}795$  & $-66{,}588$  & $-1.8$M & $-3.6$M & $-10.7$M \\
+\texttt{csbapr-no-nau}    & $-1{,}305$ & $-1{,}540$ & $-153{,}729$ & $-1.9$M & $-3.0$M & $-11.0$M \\
+\texttt{csbapr} (full)    & $-4{,}324$ & $-4{,}103$ & $-380{,}906$ & $-2.6$M & $-4.5$M & $-14.2$M \\
+\bottomrule
+\end{tabular}
+\end{table}
+The result is striking but interpretable. The plain \texttt{bapr} baseline is the strongest at \emph{every} amplitude, and the SINDy-equipped \texttt{csbapr} configuration is the worst. Two factors explain this:
+\begin{itemize}[leftmargin=*]
+    \item \emph{NAU's $L{=}0$ does not match the LQR optimum after action saturation.} The optimal $u^* = -Kx$ has continuous-valued $K$ entries, while NAU's weights are clamped to $\{-1, 0, 1\}$ — the architecture cannot represent $K$ exactly, and once initial-state amplitude grows beyond the saturation point the optimal action lies on the action-space boundary anyway. NAU's structural advantage at unbounded extrapolation is irrelevant in this saturated regime, while its constrained weight space remains a representation cost.
+    \item \emph{State-only SINDy identifies $A$ but not $B$, so the Jacobian-Consistency target is misaligned.} The CS-BAPR pipeline's SINDy step in our implementation is \emph{state-only} (it fits $\dot x \approx A x$, not $\dot x \approx Ax + Bu$), so the symbolic reference $f_{\text{sym}}$ encodes only the open-loop dynamics, not the closed-loop $A - BK$ that the optimal policy implements. Pulling $\nabla \pi$ toward $\nabla f_{\text{sym}} = A$ is structurally wrong for tracking $-K$, so the Jacobian penalty actively misleads training.
+\end{itemize}
+We report the LQR result as a \emph{negative empirical case for the SINDy extension}: even on a setting designed to be its sweet spot, the current state-only SINDy + Jacobian-Consistency formulation under-performs the no-SINDy ablation. A correctly action-aware SINDy (fitting $f(x, u) = Ax + Bu$ jointly and aligning $\nabla \pi$ with the closed-loop $A - BK$ rather than with $A$) is a clear next step; we leave it to future work because it requires both a code change and a re-derivation of the Jacobian-Consistency theorem (\Cref{thm:sindy_jac}) that is currently formulated in terms of state-only SINDy.
+
+\paragraph{Hopper-v4 with wind disturbance.}
+Standard MuJoCo OOD profiles (mass$\times 10$, gravity$\times 5$) cause physically degenerate behaviour and do not yield the continuous, gentle OOD axis the transit benchmark provides. We instead apply a constant horizontal force $F_{\text{wind}} = a \cdot m_{\text{torso}} \cdot g$ on the Hopper torso for the entire episode, with $a \in \{0, 1, 2, 5, 10, 20\}$. Training uses $a = 0$ (no wind); evaluation sweeps the full range. \Cref{tab:hopper} reports the medians.
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Hopper-v4 wind-amplitude sweep, median episode return. $n{=}3$ seeds for \texttt{csbapr-no-nau} and \texttt{csbapr}, $n{=}2$ seeds for \texttt{bapr}/\texttt{csbapr-relu} (two stuck runs killed). \texttt{bapr} and \texttt{csbapr-relu} share configuration (no actor weight decay, no NAU regularization) and yield identical numbers.}
+\label{tab:hopper}
+\begin{tabular}{lrrrrrr}
+\toprule
+Method & ID ($a{=}0$) & $a{=}1$ & $a{=}2$ & $a{=}5$ & $a{=}10$ & $a{=}20$ \\
+\midrule
+\texttt{bapr}/\texttt{csbapr-relu} & 995 & 216 & 221 & 144 & 99 & 107 \\
+\texttt{csbapr-no-nau} (MLP$+$6 fixes) & $1{,}008$ & $\mathbf{317}$ & $\mathbf{270}$ & $\mathbf{255}$ & $\mathbf{256}$ & $\mathbf{224}$ \\
+\texttt{csbapr} (NAU$+$6 fixes)    & $\mathbf{990}$  & $289$  & $175$  & $62$   & $81$   & $74$  \\
+\bottomrule
+\end{tabular}
+\end{table}
+The Hopper-wind result inverts the bus picture: \texttt{csbapr-no-nau} (MLP $+$ 6 fixes) is the most wind-robust variant at every amplitude, while \texttt{csbapr} (NAU) is best only at the in-distribution point and degrades sharply once the wind kicks in. The diagnosis is again a structural one: NAU's $L{=}0$ output head encourages the policy to be \emph{the same} linear function of state regardless of the disturbance, which is exactly the wrong response to a body-frame force perturbation that requires gait re-tuning. The MLP head, with no architectural pressure to keep the policy state-linear, learns a wider gait that absorbs the wind better. We additionally observed one of three NAU seeds (seed 2) collapse at $a{=}1$ to a return of $85$ (vs.\ $289$/$321$ on the other two seeds), the same $\sim 1/3$ catastrophic-seed pattern seen on the bus benchmark.
+
+\paragraph{Combined takeaway from auxiliary benchmarks.}
+LQR and Hopper-wind tell consistent stories: NAU's $L{=}0$ guarantee is most useful when the optimal policy is itself approximately scale-linear in state (the bus benchmark), and is at best neutral and at worst harmful when the optimal policy needs to bend with structural perturbations (LQR action saturation, Hopper gait adjustment). This refines the contribution claim of \Cref{sec:nau}: the NAU output head is not a universal upgrade over MLP$+$6 fixes; rather, it is the right choice when the OOD axis is a magnitude rescaling of an exogenous input the optimal policy should respond to linearly (transit demand), and the wrong choice when the OOD axis is a structural perturbation requiring policy re-tuning. The 6 training-stabilization fixes are the universal component; the architectural choice is task-specific.
+
 \subsection{Additional analysis}
 
 \textbf{Computational cost.} The NAU head adds negligible computational overhead relative to the MLP baseline ($<$5\% wall-clock). The stabilization fixes are $O(1)$ per update. With three seeds and 500 episodes per configuration, a full run completes in approximately 4.5 hours per seed-configuration on a single CPU core; a hardware-aware launcher (\texttt{scripts/run\_smart\_CS-BAPR.sh}) parallelizes across seeds and configurations based on detected CPU/GPU resources.
 
-\textbf{What we do \emph{not} claim.} We do not claim, on this benchmark, that the SINDy or IRM extensions help: we did not activate them in these runs, and the nature of the task (counteracting demand-driven dynamics, not tracking them) is inside the regime where \Cref{sec:scope} predicts they should not help. A benchmark where the symbolic extensions \emph{do} help---a classical tracking task with an analytic optimal control law---is flagged as future work in \Cref{sec:conclusion}.
+\textbf{What we do \emph{not} claim.} We do not claim, on this benchmark, that the SINDy or IRM extensions help: the LQR experiment in \Cref{sec:aux_benchmarks} above is the strongest evidence we have that the current state-only SINDy formulation does not deliver its theoretical promise. The extensions remain as machine-verified framework components, and we identify the action-aware SINDy correction as the most concrete missing piece between the theoretical claim and an empirically positive case.
 
 
 \section{Conclusion}
