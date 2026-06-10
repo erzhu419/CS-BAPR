@@ -5,7 +5,7 @@ CS-BAPR Training Script — Unified entry point for all experiments.
 Supports:
   - Environments: Pendulum-v1, Hopper-v4, HalfCheetah-v4, Walker2d-v4
   - Methods: csbapr (full), csbapr-relu, csbapr-no-sindy, csbapr-no-irm,
-             csbapr-no-sym, csbapr-no-jac, bapr, sac
+             csbapr-no-sym, csbapr-no-jac, resac, bapr, sac
   - Multi-seed: 5 seeds per config
 
 Usage:
@@ -40,6 +40,7 @@ sys.path.insert(0, str(project_root))
 
 from csbapr.agent import CSBAPRAgent
 from csbapr.config import CSBAPRConfig
+from csbapr.envs.extreme_ood import ExtremeOODConfig, ExtremeOODWrapper
 
 
 # ============================================================
@@ -93,6 +94,16 @@ METHOD_PRESETS = {
         use_nau_actor=False,
         weight_sym=0.0,
         jac_weight=0.0,
+    ),
+    # RE-SAC baseline: ensemble risk-sensitive SAC without BOCD adaptation.
+    # Keep the fixed LCB-style policy penalty (effective_beta=-2) and OOD
+    # Q-std regularization, but disable the BAPR run-length weighted penalty.
+    'resac': dict(
+        use_nau_actor=False,
+        weight_sym=0.0,
+        jac_weight=0.0,
+        bapr_warmup_iters=10**12,
+        penalty_scale=0.0,
     ),
     # Vanilla SAC baseline
     'sac': dict(
@@ -387,7 +398,9 @@ def apply_rarl_perturbation(action, env, rng, adversary_strength=0.1):
     return np.clip(action + perturbation, env.action_space.low, env.action_space.high)
 
 
-def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interval=50):
+def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interval=50,
+          extreme_ood_train=False, ood_schedule="episode_random",
+          ood_intensity=50.0, ood_abrupt_step=100, ood_switch_steps=100):
     """
     Train CS-BAPR agent and save checkpoints + metrics.
 
@@ -414,6 +427,17 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
         config.max_episodes = max_episodes
 
     env = gym.make(env_name)
+    if extreme_ood_train:
+        env = ExtremeOODWrapper(
+            env,
+            config=ExtremeOODConfig(
+                intensity=ood_intensity,
+                schedule=ood_schedule,
+                seed=seed,
+                abrupt_step=ood_abrupt_step,
+                switch_every_steps=ood_switch_steps,
+            ),
+        )
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
 
@@ -424,7 +448,7 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
     use_rarl = _get_method_flag(method_name, '_rarl')
 
     # Phase 0: SINDy pre-identification
-    skip_sindy_methods = ('sac', 'bapr', 'csbapr-no-sindy', 'dr', 'rarl')
+    skip_sindy_methods = ('sac', 'resac', 'bapr', 'csbapr-no-sindy', 'dr', 'rarl')
     if method_name not in skip_sindy_methods:
         try:
             extra_envs = None
@@ -457,6 +481,10 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
     print(f"\n[TRAIN] {run_name}")
     print(f"  Config: NAU={config.use_nau_actor}, weight_sym={config.weight_sym}, "
           f"jac_weight={config.jac_weight}, IRM={use_irm}, DR={use_dr}, RARL={use_rarl}")
+    if extreme_ood_train:
+        print(f"  Extreme OOD train: schedule={ood_schedule}, "
+              f"intensity={ood_intensity:g}, abrupt_step={ood_abrupt_step}, "
+              f"switch_steps={ood_switch_steps}")
 
     history = {
         'episode_rewards': [],
@@ -481,7 +509,7 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
     current_mode = 'normal'
     next_switch_ep = rng.randint(*MODE_SWITCH_INTERVAL) if mode_names else config.max_episodes + 1
 
-    if mode_names and not use_dr:
+    if mode_names and not use_dr and not extreme_ood_train:
         print(f"  Mode switching: {len(mode_names)} modes, "
               f"switch every {MODE_SWITCH_INTERVAL[0]}-{MODE_SWITCH_INTERVAL[1]} episodes")
         apply_mode_to_env(env, env_name, mode_profiles.get('normal', {}))
@@ -493,7 +521,7 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
         if use_dr:
             dr_params = randomize_env_params(env, env_name, rng)
         # === Standard mode switch ===
-        elif mode_names and episode >= next_switch_ep:
+        elif mode_names and not extreme_ood_train and episode >= next_switch_ep:
             current_mode = rng.choice(mode_names)
             apply_mode_to_env(env, env_name, mode_profiles[current_mode])
             next_switch_ep = episode + rng.randint(*MODE_SWITCH_INTERVAL)
@@ -562,9 +590,12 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
                 })
 
             elapsed = time.time() - start_time
-            mode_str = f", mode={current_mode}" if mode_names and not use_dr else ""
+            mode_str = f", mode={current_mode}" if mode_names and not use_dr and not extreme_ood_train else ""
             if use_dr:
                 mode_str = ", DR=on"
+            if extreme_ood_train:
+                active = getattr(env, "active_profile_name", "unknown")
+                mode_str = f", extreme_ood={active}"
             if use_rarl:
                 mode_str += ", RARL=on"
             print(f"  Ep {episode+1}/{config.max_episodes}: "
@@ -603,6 +634,13 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
             'gpu_memory_peak_mb': gpu_mem_peak,
             'sindy_report': getattr(agent, '_sindy_report', None),
             'irm_report': getattr(agent, '_irm_report', None),
+            'extreme_ood_train': extreme_ood_train,
+            'extreme_ood_config': {
+                'schedule': ood_schedule,
+                'intensity': ood_intensity,
+                'abrupt_step': ood_abrupt_step,
+                'switch_every_steps': ood_switch_steps,
+            } if extreme_ood_train else None,
             'config': {k: v for k, v in vars(config).items()
                        if isinstance(v, (int, float, str, bool))},
         }, f, indent=2)
@@ -624,10 +662,26 @@ def main():
     parser.add_argument("--max-episodes", type=int, default=None)
     parser.add_argument("--eval-interval", type=int, default=50)
     parser.add_argument("--save-dir", type=str, default="results")
+    parser.add_argument("--extreme-ood-train", action="store_true",
+                        help="Train under bus-like extreme random OOD wrapper")
+    parser.add_argument("--ood-schedule", type=str, default="episode_random",
+                        choices=["static", "episode_random", "abrupt", "oscillating", "step_random"],
+                        help="Extreme OOD schedule used when --extreme-ood-train is set")
+    parser.add_argument("--ood-intensity", type=float, default=50.0,
+                        help="Max OOD multiplier used by the generic wrapper")
+    parser.add_argument("--ood-abrupt-step", type=int, default=100,
+                        help="Step for abrupt OOD shift")
+    parser.add_argument("--ood-switch-steps", type=int, default=100,
+                        help="Switch period for oscillating/step_random OOD")
 
     args = parser.parse_args()
     train(args.env, args.method, args.seed, args.save_dir,
-          args.max_episodes, args.eval_interval)
+          args.max_episodes, args.eval_interval,
+          extreme_ood_train=args.extreme_ood_train,
+          ood_schedule=args.ood_schedule,
+          ood_intensity=args.ood_intensity,
+          ood_abrupt_step=args.ood_abrupt_step,
+          ood_switch_steps=args.ood_switch_steps)
 
 
 if __name__ == "__main__":

@@ -45,6 +45,8 @@ import numpy as np
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+from csbapr.envs.extreme_ood import ExtremeOODConfig, make_extreme_ood_env
+
 
 # ============================================================
 # Theoretical Bounds (Part X corrected)
@@ -762,6 +764,103 @@ def gym_ood_sweep(env_name, param_name, multipliers, n_seeds=5,
     return results
 
 
+def gym_extreme_random_sweep(env_name, intensities, n_seeds=5,
+                             checkpoint_nau=None, checkpoint_relu=None,
+                             max_steps=1000, schedule="episode_random",
+                             abrupt_step=100, switch_every_steps=100):
+    """
+    Evaluate policies under bus-like extreme randomized OOD.
+
+    Unlike ``gym_ood_sweep``, this does not test a single named parameter.
+    Each intensity builds a profile bank with severe physics perturbations
+    when available, and sensor/action perturbations for every Gym env.
+    """
+    import gymnasium as gym
+
+    print("\n" + "=" * 70)
+    print(f"CS-BAPR Extreme Random OOD Sweep: {env_name}")
+    print(f"Schedule: {schedule}, Intensities: {intensities}, Seeds: {n_seeds}")
+    print("=" * 70)
+
+    test_env = gym.make(env_name)
+    state_dim = test_env.observation_space.shape[0]
+    action_dim = test_env.action_space.shape[0]
+    test_env.close()
+
+    policy_fns = {}
+    if checkpoint_nau:
+        _, fn_nau = load_policy(checkpoint_nau, state_dim, action_dim, use_nau=True)
+        policy_fns['CS-BAPR (NAU)'] = fn_nau
+    if checkpoint_relu:
+        _, fn_relu = load_policy(checkpoint_relu, state_dim, action_dim, use_nau=False)
+        policy_fns['BA-PR (ReLU)'] = fn_relu
+    policy_fns['Random'] = None
+
+    results = {}
+    for intensity in intensities:
+        d = compute_ood_distance(env_name, "intensity", max(float(intensity), 1e-9))
+        print(f"\n--- extreme_intensity_{intensity:g} (d={d:.3f}) ---")
+        method_results = {}
+
+        for method_name, policy_fn in policy_fns.items():
+            seed_rewards = []
+            seed_lengths = []
+            for seed in range(n_seeds):
+                env = make_extreme_ood_env(
+                    env_name,
+                    config=ExtremeOODConfig(
+                        intensity=float(intensity),
+                        schedule=schedule,
+                        seed=seed,
+                        abrupt_step=abrupt_step,
+                        switch_every_steps=switch_every_steps,
+                    ),
+                )
+                eval_result = evaluate_policy_on_env(
+                    env, policy_fn, n_episodes=1, max_steps=max_steps
+                )
+                seed_rewards.append(eval_result['mean_reward'])
+                seed_lengths.append(eval_result['mean_length'])
+                env.close()
+
+            method_results[method_name] = {
+                'mean_reward': float(np.mean(seed_rewards)),
+                'std_reward': float(np.std(seed_rewards)),
+                'mean_length': float(np.mean(seed_lengths)),
+                'rewards': seed_rewards,
+            }
+            print(f"  {method_name}: {np.mean(seed_rewards):.1f} ± {np.std(seed_rewards):.1f} "
+                  f"(len={np.mean(seed_lengths):.0f})")
+
+        bound_corrected = float(theoretical_bound_corrected(d))
+        bound_fencing = float(theoretical_bound_fencing(d))
+        results[f"extreme_{intensity:g}"] = {
+            'mode_name': f"extreme_{intensity:g}",
+            'intensity': float(intensity),
+            'schedule': schedule,
+            'ood_distance': d,
+            'methods': method_results,
+            'bound_corrected': bound_corrected,
+            'bound_fencing': bound_fencing,
+            'L_eff': 0.0,
+        }
+
+    print("\n" + "=" * 70)
+    header = f"{'Intensity':>12s} {'d':>6s}"
+    for m in policy_fns:
+        header += f" {m:>16s}"
+    print(header)
+    print("-" * len(header))
+    for key, r in sorted(results.items(), key=lambda x: x[1]['ood_distance']):
+        line = f"{r['intensity']:>12.1f} {r['ood_distance']:>6.3f}"
+        for m in policy_fns:
+            mr = r['methods'].get(m, {})
+            line += f" {mr.get('mean_reward', 0):>8.1f}±{mr.get('std_reward', 0):>4.1f}"
+        print(line)
+
+    return results
+
+
 # ============================================================
 # Bus Simulation OOD Protocol (backward-compatible)
 # ============================================================
@@ -926,6 +1025,10 @@ Examples:
   # Save results as JSON
   python scripts/ood_eval.py --env Pendulum-v1 --param mass --range 1,2,5,10 \\
       --output results/pendulum_ood.json
+
+  # Bus-like randomized OOD on any Gymnasium env
+  python scripts/ood_eval.py --env Pendulum-v1 --extreme-random \\
+      --range 1,5,10,20,50,100 --ood-schedule abrupt
         """,
     )
     parser.add_argument("--env", type=str, default="Pendulum-v1",
@@ -949,6 +1052,16 @@ Examples:
     parser.add_argument("--compound", action="store_true",
                         help="Use compound mode profiles from train_csbapr.py "
                              "(multi-param perturbation, overrides --param/--range)")
+    parser.add_argument("--extreme-random", action="store_true",
+                        help="Use generic bus-like extreme randomized OOD wrapper; "
+                             "--range is interpreted as intensity values")
+    parser.add_argument("--ood-schedule", type=str, default="episode_random",
+                        choices=["static", "episode_random", "abrupt", "oscillating", "step_random"],
+                        help="Schedule for --extreme-random")
+    parser.add_argument("--ood-abrupt-step", type=int, default=100,
+                        help="Step for abrupt random OOD shift")
+    parser.add_argument("--ood-switch-steps", type=int, default=100,
+                        help="Switch period for oscillating/step_random random OOD")
     parser.add_argument("--output", type=str, default=None)
     parser.add_argument("--plot", action="store_true",
                         help="Generate bound vs actual plot (Figure 1)")
@@ -977,6 +1090,18 @@ Examples:
         od_range = [int(x) for x in (args.od_range or "1,5,10,20,50,100").split(",")]
         results = bus_ood_sweep(args.env_path, od_range,
                                 n_seeds=args.seeds, max_steps=args.max_steps)
+    elif args.extreme_random:
+        intensities = [float(x) for x in args.range.split(",")]
+        results = gym_extreme_random_sweep(
+            args.env, intensities,
+            n_seeds=args.seeds,
+            checkpoint_nau=args.checkpoint_nau,
+            checkpoint_relu=args.checkpoint_relu,
+            max_steps=args.max_steps,
+            schedule=args.ood_schedule,
+            abrupt_step=args.ood_abrupt_step,
+            switch_every_steps=args.ood_switch_steps,
+        )
     elif args.mode == 'shift':
         multipliers = [float(x) for x in args.range.split(",")]
         results = gym_abrupt_shift_sweep(
