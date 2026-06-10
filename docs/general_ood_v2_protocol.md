@@ -34,6 +34,21 @@ It applies perturbations in two layers:
 This means the same protocol can run on Pendulum, Hopper, Walker2d,
 HalfCheetah, Ant, or a non-physics custom Gym environment.
 
+## Profile Families
+
+`--ood-profile-family extreme`
+: The original generic stress test. It deliberately mixes severe physics,
+sensor, and actuator perturbations. This is useful for finding failure modes,
+but it is less analogous to the bus benchmark because the OOD source is not a
+single coherent latent regime.
+
+`--ood-profile-family structured`
+: A bus-like latent-load family. Each profile is a coherent regime such as
+`low_load`, `rush_load`, `mega_event`, or `slippery_rush`; the profile changes
+mass/gravity/friction together instead of injecting unrelated sensor/action
+chaos. The agent does not observe the profile label. The label and
+`latent_load` are only emitted in `info` for diagnostics.
+
 ## Schedules
 
 `--ood-schedule static`
@@ -62,6 +77,7 @@ python scripts/train_csbapr.py \
   --seed 0 \
   --max-episodes 50 \
   --extreme-ood-train \
+  --ood-profile-family structured \
   --ood-schedule episode_random \
   --ood-intensity 50
 ```
@@ -74,6 +90,7 @@ python scripts/train_csbapr.py \
   --method csbapr-no-sindy \
   --seed 0 \
   --extreme-ood-train \
+  --ood-profile-family structured \
   --ood-schedule abrupt \
   --ood-intensity 50 \
   --ood-abrupt-step 250
@@ -104,6 +121,14 @@ This makes off-policy training regime-aware without using the wrapper's
 Use `bapr-context` as the key ablation: if it improves as much as
 `csbapr-context`, the gain is from online regime inference rather than NAU.
 
+The initial context-adaptation runs did not recover the bus-level CS-BAPR
+advantage under the unstructured `extreme` family. The next protocol therefore
+separates two questions:
+
+- `extreme`: robustness to arbitrary compound chaos.
+- `structured`: robustness to bus-like latent regime shifts with very large OOD
+  magnitude.
+
 ## Evaluation
 
 Evaluate random OOD intensity sweeps:
@@ -113,6 +138,7 @@ python scripts/ood_eval.py \
   --env Pendulum-v1 \
   --extreme-random \
   --range 1,5,10,20,50,100 \
+  --ood-profile-family structured \
   --ood-schedule abrupt \
   --ood-abrupt-step 100 \
   --seeds 10 \
@@ -126,6 +152,7 @@ python scripts/ood_eval.py \
   --env Hopper-v4 \
   --extreme-random \
   --range 1,5,10,20,50 \
+  --ood-profile-family structured \
   --ood-schedule oscillating \
   --ood-switch-steps 100 \
   --checkpoint-nau results/csbapr_Hopper-v4_0_best.pt \
@@ -146,3 +173,24 @@ The key v2 question is not whether NAU always wins. It is whether the six
 training-stabilization fixes plus architecture choices produce a robust family
 under severe non-stationarity, and which environments actually match the
 constant-derivative inductive bias.
+
+## Structured-OOD Follow-Up Matrix
+
+After the negative `extreme` and context-adaptation results, the most relevant
+next matrix is:
+
+| Env | Methods | Schedule | Intensity |
+| --- | --- | --- | --- |
+| `Pendulum-v1` | `csbapr-no-sindy`, `bapr`, `resac`, `csbapr-context`, `bapr-context` | step_random | 50 |
+| `Hopper-v4` | `csbapr-no-sindy`, `bapr`, `resac`, `csbapr-context`, `bapr-context` | step_random | 50 |
+
+Interpretation:
+
+- If CS-BAPR improves only on `structured`, the contribution is not generic
+  chaos robustness; it is compatibility between the architecture and
+  low-dimensional coherent OOD regimes.
+- If BAPR/context variants close the gap, the paper should emphasize online
+  regime inference rather than NAU.
+- If all methods remain weak, the result is a clean negative result: bus has
+  environment-specific structure that generic continuous-control tasks do not
+  reproduce under current wrappers.

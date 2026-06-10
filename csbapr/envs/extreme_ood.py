@@ -34,6 +34,7 @@ class ExtremeOODConfig:
 
     intensity: float = 50.0
     schedule: str = "episode_random"
+    profile_family: str = "extreme"
     seed: Optional[int] = None
     static_profile: Optional[str] = None
     abrupt_step: int = 100
@@ -133,6 +134,105 @@ def default_extreme_profiles(env_name: Optional[str] = None, intensity: float = 
     return common[:1] + physical + common[1:]
 
 
+def default_structured_profiles(env_name: Optional[str] = None, intensity: float = 50.0) -> List[Profile]:
+    """
+    Build structured bus-like OOD regimes for generic RL.
+
+    The original ``extreme`` family deliberately mixes physics, sensor, and
+    actuator shocks. That is a useful stress test, but it is not analogous to
+    the bus benchmark where a low-dimensional latent demand regime coherently
+    changes the dynamics. This profile family keeps the OOD magnitude large
+    while making each profile a coherent latent-load mode. No oracle label is
+    exposed to the agent; the name is only stored in info/logging.
+    """
+    hi = max(float(intensity), 1.0)
+    mid = float(np.sqrt(hi))
+    lo = 1.0 / mid
+    env_name = env_name or ""
+
+    def base(name, latent_load, **kwargs):
+        out = {
+            "name": name,
+            "latent_load": float(latent_load),
+            "obs_scale": 1.0,
+            "action_scale": 1.0,
+        }
+        out.update(kwargs)
+        return out
+
+    if "Pendulum" in env_name:
+        def p(name, load):
+            # High demand means heavier/slower pendulum and stronger gravity.
+            # Exponents keep intensity=50 severe but not numerically absurd.
+            return base(
+                name,
+                load,
+                mass=float(load ** 0.25),
+                gravity=float(load ** 0.50),
+                length=float(load ** 0.25),
+            )
+        profiles = [
+            base("id", 1.0),
+            p("low_load", lo),
+            p("rush_load", mid),
+            p("mega_event", hi),
+            base(
+                "recovery_aftershock",
+                mid,
+                mass=float(mid ** 0.25),
+                gravity=float(hi ** 0.25),
+                length=float(lo ** 0.25),
+            ),
+        ]
+    elif any(token in env_name for token in ("Hopper", "Walker", "HalfCheetah", "Ant", "Humanoid")):
+        def m(name, load):
+            # Coherent terrain/body-load mode: mass and gravity rise together,
+            # friction drops for high-load regimes. This preserves structure
+            # while remaining far outside ordinary domain randomization.
+            return base(
+                name,
+                load,
+                body_mass=float(load ** 0.33),
+                gravity=float(min(load ** 0.25, 3.0)),
+                friction=float(max(load ** -0.25, 0.25)),
+            )
+        profiles = [
+            base("id", 1.0),
+            m("easy_surface", lo),
+            m("heavy_traffic", mid),
+            m("mega_event", hi),
+            base(
+                "slippery_rush",
+                mid,
+                body_mass=float(mid ** 0.25),
+                gravity=float(min(mid ** 0.20, 2.0)),
+                friction=float(max(hi ** -0.33, 0.15)),
+            ),
+        ]
+    else:
+        profiles = [
+            base("id", 1.0),
+            base("low_load", lo, obs_scale=float(lo ** 0.25)),
+            base("rush_load", mid, obs_scale=float(mid ** 0.25)),
+            base("mega_event", hi, obs_scale=float(hi ** 0.25)),
+        ]
+
+    return profiles
+
+
+def make_ood_profiles(
+    env_name: Optional[str] = None,
+    intensity: float = 50.0,
+    family: str = "extreme",
+) -> List[Profile]:
+    family = str(family or "extreme")
+    if family == "extreme":
+        return default_extreme_profiles(env_name, intensity=intensity)
+    if family == "structured":
+        return default_structured_profiles(env_name, intensity=intensity)
+    raise ValueError(f"Unknown OOD profile family: {family}")
+
+
 class ExtremeOODWrapper(gym.Wrapper):
     """
     Apply severe OOD perturbations under a configurable schedule.
@@ -160,8 +260,8 @@ class ExtremeOODWrapper(gym.Wrapper):
         self.config = config
 
         env_name = getattr(getattr(env, "spec", None), "id", None)
-        self.profiles = list(profiles) if profiles is not None else default_extreme_profiles(
-            env_name, intensity=config.intensity
+        self.profiles = list(profiles) if profiles is not None else make_ood_profiles(
+            env_name, intensity=config.intensity, family=config.profile_family
         )
         if not self.profiles:
             self.profiles = [{"name": "id"}]
@@ -197,6 +297,8 @@ class ExtremeOODWrapper(gym.Wrapper):
         info = dict(info)
         info["ood_profile"] = self.active_profile_name
         info["ood_schedule"] = self.config.schedule
+        info["ood_profile_family"] = self.config.profile_family
+        info["ood_latent_load"] = self.current_profile.get("latent_load")
         return obs, info
 
     def step(self, action):
@@ -215,6 +317,8 @@ class ExtremeOODWrapper(gym.Wrapper):
         info["ood_profile"] = self.active_profile_name
         info["ood_schedule"] = self.config.schedule
         info["ood_step"] = self._step
+        info["ood_profile_family"] = self.config.profile_family
+        info["ood_latent_load"] = self.current_profile.get("latent_load")
         self._step += 1
         return obs, reward, terminated, truncated, info
 

@@ -767,7 +767,8 @@ def gym_ood_sweep(env_name, param_name, multipliers, n_seeds=5,
 def gym_extreme_random_sweep(env_name, intensities, n_seeds=5,
                              checkpoint_nau=None, checkpoint_relu=None,
                              max_steps=1000, schedule="episode_random",
-                             abrupt_step=100, switch_every_steps=100):
+                             abrupt_step=100, switch_every_steps=100,
+                             profile_family="extreme"):
     """
     Evaluate policies under bus-like extreme randomized OOD.
 
@@ -779,7 +780,8 @@ def gym_extreme_random_sweep(env_name, intensities, n_seeds=5,
 
     print("\n" + "=" * 70)
     print(f"CS-BAPR Extreme Random OOD Sweep: {env_name}")
-    print(f"Schedule: {schedule}, Intensities: {intensities}, Seeds: {n_seeds}")
+    print(f"Schedule: {schedule}, Profile family: {profile_family}, "
+          f"Intensities: {intensities}, Seeds: {n_seeds}")
     print("=" * 70)
 
     test_env = gym.make(env_name)
@@ -811,6 +813,7 @@ def gym_extreme_random_sweep(env_name, intensities, n_seeds=5,
                     config=ExtremeOODConfig(
                         intensity=float(intensity),
                         schedule=schedule,
+                        profile_family=profile_family,
                         seed=seed,
                         abrupt_step=abrupt_step,
                         switch_every_steps=switch_every_steps,
@@ -838,6 +841,7 @@ def gym_extreme_random_sweep(env_name, intensities, n_seeds=5,
             'mode_name': f"extreme_{intensity:g}",
             'intensity': float(intensity),
             'schedule': schedule,
+            'profile_family': profile_family,
             'ood_distance': d,
             'methods': method_results,
             'bound_corrected': bound_corrected,
@@ -1058,6 +1062,9 @@ Examples:
     parser.add_argument("--ood-schedule", type=str, default="episode_random",
                         choices=["static", "episode_random", "abrupt", "oscillating", "step_random"],
                         help="Schedule for --extreme-random")
+    parser.add_argument("--ood-profile-family", type=str, default="extreme",
+                        choices=["extreme", "structured"],
+                        help="Profile family for --extreme-random")
     parser.add_argument("--ood-abrupt-step", type=int, default=100,
                         help="Step for abrupt random OOD shift")
     parser.add_argument("--ood-switch-steps", type=int, default=100,
@@ -1101,6 +1108,7 @@ Examples:
             schedule=args.ood_schedule,
             abrupt_step=args.ood_abrupt_step,
             switch_every_steps=args.ood_switch_steps,
+            profile_family=args.ood_profile_family,
         )
     elif args.mode == 'shift':
         multipliers = [float(x) for x in args.range.split(",")]

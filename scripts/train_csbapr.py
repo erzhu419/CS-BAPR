@@ -418,7 +418,8 @@ def apply_rarl_perturbation(action, env, rng, adversary_strength=0.1):
 
 def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interval=50,
           extreme_ood_train=False, ood_schedule="episode_random",
-          ood_intensity=50.0, ood_abrupt_step=100, ood_switch_steps=100):
+          ood_intensity=50.0, ood_abrupt_step=100, ood_switch_steps=100,
+          ood_profile_family="extreme"):
     """
     Train CS-BAPR agent and save checkpoints + metrics.
 
@@ -451,6 +452,7 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
             config=ExtremeOODConfig(
                 intensity=ood_intensity,
                 schedule=ood_schedule,
+                profile_family=ood_profile_family,
                 seed=seed,
                 abrupt_step=ood_abrupt_step,
                 switch_every_steps=ood_switch_steps,
@@ -506,6 +508,7 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
           f"IRM={use_irm}, DR={use_dr}, RARL={use_rarl}")
     if extreme_ood_train:
         print(f"  Extreme OOD train: schedule={ood_schedule}, "
+              f"profile_family={ood_profile_family}, "
               f"intensity={ood_intensity:g}, abrupt_step={ood_abrupt_step}, "
               f"switch_steps={ood_switch_steps}")
 
@@ -666,6 +669,7 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
             'extreme_ood_train': extreme_ood_train,
             'extreme_ood_config': {
                 'schedule': ood_schedule,
+                'profile_family': ood_profile_family,
                 'intensity': ood_intensity,
                 'abrupt_step': ood_abrupt_step,
                 'switch_every_steps': ood_switch_steps,
@@ -696,6 +700,9 @@ def main():
     parser.add_argument("--ood-schedule", type=str, default="episode_random",
                         choices=["static", "episode_random", "abrupt", "oscillating", "step_random"],
                         help="Extreme OOD schedule used when --extreme-ood-train is set")
+    parser.add_argument("--ood-profile-family", type=str, default="extreme",
+                        choices=["extreme", "structured"],
+                        help="OOD profile family: unstructured stress test or bus-like structured latent regimes")
     parser.add_argument("--ood-intensity", type=float, default=50.0,
                         help="Max OOD multiplier used by the generic wrapper")
     parser.add_argument("--ood-abrupt-step", type=int, default=100,
@@ -710,7 +717,8 @@ def main():
           ood_schedule=args.ood_schedule,
           ood_intensity=args.ood_intensity,
           ood_abrupt_step=args.ood_abrupt_step,
-          ood_switch_steps=args.ood_switch_steps)
+          ood_switch_steps=args.ood_switch_steps,
+          ood_profile_family=args.ood_profile_family)
 
 
 if __name__ == "__main__":
