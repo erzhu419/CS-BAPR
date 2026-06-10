@@ -31,6 +31,7 @@ from csbapr.networks.critic import EnsembleQNet
 from csbapr.networks.policy import GaussianPolicy
 from csbapr.belief.tracker import BeliefTracker
 from csbapr.belief.surprise import SurpriseComputer
+from csbapr.context import TransitionContextTracker
 from csbapr.losses.jacobian import compute_jacobian_loss
 from csbapr.losses.q_loss import compute_q_loss_csbapr
 from csbapr.losses.ood_bound import compute_ood_bound, estimate_deriv_bound_B
@@ -49,33 +50,45 @@ class CSBAPRAgent:
         self.device = self.config.get_device()
         self.state_dim = state_dim
         self.action_dim = action_dim
+        self.use_context = bool(getattr(self.config, "use_context", False))
+        self.context_tracker = None
+        self.context_dim = 0
+        if self.use_context:
+            self.context_tracker = TransitionContextTracker(
+                state_dim=state_dim,
+                action_dim=action_dim,
+                ema_alpha=getattr(self.config, "context_ema_alpha", 0.2),
+                clip=getattr(self.config, "context_clip", 5.0),
+            )
+            self.context_dim = self.context_tracker.context_dim
+        self.actor_state_dim = state_dim + self.context_dim
 
         # ===== Networks =====
         actor_type = getattr(self.config, 'actor_type', None)
         if actor_type == 'kan':
             self.actor = KAN_Actor(
-                state_dim, action_dim, self.config.hidden_dim
+                self.actor_state_dim, action_dim, self.config.hidden_dim
             ).to(self.device)
         elif self.config.use_nau_actor:
             self.actor = NAU_NMU_Actor(
-                state_dim, action_dim, self.config.hidden_dim
+                self.actor_state_dim, action_dim, self.config.hidden_dim
             ).to(self.device)
         elif actor_type in ("tanh-mlp", "gelu-mlp", "softplus-mlp"):
             # Smooth-activation MLP fallback (for the four-way head ablation).
             # The activation is the prefix; e.g., 'tanh-mlp' → tanh hidden layers.
             self.actor = GaussianPolicy(
-                state_dim, action_dim, self.config.hidden_dim,
+                self.actor_state_dim, action_dim, self.config.hidden_dim,
                 activation=actor_type.split("-")[0],
             ).to(self.device)
         else:
             # Default: ReLU-hidden tanh-output (the SAC baseline used by BAPR).
             self.actor = GaussianPolicy(
-                state_dim, action_dim, self.config.hidden_dim,
+                self.actor_state_dim, action_dim, self.config.hidden_dim,
                 activation="relu",
             ).to(self.device)
 
         self.critic = EnsembleQNet(
-            state_dim, action_dim, self.config.hidden_dim, self.config.num_critics
+            self.actor_state_dim, action_dim, self.config.hidden_dim, self.config.num_critics
         ).to(self.device)
         self.target_critic = deepcopy(self.critic)
 
@@ -113,6 +126,71 @@ class CSBAPRAgent:
 
         # ===== Logging =====
         self.training_steps = 0
+
+    def reset_context(self):
+        """Reset episode-local context state for context-enabled methods."""
+        if self.context_tracker is not None:
+            self.context_tracker.reset_episode()
+
+    def snapshot_context(self):
+        """Return a deepcopy-able context snapshot for evaluation rollouts."""
+        return deepcopy(self.context_tracker) if self.context_tracker is not None else None
+
+    def restore_context(self, snapshot):
+        if snapshot is not None:
+            self.context_tracker = snapshot
+
+    def observe_context(self, state, action, reward, next_state, done=False):
+        """Update online context without adding to replay."""
+        if self.context_tracker is not None:
+            self.context_tracker.update(state, action, reward, next_state, done=done)
+
+    def store_transition(self, state, action, reward, next_state, done):
+        """
+        Store a transition, including the inferred regime context when enabled.
+
+        Context is recorded before and after the transition. This lets the
+        critic train each replay sample under the context that was available
+        online at collection time, instead of imposing today's regime on old
+        off-policy data.
+        """
+        if self.context_tracker is None:
+            self.replay_buffer.push(state, action, reward, next_state, done)
+            return
+        context = self.context_tracker.context
+        next_context = self.context_tracker.update(
+            state, action, reward, next_state, done=bool(done)
+        )
+        self.replay_buffer.push(
+            state, action, reward, next_state, done,
+            context=context, next_context=next_context,
+        )
+
+    def _current_context_np(self) -> np.ndarray:
+        if self.context_tracker is None:
+            return np.zeros(0, dtype=np.float32)
+        return self.context_tracker.context
+
+    def _augment_state_np(self, state: np.ndarray, context: np.ndarray = None) -> np.ndarray:
+        if not self.use_context:
+            return np.asarray(state, dtype=np.float32)
+        if context is None:
+            context = self._current_context_np()
+        return np.concatenate([
+            np.asarray(state, dtype=np.float32).reshape(-1),
+            np.asarray(context, dtype=np.float32).reshape(-1),
+        ]).astype(np.float32)
+
+    def _augment_state_tensor(self, state: torch.Tensor,
+                              context: torch.Tensor = None) -> torch.Tensor:
+        if not self.use_context:
+            return state
+        if context is None:
+            context = torch.zeros(
+                state.shape[0], self.context_dim,
+                dtype=state.dtype, device=state.device,
+            )
+        return torch.cat([state, context], dim=-1)
 
     def sindy_preidentify(self, env, policy=None, extra_envs=None):
         """
@@ -340,21 +418,32 @@ class CSBAPRAgent:
             return None
 
         # ===== Sample batch =====
-        states, actions, rewards, next_states, dones = self.replay_buffer.sample(batch_size)
+        sample = self.replay_buffer.sample(batch_size)
+        if len(sample) == 5:
+            states, actions, rewards, next_states, dones = sample
+            contexts = next_contexts = None
+        else:
+            states, actions, rewards, next_states, dones, contexts, next_contexts = sample
         state = torch.FloatTensor(states).to(self.device)
         action = torch.FloatTensor(actions).to(self.device)
         reward = torch.FloatTensor(rewards).unsqueeze(1).to(self.device)
         next_state = torch.FloatTensor(next_states).to(self.device)
         done = torch.FloatTensor(dones).unsqueeze(1).to(self.device)
+        context = (torch.FloatTensor(contexts).to(self.device)
+                   if contexts is not None else None)
+        next_context = (torch.FloatTensor(next_contexts).to(self.device)
+                        if next_contexts is not None else None)
+        state_aug = self._augment_state_tensor(state, context)
+        next_state_aug = self._augment_state_tensor(next_state, next_context)
 
         # Evaluate policy on current states (graph needed for policy loss)
-        new_action, log_prob, _, _, _ = self.actor.evaluate(state)
+        new_action, log_prob, _, _, _ = self.actor.evaluate(state_aug)
 
         # Evaluate on next states for target Q — no_grad: target computation
         # must NOT accumulate a computation graph (would never be freed by
         # q_loss.backward() since target is detached, causing a memory leak).
         with torch.no_grad():
-            new_next_action, next_log_prob, _, _, _ = self.actor.evaluate(next_state)
+            new_next_action, next_log_prob, _, _, _ = self.actor.evaluate(next_state_aug)
 
         # Reward scaling: divide by running std (no mean shift — preserves sign).
         # Group-A2 fix; toggle via config.enable_reward_ema.
@@ -396,7 +485,12 @@ class CSBAPRAgent:
             with torch.no_grad():
                 rs = torch.from_numpy(s_arr).to(self.device)
                 ra = torch.from_numpy(a_arr).to(self.device)
-                pre_q = self.critic(rs, ra)
+                if self.use_context and "context" in recent_rollout:
+                    rc_arr = np.asarray(recent_rollout["context"], dtype=np.float32)[-tail:]
+                    rc = torch.from_numpy(rc_arr).to(self.device)
+                else:
+                    rc = None
+                pre_q = self.critic(self._augment_state_tensor(rs, rc), ra)
                 q_std_signal = pre_q.std(dim=0)
             r_tensor = torch.from_numpy(r_arr).unsqueeze(1).to(self.device)
             r_tensor = r_tensor / max(self._reward_ema_var ** 0.5, 1e-6)
@@ -406,7 +500,7 @@ class CSBAPRAgent:
             )
         else:
             with torch.no_grad():
-                pre_q = self.critic(state, action)
+                pre_q = self.critic(state_aug, action)
                 q_std_signal = pre_q.std(dim=0)
             surprise = self.surprise_computer.compute(
                 reward, q_std_signal,
@@ -426,7 +520,7 @@ class CSBAPRAgent:
             self.alpha = max(raw_alpha, floor) if getattr(self.config, "enable_entropy_floor", True) else raw_alpha
 
         # ===== Step 3: Q-loss (CS-BAPR, with Γ_sym) =====
-        if self.f_sym_torch is not None:
+        if self.f_sym_torch is not None and not self.use_context:
             q_loss, predicted_q, ood_loss, w_lambda, sym_p = compute_q_loss_csbapr(
                 self.critic, self.target_critic, self.actor,
                 self.f_sym_torch,
@@ -446,7 +540,7 @@ class CSBAPRAgent:
         else:
             # Fallback: BA-PR Q-loss without Γ_sym
             q_loss, predicted_q, ood_loss, w_lambda, sym_p = self._compute_q_loss_bapr_fallback(
-                state, action, reward, next_state, done,
+                state_aug, action, reward, next_state_aug, done,
                 new_next_action, next_log_prob, reg_norm, batch_size
             )
 
@@ -459,7 +553,7 @@ class CSBAPRAgent:
         # ===== Step 4: Policy loss (with Jacobian consistency) =====
         # Reuse new_action/log_prob from L330: alpha_loss uses log_prob.detach(),
         # and q_loss.backward() only touches critic params — actor graph still intact.
-        q_values = self.critic(state, new_action)
+        q_values = self.critic(state_aug, new_action)
         q_mean = q_values.mean(dim=0)
         q_std = q_values.std(dim=0)
 
@@ -483,7 +577,7 @@ class CSBAPRAgent:
 
         # CS-BAPR: Add Jacobian consistency loss
         jac_loss_val = 0.0
-        if self.f_sym_torch is not None and self.config.jac_weight > 0:
+        if self.f_sym_torch is not None and not self.use_context and self.config.jac_weight > 0:
             jac_loss = compute_jacobian_loss(self.actor, self.f_sym_torch, state)
             # Clamp JC loss to [0, 2.0] to prevent runaway gradients when L_eff is large
             jac_loss_clamped = torch.clamp(jac_loss, max=2.0)
@@ -595,7 +689,7 @@ class CSBAPRAgent:
 
     def select_action(self, state: np.ndarray, deterministic: bool = False) -> np.ndarray:
         """Select action using current policy."""
-        state_tensor = torch.FloatTensor(state).to(self.device)
+        state_tensor = torch.FloatTensor(self._augment_state_np(state)).to(self.device)
         return self.actor.get_action(state_tensor, deterministic=deterministic)
 
     def save(self, path: str):
@@ -608,6 +702,8 @@ class CSBAPRAgent:
             'log_alpha': self.log_alpha,
             'training_steps': self.training_steps,
             'n_train_samples': self._n_train_samples,
+            'use_context': self.use_context,
+            'context_dim': self.context_dim,
             'sindy_report': getattr(self, '_sindy_report', None),
             'irm_report': getattr(self, '_irm_report', None),
             'config': {k: v for k, v in vars(self.config).items()

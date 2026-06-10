@@ -47,6 +47,16 @@ class CSBAPRConfig:
     beta_bc: float = 0.001        # behavior cloning weight (RE-SAC dual reg, prevents policy drift)
     actor_type: str = None        # None→NAU/MLP (via use_nau_actor), 'kan'→KAN, 'tanh-mlp'→smooth-activation MLP
 
+    # ===== Online OOD context adaptation =====
+    # Generic Gym/MuJoCo environments do not expose bus-like route/demand
+    # structure. When enabled, the agent appends an online transition-context
+    # vector to actor/critic inputs. The context is inferred from recent
+    # (s, a, r, s') statistics and stored in replay, so each off-policy sample
+    # is trained under the regime descriptor observed when it was collected.
+    use_context: bool = False
+    context_ema_alpha: float = 0.2
+    context_clip: float = 5.0
+
     # ===== Toggles for the four CS-BAPR base training-stabilization fixes =====
     # These default ON (matching CS-BAPR's recipe). Setting them all OFF gives
     # an honest "pristine BAPR" baseline for ablation.

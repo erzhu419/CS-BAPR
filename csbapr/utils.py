@@ -50,20 +50,36 @@ class ReplayBuffer:
         self.buffer = []
         self.position = 0
 
-    def push(self, state, action, reward, next_state, done):
+    def push(self, state, action, reward, next_state, done,
+             context=None, next_context=None):
         if len(self.buffer) < self.capacity:
             self.buffer.append(None)
-        self.buffer[self.position] = (state, action, reward, next_state, done)
+        if context is None and next_context is None:
+            self.buffer[self.position] = (state, action, reward, next_state, done)
+        else:
+            self.buffer[self.position] = (
+                state, action, reward, next_state, done,
+                np.asarray(context, dtype=np.float32),
+                np.asarray(next_context, dtype=np.float32),
+            )
         self.position = (self.position + 1) % self.capacity
 
     def sample(self, batch_size: int):
         indices = np.random.randint(0, len(self.buffer), size=batch_size)
         batch = [self.buffer[i] for i in indices]
-        states, actions, rewards, next_states, dones = zip(*batch)
+        if len(batch[0]) == 5:
+            states, actions, rewards, next_states, dones = zip(*batch)
+            return (np.stack(states), np.stack(actions),
+                    np.array(rewards, dtype=np.float32),
+                    np.stack(next_states),
+                    np.array(dones, dtype=np.float32))
+        states, actions, rewards, next_states, dones, contexts, next_contexts = zip(*batch)
         return (np.stack(states), np.stack(actions),
                 np.array(rewards, dtype=np.float32),
                 np.stack(next_states),
-                np.array(dones, dtype=np.float32))
+                np.array(dones, dtype=np.float32),
+                np.stack(contexts),
+                np.stack(next_contexts))
 
     @property
     def size(self) -> int:

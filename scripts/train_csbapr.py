@@ -4,8 +4,9 @@ CS-BAPR Training Script — Unified entry point for all experiments.
 
 Supports:
   - Environments: Pendulum-v1, Hopper-v4, HalfCheetah-v4, Walker2d-v4
-  - Methods: csbapr (full), csbapr-relu, csbapr-no-sindy, csbapr-no-irm,
-             csbapr-no-sym, csbapr-no-jac, resac, bapr, sac
+  - Methods: csbapr (full), csbapr-context, csbapr-relu, csbapr-no-sindy,
+             csbapr-no-irm, csbapr-no-sym, csbapr-no-jac, resac, bapr,
+             bapr-context, sac
   - Multi-seed: 5 seeds per config
 
 Usage:
@@ -68,6 +69,15 @@ METHOD_PRESETS = {
         weight_sym=0.0,
         jac_weight=0.0,
     ),
+    # Generic-OOD adaptation: NAU actor + online transition context.
+    # SINDy/Jacobian are intentionally disabled here because the context-augmented
+    # policy has input dimension state+context while f_sym is state-only.
+    'csbapr-context': dict(
+        use_nau_actor=True,
+        use_context=True,
+        weight_sym=0.0,
+        jac_weight=0.0,
+    ),
     # Ablation: no Γ_sym in Q-loss (test Part III)
     'csbapr-no-sym': dict(
         use_nau_actor=True,
@@ -92,6 +102,14 @@ METHOD_PRESETS = {
     # BA-PR baseline (predecessor, no SINDy/NAU)
     'bapr': dict(
         use_nau_actor=False,
+        weight_sym=0.0,
+        jac_weight=0.0,
+    ),
+    # Context ablation: tests whether online regime inference helps independent
+    # of NAU/symbolic structure.
+    'bapr-context': dict(
+        use_nau_actor=False,
+        use_context=True,
         weight_sym=0.0,
         jac_weight=0.0,
     ),
@@ -448,7 +466,11 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
     use_rarl = _get_method_flag(method_name, '_rarl')
 
     # Phase 0: SINDy pre-identification
-    skip_sindy_methods = ('sac', 'resac', 'bapr', 'csbapr-no-sindy', 'dr', 'rarl')
+    skip_sindy_methods = (
+        'sac', 'resac', 'bapr', 'bapr-context',
+        'csbapr-no-sindy', 'csbapr-context',
+        'dr', 'rarl',
+    )
     if method_name not in skip_sindy_methods:
         try:
             extra_envs = None
@@ -479,8 +501,9 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
     # Training loop
     run_name = f"{method_name}_{env_name}_{seed}"
     print(f"\n[TRAIN] {run_name}")
-    print(f"  Config: NAU={config.use_nau_actor}, weight_sym={config.weight_sym}, "
-          f"jac_weight={config.jac_weight}, IRM={use_irm}, DR={use_dr}, RARL={use_rarl}")
+    print(f"  Config: NAU={config.use_nau_actor}, context={config.use_context}, "
+          f"weight_sym={config.weight_sym}, jac_weight={config.jac_weight}, "
+          f"IRM={use_irm}, DR={use_dr}, RARL={use_rarl}")
     if extreme_ood_train:
         print(f"  Extreme OOD train: schedule={ood_schedule}, "
               f"intensity={ood_intensity:g}, abrupt_step={ood_abrupt_step}, "
@@ -527,6 +550,7 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
             next_switch_ep = episode + rng.randint(*MODE_SWITCH_INTERVAL)
 
         state, _ = env.reset(seed=seed * 10000 + episode)
+        agent.reset_context()
         episode_reward = 0.0
         done = False
         ep_steps = 0
@@ -542,7 +566,7 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
 
             next_state, reward, terminated, truncated, _ = env.step(scaled_action)
             done = terminated or truncated
-            agent.replay_buffer.push(state, action, reward, next_state, float(done))
+            agent.store_transition(state, action, reward, next_state, float(done))
             state = next_state
             episode_reward += reward
             ep_steps += 1
@@ -560,18 +584,23 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
         # Periodic evaluation
         if (episode + 1) % eval_interval == 0:
             eval_rewards = []
+            context_snapshot = agent.snapshot_context()
             for eval_ep in range(5):
                 s, _ = env.reset(seed=99999 + eval_ep)
+                agent.reset_context()
                 er = 0.0
                 for _ in range(config.max_steps_per_episode):
                     a = agent.select_action(s, deterministic=True)
                     sa = np.clip(a * env.action_space.high[0],
                                  env.action_space.low[0], env.action_space.high[0])
-                    s, r, term, trunc, _ = env.step(sa)
+                    ns, r, term, trunc, _ = env.step(sa)
+                    agent.observe_context(s, a, r, ns, done=term or trunc)
+                    s = ns
                     er += r
                     if term or trunc:
                         break
                 eval_rewards.append(er)
+            agent.restore_context(context_snapshot)
 
             mean_eval = np.mean(eval_rewards)
             history['eval_rewards'].append({
