@@ -49,6 +49,13 @@ mass/gravity/friction together instead of injecting unrelated sensor/action
 chaos. The agent does not observe the profile label. The label and
 `latent_load` are only emitted in `info` for diagnostics.
 
+`--ood-profile-family load`
+: The current recommended v2.2 family. It keeps the coherent latent regime
+idea, but makes the OOD more bus-like: a hidden load variable jointly changes
+physics, actuation, terrain/contact, runtime external force, and locomotion
+velocity preference. The intensity is still allowed to be large, but is mapped
+to severe-yet-solvable profiles instead of blindly making every parameter 50x.
+
 ## Schedules
 
 `--ood-schedule static`
@@ -66,6 +73,11 @@ chaos. The agent does not observe the profile label. The label and
 `--ood-schedule step_random`
 : A new severe profile is sampled every `--ood-switch-steps`.
 
+`--ood-schedule markov`
+: Start ID, then at each `--ood-switch-steps` tick switch profiles with
+`--ood-switch-probability`. This creates longer coherent dwell times, closer to
+bus traffic/load regimes than fully random step switching.
+
 ## Training
 
 Train under the generic stressor:
@@ -80,6 +92,21 @@ python scripts/train_csbapr.py \
   --ood-profile-family structured \
   --ood-schedule episode_random \
   --ood-intensity 50
+```
+
+Recommended v2.2 latent-load run:
+
+```bash
+python scripts/train_csbapr.py \
+  --env Hopper-v4 \
+  --method csbapr-stable-context \
+  --seed 0 \
+  --extreme-ood-train \
+  --ood-profile-family load \
+  --ood-schedule markov \
+  --ood-intensity 50 \
+  --ood-switch-steps 200 \
+  --ood-switch-probability 0.35
 ```
 
 For MuJoCo:
@@ -128,6 +155,29 @@ separates two questions:
 - `extreme`: robustness to arbitrary compound chaos.
 - `structured`: robustness to bus-like latent regime shifts with very large OOD
   magnitude.
+
+## v2.2: Latent-Load Environment and Diagnostics
+
+The structured matrix showed an additional failure mode: raw context variants
+could learn early on Hopper but collapsed late, while no-context baselines
+remained stable. The immediate fix is not more random search. The training
+script now:
+
+- passes `recent_rollout` into `agent.update(...)`, enabling rollout-based
+  BAPR surprise instead of replay-batch surprise;
+- writes recent training diagnostics (`surprise`, `belief_entropy`,
+  `weighted_lambda`, `q_std`, `alpha`, `L_eff`) into the history JSON;
+- records OOD profile switch events;
+- runs fixed-profile evals for each wrapper profile, so worst-regime return can
+  be inspected separately from random-schedule average return.
+
+New conservative context baselines are available:
+
+- `csbapr-stable-context`
+- `bapr-stable-context`
+
+They slow the transition-context EMA and strengthen behavior cloning regularity
+to reduce context-triggered actor drift.
 
 ## Evaluation
 
@@ -194,3 +244,19 @@ Interpretation:
 - If all methods remain weak, the result is a clean negative result: bus has
   environment-specific structure that generic continuous-control tasks do not
   reproduce under current wrappers.
+
+## Latent-Load Follow-Up Matrix
+
+Use this matrix before launching larger sweeps:
+
+| Env | Methods | Schedule | Intensity |
+| --- | --- | --- | --- |
+| `Pendulum-v1` | `resac`, `bapr`, `csbapr-no-sindy`, `bapr-stable-context`, `csbapr-stable-context` | markov | 50 |
+| `Hopper-v4` | `resac`, `bapr`, `csbapr-no-sindy`, `bapr-stable-context`, `csbapr-stable-context` | markov | 50 |
+
+Primary readouts:
+
+- fixed-profile worst return,
+- post-switch recovery under `profile_events`,
+- whether `surprise` and `weighted_lambda` move after profile switches,
+- seed variance of the stable-context variants.

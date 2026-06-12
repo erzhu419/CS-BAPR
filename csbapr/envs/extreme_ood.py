@@ -39,6 +39,7 @@ class ExtremeOODConfig:
     static_profile: Optional[str] = None
     abrupt_step: int = 100
     switch_every_steps: int = 100
+    switch_probability: float = 0.35
     include_sensor_noise: bool = True
     include_action_noise: bool = True
     include_reward_noise: bool = False
@@ -220,6 +221,108 @@ def default_structured_profiles(env_name: Optional[str] = None, intensity: float
     return profiles
 
 
+def default_load_profiles(env_name: Optional[str] = None, intensity: float = 50.0) -> List[Profile]:
+    """
+    Build bus-like latent-load regimes that are severe but coherent.
+
+    The ``structured`` family mostly scales global physics. That can make
+    robust locomotion enough, leaving little value in identifying the current
+    regime. This family treats OOD as a hidden load variable: it jointly
+    changes mass/terrain/actuation and, for locomotion tasks, adds a
+    profile-dependent external force and velocity preference. The profile name
+    is only exposed in ``info`` for diagnostics.
+    """
+    hi = max(float(intensity), 1.0)
+    if hi <= 1.0:
+        stress = 0.0
+    else:
+        stress = np.log(hi) / np.log(50.0)
+    stress = float(np.clip(stress, 0.0, 1.5))
+    env_name = env_name or ""
+
+    def base(name, latent_load, **kwargs):
+        out = {
+            "name": name,
+            "latent_load": float(latent_load),
+            "obs_scale": 1.0,
+            "action_scale": 1.0,
+        }
+        out.update(kwargs)
+        return out
+
+    if "Pendulum" in env_name:
+        def p(name, z):
+            return base(
+                name,
+                z,
+                mass=float(max(0.35, 1.0 + 1.45 * z)),
+                gravity=float(max(0.35, 1.0 + 1.85 * z)),
+                length=float(max(0.60, 1.0 + 0.25 * z)),
+                action_scale=float(np.clip(1.0 - 0.18 * z, 0.52, 1.18)),
+                obs_noise=float(max(z, 0.0) * 0.01),
+                extra_control_cost=float(max(z, 0.0) * 0.001),
+            )
+
+        profiles = [
+            base("id", 0.0),
+            p("low_load", -0.35 * stress),
+            p("rush_load", 0.75 * stress),
+            p("mega_event", 1.30 * stress),
+            base(
+                "recovery_aftershock",
+                0.45 * stress,
+                mass=float(1.0 + 0.65 * stress),
+                gravity=float(1.0 + 1.10 * stress),
+                length=float(max(0.70, 1.0 - 0.25 * stress)),
+                action_scale=float(np.clip(1.0 - 0.10 * stress, 0.65, 1.0)),
+                obs_noise=float(0.006 * stress),
+                extra_control_cost=float(0.0006 * stress),
+            ),
+        ]
+    elif any(token in env_name for token in ("Hopper", "Walker", "HalfCheetah", "Ant", "Humanoid")):
+        def m(name, z):
+            return base(
+                name,
+                z,
+                body_mass=float(max(0.55, 1.0 + 0.82 * z)),
+                gravity=float(max(0.75, 1.0 + 0.18 * z)),
+                friction=float(np.clip(1.0 - 0.35 * z, 0.35, 1.35)),
+                action_scale=float(np.clip(1.0 - 0.18 * z, 0.60, 1.15)),
+                x_force=float(-22.0 * z),
+                target_x_velocity=float(np.clip(1.15 - 0.34 * z, 0.35, 1.50)),
+                target_velocity_weight=float(0.18 * abs(z)),
+                extra_control_cost=float(0.0008 * max(z, 0.0)),
+            )
+
+        profiles = [
+            base("id", 0.0),
+            m("easy_surface", -0.35 * stress),
+            m("rush_load", 0.75 * stress),
+            m("mega_event", 1.30 * stress),
+            base(
+                "slippery_rush",
+                0.95 * stress,
+                body_mass=float(1.0 + 0.45 * stress),
+                gravity=float(1.0 + 0.12 * stress),
+                friction=float(np.clip(1.0 - 0.65 * stress, 0.25, 1.0)),
+                action_scale=float(np.clip(1.0 - 0.12 * stress, 0.65, 1.0)),
+                x_force=float(-16.0 * stress),
+                target_x_velocity=float(np.clip(0.95 - 0.22 * stress, 0.40, 1.0)),
+                target_velocity_weight=float(0.15 * stress),
+                extra_control_cost=float(0.0006 * stress),
+            ),
+        ]
+    else:
+        profiles = [
+            base("id", 0.0),
+            base("low_load", -0.35 * stress, obs_scale=float(1.0 - 0.10 * stress)),
+            base("rush_load", 0.75 * stress, obs_scale=float(1.0 + 0.15 * stress)),
+            base("mega_event", 1.30 * stress, obs_scale=float(1.0 + 0.30 * stress)),
+        ]
+
+    return profiles
+
+
 def make_ood_profiles(
     env_name: Optional[str] = None,
     intensity: float = 50.0,
@@ -230,6 +333,8 @@ def make_ood_profiles(
         return default_extreme_profiles(env_name, intensity=intensity)
     if family == "structured":
         return default_structured_profiles(env_name, intensity=intensity)
+    if family in ("load", "latent_load"):
+        return default_load_profiles(env_name, intensity=intensity)
     raise ValueError(f"Unknown OOD profile family: {family}")
 
 
@@ -243,6 +348,7 @@ class ExtremeOODWrapper(gym.Wrapper):
       - ``abrupt``: start ID, switch once at ``abrupt_step``.
       - ``oscillating``: cycle through profiles every ``switch_every_steps``.
       - ``step_random``: resample every ``switch_every_steps``.
+      - ``markov``: dwell in a profile and randomly switch at period ticks.
     """
 
     def __init__(
@@ -304,6 +410,7 @@ class ExtremeOODWrapper(gym.Wrapper):
     def step(self, action):
         self._maybe_switch_before_step()
         action = self._transform_action(action)
+        self._apply_runtime_disturbance()
         out = self.env.step(action)
         if len(out) == 5:
             obs, reward, terminated, truncated, info = out
@@ -311,7 +418,7 @@ class ExtremeOODWrapper(gym.Wrapper):
             obs, reward, done, info = out
             terminated, truncated = done, False
 
-        reward = self._transform_reward(reward)
+        reward = self._transform_reward(reward, action=action, info=info)
         obs = self._transform_obs(obs)
         info = dict(info)
         info["ood_profile"] = self.active_profile_name
@@ -346,7 +453,7 @@ class ExtremeOODWrapper(gym.Wrapper):
             return self.profiles[min(1, len(self.profiles) - 1)]
         if schedule == "episode_random":
             return self._sample_profile()
-        if schedule in ("abrupt", "oscillating", "step_random"):
+        if schedule in ("abrupt", "oscillating", "step_random", "markov"):
             return self._profile_by_name.get("id", self.profiles[0])
         raise ValueError(f"Unknown OOD schedule: {schedule}")
 
@@ -362,6 +469,17 @@ class ExtremeOODWrapper(gym.Wrapper):
             period = max(int(self.config.switch_every_steps), 1)
             if self._step > 0 and self._step % period == 0:
                 self._activate_profile(self._sample_profile())
+        elif schedule == "markov":
+            period = max(int(self.config.switch_every_steps), 1)
+            switch_p = float(np.clip(self.config.switch_probability, 0.0, 1.0))
+            if self._step > 0 and self._step % period == 0 and self._rng.rand() < switch_p:
+                candidates = [
+                    p for p in self.profiles
+                    if str(p.get("name", "")) != self.active_profile_name
+                ]
+                if candidates:
+                    idx = int(self._rng.randint(0, len(candidates)))
+                    self._activate_profile(candidates[idx])
 
     def _capture_base_params(self):
         if self._base_captured:
@@ -372,6 +490,7 @@ class ExtremeOODWrapper(gym.Wrapper):
             self._base["body_mass"] = model.body_mass.copy()
             self._base["geom_friction"] = model.geom_friction.copy()
             self._base["gravity"] = model.opt.gravity.copy()
+            self._base["force_body_id"] = 1 if getattr(model, "nbody", 0) > 1 else 0
         if hasattr(unwrapped, "m") and hasattr(unwrapped, "g") and hasattr(unwrapped, "l"):
             self._base["pendulum_m"] = float(unwrapped.m)
             self._base["pendulum_g"] = float(unwrapped.g)
@@ -423,9 +542,41 @@ class ExtremeOODWrapper(gym.Wrapper):
             action_arr = action_arr + self._rng.normal(0.0, noise, size=action_arr.shape) * width
         return _finite_box_clip(self.action_space, action_arr)
 
-    def _transform_reward(self, reward):
+    def _apply_runtime_disturbance(self):
+        unwrapped = self.env.unwrapped
+        data = getattr(unwrapped, "data", None)
+        if data is None or not hasattr(data, "xfrc_applied"):
+            return
+        xfrc = data.xfrc_applied
+        if xfrc is None or xfrc.ndim != 2 or xfrc.shape[1] < 6:
+            return
+        xfrc[:] = 0.0
+        fx = _safe_float(self.current_profile.get("x_force", 0.0), default=0.0)
+        fz = _safe_float(self.current_profile.get("z_force", 0.0), default=0.0)
+        if fx == 0.0 and fz == 0.0:
+            return
+        default_body = int(self._base.get("force_body_id", min(1, xfrc.shape[0] - 1)))
+        body_id = int(self.current_profile.get("force_body_id", default_body))
+        body_id = int(np.clip(body_id, 0, xfrc.shape[0] - 1))
+        xfrc[body_id, 0] = fx
+        xfrc[body_id, 2] = fz
+
+    def _transform_reward(self, reward, action=None, info=None):
         reward_value = float(reward)
         reward_value *= _safe_float(self.current_profile.get("reward_scale", 1.0))
+        target_velocity = self.current_profile.get("target_x_velocity")
+        if target_velocity is not None and info is not None:
+            velocity = info.get("x_velocity", info.get("forward_velocity"))
+            if velocity is not None:
+                weight = _safe_float(
+                    self.current_profile.get("target_velocity_weight", 0.0),
+                    default=0.0,
+                )
+                reward_value -= weight * float(float(velocity) - float(target_velocity)) ** 2
+        control_cost = _safe_float(self.current_profile.get("extra_control_cost", 0.0), default=0.0)
+        if control_cost > 0 and action is not None:
+            action_arr = np.asarray(action, dtype=np.float32)
+            reward_value -= control_cost * float(np.sum(np.square(action_arr)))
         noise = _safe_float(self.current_profile.get("reward_noise", 0.0), default=0.0)
         if self.config.include_reward_noise and noise > 0:
             reward_value += float(self._rng.normal(0.0, noise))

@@ -30,7 +30,7 @@ import json
 import os
 import sys
 import time
-from collections import deque
+from collections import Counter, deque
 from pathlib import Path
 
 import numpy as np
@@ -78,6 +78,19 @@ METHOD_PRESETS = {
         weight_sym=0.0,
         jac_weight=0.0,
     ),
+    # More conservative context variants for coherent latent-load OOD. The raw
+    # context methods were unstable on Hopper; these slow the context filter and
+    # reduce actor drift while keeping the same no-oracle information setting.
+    'csbapr-stable-context': dict(
+        use_nau_actor=True,
+        use_context=True,
+        context_ema_alpha=0.05,
+        beta_bc=0.005,
+        lr_actor=1e-4,
+        penalty_scale=1.0,
+        weight_sym=0.0,
+        jac_weight=0.0,
+    ),
     # Ablation: no Γ_sym in Q-loss (test Part III)
     'csbapr-no-sym': dict(
         use_nau_actor=True,
@@ -110,6 +123,16 @@ METHOD_PRESETS = {
     'bapr-context': dict(
         use_nau_actor=False,
         use_context=True,
+        weight_sym=0.0,
+        jac_weight=0.0,
+    ),
+    'bapr-stable-context': dict(
+        use_nau_actor=False,
+        use_context=True,
+        context_ema_alpha=0.05,
+        beta_bc=0.005,
+        lr_actor=1e-4,
+        penalty_scale=1.0,
         weight_sym=0.0,
         jac_weight=0.0,
     ),
@@ -332,6 +355,97 @@ def _get_method_flag(method_name, flag):
     return METHOD_PRESETS.get(method_name, {}).get(flag, False)
 
 
+def _json_safe(value):
+    """Convert numpy/torch scalars and containers into JSON-serializable values."""
+    if isinstance(value, dict):
+        return {str(k): _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, deque)):
+        return [_json_safe(v) for v in value]
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, (np.integer,)):
+        return int(value)
+    if isinstance(value, (np.floating,)):
+        return float(value)
+    if isinstance(value, (np.bool_,)):
+        return bool(value)
+    if torch.is_tensor(value):
+        if value.numel() == 1:
+            return float(value.detach().cpu().item())
+        return value.detach().cpu().tolist()
+    return value
+
+
+def _recent_rollout_payload(recent_rollout):
+    """Materialize recent on-policy transition deques for BAPR surprise."""
+    return {k: list(v) for k, v in recent_rollout.items() if len(v) > 0}
+
+
+def _summarize_metrics(metrics, window=100):
+    metrics = list(metrics)[-int(window):]
+    if not metrics:
+        return {}
+    keys = sorted({k for m in metrics for k in m.keys()})
+    summary = {}
+    for key in keys:
+        vals = []
+        for metric in metrics:
+            value = metric.get(key)
+            if value is None:
+                continue
+            try:
+                value = float(value)
+            except (TypeError, ValueError):
+                continue
+            if np.isfinite(value):
+                vals.append(value)
+        if vals:
+            summary[f"{key}_last"] = float(vals[-1])
+            summary[f"{key}_mean"] = float(np.mean(vals))
+    return summary
+
+
+def _evaluate_agent(agent, eval_env, max_steps, n_episodes, seed_base):
+    rewards = []
+    lengths = []
+    profile_counts = Counter()
+
+    for eval_ep in range(int(n_episodes)):
+        s, info = eval_env.reset(seed=int(seed_base) + eval_ep)
+        agent.reset_context()
+        er = 0.0
+        steps = 0
+        profile = info.get("ood_profile") if isinstance(info, dict) else None
+        if profile is not None:
+            profile_counts[str(profile)] += 1
+
+        for _ in range(max_steps):
+            a = agent.select_action(s, deterministic=True)
+            sa = np.clip(a * eval_env.action_space.high[0],
+                         eval_env.action_space.low[0], eval_env.action_space.high[0])
+            ns, r, term, trunc, info = eval_env.step(sa)
+            agent.observe_context(s, a, r, ns, done=term or trunc)
+            profile = info.get("ood_profile") if isinstance(info, dict) else None
+            if profile is not None:
+                profile_counts[str(profile)] += 1
+            s = ns
+            er += r
+            steps += 1
+            if term or trunc:
+                break
+
+        rewards.append(float(er))
+        lengths.append(int(steps))
+
+    return {
+        "mean": float(np.mean(rewards)) if rewards else 0.0,
+        "std": float(np.std(rewards)) if rewards else 0.0,
+        "rewards": rewards,
+        "lengths": lengths,
+        "profile_counts": dict(profile_counts),
+    }
+
+
 # ============================================================
 # Domain Randomization helper
 # ============================================================
@@ -419,7 +533,8 @@ def apply_rarl_perturbation(action, env, rng, adversary_strength=0.1):
 def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interval=50,
           extreme_ood_train=False, ood_schedule="episode_random",
           ood_intensity=50.0, ood_abrupt_step=100, ood_switch_steps=100,
-          ood_profile_family="extreme"):
+          ood_switch_probability=0.35, ood_profile_family="extreme",
+          fixed_profile_eval_episodes=1):
     """
     Train CS-BAPR agent and save checkpoints + metrics.
 
@@ -456,6 +571,7 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
                 seed=seed,
                 abrupt_step=ood_abrupt_step,
                 switch_every_steps=ood_switch_steps,
+                switch_probability=ood_switch_probability,
             ),
         )
     state_dim = env.observation_space.shape[0]
@@ -470,7 +586,8 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
     # Phase 0: SINDy pre-identification
     skip_sindy_methods = (
         'sac', 'resac', 'bapr', 'bapr-context',
-        'csbapr-no-sindy', 'csbapr-context',
+        'bapr-stable-context',
+        'csbapr-no-sindy', 'csbapr-context', 'csbapr-stable-context',
         'dr', 'rarl',
     )
     if method_name not in skip_sindy_methods:
@@ -510,15 +627,47 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
         print(f"  Extreme OOD train: schedule={ood_schedule}, "
               f"profile_family={ood_profile_family}, "
               f"intensity={ood_intensity:g}, abrupt_step={ood_abrupt_step}, "
-              f"switch_steps={ood_switch_steps}")
+              f"switch_steps={ood_switch_steps}, switch_p={ood_switch_probability:.2f}")
 
     history = {
         'episode_rewards': [],
         'eval_rewards': [],
+        'fixed_profile_eval_rewards': [],
         'training_metrics': deque(maxlen=1000),  # keep only last 1000 update metrics
         'L_eff_history': [],
+        'profile_events': [],
+        'mode_events': [],
         'overhead': [],  # wall-clock per episode
     }
+
+    fixed_eval_envs = {}
+    if extreme_ood_train and fixed_profile_eval_episodes > 0 and hasattr(env, "profiles"):
+        for idx, profile in enumerate(env.profiles):
+            profile_name = str(profile.get("name", idx))
+            fixed_eval_envs[profile_name] = ExtremeOODWrapper(
+                gym.make(env_name),
+                config=ExtremeOODConfig(
+                    intensity=ood_intensity,
+                    schedule="static",
+                    profile_family=ood_profile_family,
+                    seed=seed * 1000 + idx,
+                    static_profile=profile_name,
+                    abrupt_step=ood_abrupt_step,
+                    switch_every_steps=ood_switch_steps,
+                    switch_probability=ood_switch_probability,
+                ),
+            )
+        print(f"  Fixed-profile eval: {len(fixed_eval_envs)} profiles × "
+              f"{fixed_profile_eval_episodes} episode(s)")
+
+    rollout_window = max(int(getattr(config, "surprise_window", 256)), 8)
+    recent_rollout = {
+        "state": deque(maxlen=rollout_window),
+        "action": deque(maxlen=rollout_window),
+        "reward": deque(maxlen=rollout_window),
+    }
+    if config.use_context:
+        recent_rollout["context"] = deque(maxlen=rollout_window)
 
     best_eval_reward = -float('inf')
     start_time = time.time()
@@ -534,11 +683,34 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
     mode_names = list(mode_profiles.keys()) if mode_profiles else []
     current_mode = 'normal'
     next_switch_ep = rng.randint(*MODE_SWITCH_INTERVAL) if mode_names else config.max_episodes + 1
+    last_ood_profile = None
+
+    def record_ood_event(info, episode_idx, episode_step):
+        nonlocal last_ood_profile
+        if not extreme_ood_train or not isinstance(info, dict):
+            return
+        profile = info.get("ood_profile")
+        if profile is None or profile == last_ood_profile:
+            return
+        last_ood_profile = profile
+        history['profile_events'].append({
+            'episode': int(episode_idx + 1),
+            'episode_step': int(episode_step),
+            'total_steps': int(total_steps + episode_step),
+            'profile': str(profile),
+            'latent_load': _json_safe(info.get("ood_latent_load")),
+            'schedule': str(info.get("ood_schedule", ood_schedule)),
+        })
 
     if mode_names and not use_dr and not extreme_ood_train:
         print(f"  Mode switching: {len(mode_names)} modes, "
               f"switch every {MODE_SWITCH_INTERVAL[0]}-{MODE_SWITCH_INTERVAL[1]} episodes")
         apply_mode_to_env(env, env_name, mode_profiles.get('normal', {}))
+        history['mode_events'].append({
+            'episode': 1,
+            'mode': current_mode,
+            'params': mode_profiles.get('normal', {}),
+        })
 
     for episode in range(config.max_episodes):
         ep_start = time.time()
@@ -551,14 +723,21 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
             current_mode = rng.choice(mode_names)
             apply_mode_to_env(env, env_name, mode_profiles[current_mode])
             next_switch_ep = episode + rng.randint(*MODE_SWITCH_INTERVAL)
+            history['mode_events'].append({
+                'episode': int(episode + 1),
+                'mode': str(current_mode),
+                'params': mode_profiles[current_mode],
+            })
 
-        state, _ = env.reset(seed=seed * 10000 + episode)
+        state, reset_info = env.reset(seed=seed * 10000 + episode)
+        record_ood_event(reset_info, episode, 0)
         agent.reset_context()
         episode_reward = 0.0
         done = False
         ep_steps = 0
 
         while not done:
+            context_before = agent._current_context_np() if config.use_context else None
             action = agent.select_action(state)
             scaled_action = np.clip(action * env.action_space.high[0],
                                     env.action_space.low[0], env.action_space.high[0])
@@ -567,16 +746,22 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
             if use_rarl:
                 scaled_action = apply_rarl_perturbation(scaled_action, env, rng)
 
-            next_state, reward, terminated, truncated, _ = env.step(scaled_action)
+            next_state, reward, terminated, truncated, step_info = env.step(scaled_action)
             done = terminated or truncated
+            recent_rollout["state"].append(np.asarray(state, dtype=np.float32).copy())
+            recent_rollout["action"].append(np.asarray(action, dtype=np.float32).copy())
+            recent_rollout["reward"].append(float(reward))
+            if context_before is not None:
+                recent_rollout["context"].append(np.asarray(context_before, dtype=np.float32).copy())
             agent.store_transition(state, action, reward, next_state, float(done))
+            record_ood_event(step_info, episode, ep_steps + 1)
             state = next_state
             episode_reward += reward
             ep_steps += 1
 
             # Update
             if agent.replay_buffer.size >= config.batch_size:
-                metrics = agent.update()
+                metrics = agent.update(recent_rollout=_recent_rollout_payload(recent_rollout))
                 if metrics:
                     history['training_metrics'].append(metrics)
 
@@ -586,31 +771,37 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
 
         # Periodic evaluation
         if (episode + 1) % eval_interval == 0:
-            eval_rewards = []
             context_snapshot = agent.snapshot_context()
-            for eval_ep in range(5):
-                s, _ = env.reset(seed=99999 + eval_ep)
-                agent.reset_context()
-                er = 0.0
-                for _ in range(config.max_steps_per_episode):
-                    a = agent.select_action(s, deterministic=True)
-                    sa = np.clip(a * env.action_space.high[0],
-                                 env.action_space.low[0], env.action_space.high[0])
-                    ns, r, term, trunc, _ = env.step(sa)
-                    agent.observe_context(s, a, r, ns, done=term or trunc)
-                    s = ns
-                    er += r
-                    if term or trunc:
-                        break
-                eval_rewards.append(er)
+            eval_result = _evaluate_agent(
+                agent, env,
+                max_steps=config.max_steps_per_episode,
+                n_episodes=5,
+                seed_base=99999,
+            )
             agent.restore_context(context_snapshot)
 
-            mean_eval = np.mean(eval_rewards)
+            mean_eval = eval_result['mean']
             history['eval_rewards'].append({
                 'episode': episode + 1,
-                'mean': float(mean_eval),
-                'std': float(np.std(eval_rewards)),
+                **eval_result,
+                'metrics_summary': _summarize_metrics(history['training_metrics'], window=100),
             })
+
+            if fixed_eval_envs:
+                profile_results = {}
+                for profile_name, fixed_env in fixed_eval_envs.items():
+                    context_snapshot = agent.snapshot_context()
+                    profile_results[profile_name] = _evaluate_agent(
+                        agent, fixed_env,
+                        max_steps=config.max_steps_per_episode,
+                        n_episodes=fixed_profile_eval_episodes,
+                        seed_base=199999 + (episode + 1) * 100 + len(profile_results) * 10,
+                    )
+                    agent.restore_context(context_snapshot)
+                history['fixed_profile_eval_rewards'].append({
+                    'episode': episode + 1,
+                    'profiles': profile_results,
+                })
 
             # L_eff tracking
             L_eff = 0.0
@@ -658,7 +849,12 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
             'seed': seed,
             'episode_rewards': history['episode_rewards'],
             'eval_rewards': history['eval_rewards'],
+            'fixed_profile_eval_rewards': history['fixed_profile_eval_rewards'],
+            'training_metrics': _json_safe(list(history['training_metrics'])),
+            'training_metrics_summary': _summarize_metrics(history['training_metrics'], window=1000),
             'L_eff_history': history['L_eff_history'],
+            'profile_events': history['profile_events'],
+            'mode_events': history['mode_events'],
             'best_eval_reward': best_eval_reward,
             'total_time': total_time,
             'total_steps': total_steps,
@@ -673,12 +869,16 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
                 'intensity': ood_intensity,
                 'abrupt_step': ood_abrupt_step,
                 'switch_every_steps': ood_switch_steps,
+                'switch_probability': ood_switch_probability,
+                'fixed_profile_eval_episodes': fixed_profile_eval_episodes,
             } if extreme_ood_train else None,
             'config': {k: v for k, v in vars(config).items()
                        if isinstance(v, (int, float, str, bool))},
         }, f, indent=2)
 
     env.close()
+    for fixed_env in fixed_eval_envs.values():
+        fixed_env.close()
     print(f"[DONE] {run_name}: best_eval={best_eval_reward:.1f}, "
           f"time={total_time:.0f}s, steps={total_steps}, "
           f"gpu_mem={gpu_mem_peak:.0f}MB")
@@ -698,17 +898,21 @@ def main():
     parser.add_argument("--extreme-ood-train", action="store_true",
                         help="Train under bus-like extreme random OOD wrapper")
     parser.add_argument("--ood-schedule", type=str, default="episode_random",
-                        choices=["static", "episode_random", "abrupt", "oscillating", "step_random"],
+                        choices=["static", "episode_random", "abrupt", "oscillating", "step_random", "markov"],
                         help="Extreme OOD schedule used when --extreme-ood-train is set")
     parser.add_argument("--ood-profile-family", type=str, default="extreme",
-                        choices=["extreme", "structured"],
-                        help="OOD profile family: unstructured stress test or bus-like structured latent regimes")
+                        choices=["extreme", "structured", "load", "latent_load"],
+                        help="OOD profile family: unstructured, structured, or latent-load regimes")
     parser.add_argument("--ood-intensity", type=float, default=50.0,
                         help="Max OOD multiplier used by the generic wrapper")
     parser.add_argument("--ood-abrupt-step", type=int, default=100,
                         help="Step for abrupt OOD shift")
     parser.add_argument("--ood-switch-steps", type=int, default=100,
                         help="Switch period for oscillating/step_random OOD")
+    parser.add_argument("--ood-switch-probability", type=float, default=0.35,
+                        help="Switch probability at each period tick for markov OOD")
+    parser.add_argument("--fixed-profile-eval-episodes", type=int, default=1,
+                        help="Episodes per fixed-profile eval when --extreme-ood-train is set")
 
     args = parser.parse_args()
     train(args.env, args.method, args.seed, args.save_dir,
@@ -718,7 +922,9 @@ def main():
           ood_intensity=args.ood_intensity,
           ood_abrupt_step=args.ood_abrupt_step,
           ood_switch_steps=args.ood_switch_steps,
-          ood_profile_family=args.ood_profile_family)
+          ood_switch_probability=args.ood_switch_probability,
+          ood_profile_family=args.ood_profile_family,
+          fixed_profile_eval_episodes=args.fixed_profile_eval_episodes)
 
 
 if __name__ == "__main__":

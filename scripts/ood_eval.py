@@ -768,7 +768,7 @@ def gym_extreme_random_sweep(env_name, intensities, n_seeds=5,
                              checkpoint_nau=None, checkpoint_relu=None,
                              max_steps=1000, schedule="episode_random",
                              abrupt_step=100, switch_every_steps=100,
-                             profile_family="extreme"):
+                             switch_probability=0.35, profile_family="extreme"):
     """
     Evaluate policies under bus-like extreme randomized OOD.
 
@@ -817,6 +817,7 @@ def gym_extreme_random_sweep(env_name, intensities, n_seeds=5,
                         seed=seed,
                         abrupt_step=abrupt_step,
                         switch_every_steps=switch_every_steps,
+                        switch_probability=switch_probability,
                     ),
                 )
                 eval_result = evaluate_policy_on_env(
@@ -842,6 +843,7 @@ def gym_extreme_random_sweep(env_name, intensities, n_seeds=5,
             'intensity': float(intensity),
             'schedule': schedule,
             'profile_family': profile_family,
+            'switch_probability': float(switch_probability),
             'ood_distance': d,
             'methods': method_results,
             'bound_corrected': bound_corrected,
@@ -1060,15 +1062,17 @@ Examples:
                         help="Use generic bus-like extreme randomized OOD wrapper; "
                              "--range is interpreted as intensity values")
     parser.add_argument("--ood-schedule", type=str, default="episode_random",
-                        choices=["static", "episode_random", "abrupt", "oscillating", "step_random"],
+                        choices=["static", "episode_random", "abrupt", "oscillating", "step_random", "markov"],
                         help="Schedule for --extreme-random")
     parser.add_argument("--ood-profile-family", type=str, default="extreme",
-                        choices=["extreme", "structured"],
+                        choices=["extreme", "structured", "load", "latent_load"],
                         help="Profile family for --extreme-random")
     parser.add_argument("--ood-abrupt-step", type=int, default=100,
                         help="Step for abrupt random OOD shift")
     parser.add_argument("--ood-switch-steps", type=int, default=100,
                         help="Switch period for oscillating/step_random random OOD")
+    parser.add_argument("--ood-switch-probability", type=float, default=0.35,
+                        help="Switch probability at each period tick for markov random OOD")
     parser.add_argument("--output", type=str, default=None)
     parser.add_argument("--plot", action="store_true",
                         help="Generate bound vs actual plot (Figure 1)")
@@ -1108,6 +1112,7 @@ Examples:
             schedule=args.ood_schedule,
             abrupt_step=args.ood_abrupt_step,
             switch_every_steps=args.ood_switch_steps,
+            switch_probability=args.ood_switch_probability,
             profile_family=args.ood_profile_family,
         )
     elif args.mode == 'shift':
