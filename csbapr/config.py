@@ -24,6 +24,7 @@ class CSBAPRConfig:
     tau: float = 0.005            # target network soft update rate
     alpha: float = 0.2            # SAC entropy coefficient
     auto_alpha: bool = True       # auto-tune alpha
+    alpha_cap: Optional[float] = None  # optional upper cap for entropy coefficient
     lr_actor: float = 3e-4
     lr_critic: float = 3e-4
     lr_alpha: float = 3e-4
@@ -113,6 +114,9 @@ class CSBAPRConfig:
     # ===== NAU/NMU =====
     use_nau_actor: bool = True    # use NAU/NMU actor (False = standard MLP)
     nau_reg_weight: float = 0.01  # NAU weight discretization regularizer
+    nau_l_eff_penalty_weight: float = 0.0  # stabilize NAU derivative-Lipschitz surrogate
+    nau_l_eff_target: float = 200.0
+    actor_mean_clip: float = 0.0   # optional Gaussian mean clamp before tanh
 
     # ===== IRM =====
     irm_penalty_weight: float = 0.1

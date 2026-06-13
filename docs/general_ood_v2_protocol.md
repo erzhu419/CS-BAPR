@@ -175,9 +175,12 @@ New conservative context baselines are available:
 
 - `csbapr-stable-context`
 - `bapr-stable-context`
+- `csbapr-no-sindy-stable`
 
 They slow the transition-context EMA and strengthen behavior cloning regularity
-to reduce context-triggered actor drift.
+to reduce context-triggered actor drift. The CS-BAPR stable variants also cap
+entropy alpha, clamp the Gaussian mean before tanh, and penalize a
+differentiable NAU/NMU L_eff surrogate.
 
 ## Evaluation
 
@@ -260,3 +263,25 @@ Primary readouts:
 - post-switch recovery under `profile_events`,
 - whether `surprise` and `weighted_lambda` move after profile switches,
 - seed variance of the stable-context variants.
+
+## Seed-0 Latent-Load Readout
+
+The first seed-0 latent-load run produced a useful split:
+
+- Hopper: `bapr-stable-context` improved worst fixed-profile return over
+  `bapr` and `resac`, so latent context is promising.
+- Hopper: NAU variants (`csbapr-no-sindy`, `csbapr-stable-context`) suffered
+  late collapse with exploding alpha/q-std/L_eff, so do not expand CS seeds
+  until the NAU stability knobs are validated.
+- Pendulum: `switch_every_steps=200` equals the episode horizon, so it did not
+  test mid-episode adaptation; use `--ood-switch-steps 50`.
+- Pendulum high-load profiles were too hard, clustering all methods near the
+  minimum return; the load profile has been weakened for the next diagnostic.
+
+Next diagnostic matrix:
+
+| Env | Methods | Seeds | Schedule |
+| --- | --- | --- | --- |
+| `Hopper-v4` | `resac`, `bapr`, `bapr-stable-context` | 1, 2 | `load + markov + switch_steps=200` |
+| `Hopper-v4` | `csbapr-no-sindy-stable`, `csbapr-stable-context` | 0 | `load + markov + switch_steps=200` |
+| `Pendulum-v1` | `resac`, `bapr`, `csbapr-no-sindy-stable`, `bapr-stable-context`, `csbapr-stable-context` | 0 | `load + markov + switch_steps=50` |

@@ -69,6 +69,19 @@ METHOD_PRESETS = {
         weight_sym=0.0,
         jac_weight=0.0,
     ),
+    'csbapr-no-sindy-stable': dict(
+        use_nau_actor=True,
+        weight_sym=0.0,
+        jac_weight=0.0,
+        lr_actor=5e-5,
+        lr_alpha=1e-4,
+        alpha_cap=2.0,
+        actor_mean_clip=5.0,
+        actor_weight_decay=5e-4,
+        nau_reg_weight=0.02,
+        nau_l_eff_penalty_weight=0.001,
+        nau_l_eff_target=200.0,
+    ),
     # Generic-OOD adaptation: NAU actor + online transition context.
     # SINDy/Jacobian are intentionally disabled here because the context-augmented
     # policy has input dimension state+context while f_sym is state-only.
@@ -86,7 +99,14 @@ METHOD_PRESETS = {
         use_context=True,
         context_ema_alpha=0.05,
         beta_bc=0.005,
-        lr_actor=1e-4,
+        lr_actor=5e-5,
+        lr_alpha=1e-4,
+        alpha_cap=2.0,
+        actor_mean_clip=5.0,
+        actor_weight_decay=5e-4,
+        nau_reg_weight=0.02,
+        nau_l_eff_penalty_weight=0.001,
+        nau_l_eff_target=200.0,
         penalty_scale=1.0,
         weight_sym=0.0,
         jac_weight=0.0,
@@ -587,7 +607,8 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
     skip_sindy_methods = (
         'sac', 'resac', 'bapr', 'bapr-context',
         'bapr-stable-context',
-        'csbapr-no-sindy', 'csbapr-context', 'csbapr-stable-context',
+        'csbapr-no-sindy', 'csbapr-no-sindy-stable',
+        'csbapr-context', 'csbapr-stable-context',
         'dr', 'rarl',
     )
     if method_name not in skip_sindy_methods:

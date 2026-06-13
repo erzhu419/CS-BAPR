@@ -91,6 +91,8 @@ class CSBAPRAgent:
             self.actor_state_dim, action_dim, self.config.hidden_dim, self.config.num_critics
         ).to(self.device)
         self.target_critic = deepcopy(self.critic)
+        if hasattr(self.actor, "mean_clip"):
+            self.actor.mean_clip = float(getattr(self.config, "actor_mean_clip", 0.0) or 0.0)
 
         # ===== Optimizers =====
         self.actor_optimizer = optim.Adam(
@@ -518,6 +520,11 @@ class CSBAPRAgent:
             raw_alpha = self.log_alpha.exp().item()
             floor = float(getattr(self.config, "entropy_floor", 0.01))
             self.alpha = max(raw_alpha, floor) if getattr(self.config, "enable_entropy_floor", True) else raw_alpha
+            alpha_cap = getattr(self.config, "alpha_cap", None)
+            if alpha_cap is not None and float(alpha_cap) > 0:
+                self.alpha = min(self.alpha, float(alpha_cap))
+                with torch.no_grad():
+                    self.log_alpha.clamp_(max=float(np.log(float(alpha_cap))))
 
         # ===== Step 3: Q-loss (CS-BAPR, with Γ_sym) =====
         if self.f_sym_torch is not None and not self.use_context:
@@ -589,6 +596,17 @@ class CSBAPRAgent:
             nau_reg = self.actor.regularization_loss()
             policy_loss = policy_loss + self.config.nau_reg_weight * nau_reg
 
+        l_eff_surrogate_val = 0.0
+        l_eff_penalty_val = 0.0
+        l_eff_weight = float(getattr(self.config, "nau_l_eff_penalty_weight", 0.0) or 0.0)
+        if hasattr(self.actor, 'l_eff_surrogate_loss') and l_eff_weight > 0:
+            l_eff_penalty, l_eff_surrogate = self.actor.l_eff_surrogate_loss(
+                target=float(getattr(self.config, "nau_l_eff_target", 200.0))
+            )
+            policy_loss = policy_loss + l_eff_weight * l_eff_penalty
+            l_eff_penalty_val = float(l_eff_penalty.detach().item())
+            l_eff_surrogate_val = float(l_eff_surrogate.detach().item())
+
         self.actor_optimizer.zero_grad()
         policy_loss.backward()
         if self.config.grad_clip > 0:
@@ -620,6 +638,8 @@ class CSBAPRAgent:
             'surprise': surprise,
             'belief_entropy': self.belief_tracker.entropy,
             'L_eff': L_eff,
+            'L_eff_surrogate': l_eff_surrogate_val,
+            'L_eff_penalty': l_eff_penalty_val,
         }
 
     def estimate_ood_bound(self, x_train_boundary: torch.Tensor,

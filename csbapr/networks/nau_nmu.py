@@ -114,6 +114,7 @@ class NAU_NMU_Actor(nn.Module):
         self.action_dim = action_dim
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
+        self.mean_clip = 0.0
 
         # Feature extraction (ReLU allowed, OOD bound constrains overall policy)
         self.feature_net = nn.Sequential(
@@ -152,6 +153,8 @@ class NAU_NMU_Actor(nn.Module):
         # Mix with learnable alpha
         alpha = torch.sigmoid(self.mix_alpha)
         mean = alpha * linear_part + (1 - alpha) * quad_part
+        if getattr(self, "mean_clip", 0.0):
+            mean = torch.clamp(mean, -float(self.mean_clip), float(self.mean_clip))
 
         # Log-std from features
         log_std = self.log_std_linear(features)
@@ -196,6 +199,26 @@ class NAU_NMU_Actor(nn.Module):
     def regularization_loss(self) -> torch.Tensor:
         """Total NAU regularization loss for weight discretization."""
         return self.nau_head.regularization_loss()
+
+    def l_eff_surrogate_loss(self, target: float = 200.0, eps: float = 1e-6):
+        """
+        Differentiable upper-bound surrogate for the L_eff diagnostic.
+
+        compute_L_eff() uses exact spectral norms for logging. This cheaper
+        training penalty uses Frobenius norms as an upper bound and penalizes
+        the log excess above target, which keeps the NMU/mix branch from
+        silently driving the policy into high-curvature regimes.
+        """
+        alpha = torch.sigmoid(self.mix_alpha)
+        l_h = (1.0 - alpha) * 2.0 * torch.linalg.vector_norm(self.nmu_head.coeff, ord=2)
+        k_g = torch.ones((), dtype=l_h.dtype, device=l_h.device)
+        for module in self.feature_net:
+            if isinstance(module, nn.Linear):
+                k_g = k_g * torch.linalg.matrix_norm(module.weight, ord="fro")
+        surrogate = l_h * k_g * k_g
+        target_t = torch.as_tensor(float(target), dtype=surrogate.dtype, device=surrogate.device)
+        penalty = torch.relu(torch.log(surrogate + eps) - torch.log(target_t + eps)) ** 2
+        return penalty, surrogate
 
     @property
     def lipschitz_constant(self) -> float:
