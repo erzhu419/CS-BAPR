@@ -56,6 +56,15 @@ physics, actuation, terrain/contact, runtime external force, and locomotion
 velocity preference. The intensity is still allowed to be large, but is mapped
 to severe-yet-solvable profiles instead of blindly making every parameter 50x.
 
+`--ood-profile-family controllable_load`
+: The v2.3 Pendulum diagnostic family. It keeps the hidden latent-load
+interface but makes the dominant disturbance an additive actuator/load torque,
+with only mild mass/gravity/length changes. This is closer to the bus
+benchmark's structure: the OOD regime is severe and hidden, but an
+approximately linear compensating action remains feasible. Use this instead of
+plain `load` on Pendulum, where the previous high-load profile mostly measured
+torque saturation.
+
 ## Schedules
 
 `--ood-schedule static`
@@ -285,3 +294,24 @@ Next diagnostic matrix:
 | `Hopper-v4` | `resac`, `bapr`, `bapr-stable-context` | 1, 2 | `load + markov + switch_steps=200` |
 | `Hopper-v4` | `csbapr-no-sindy-stable`, `csbapr-stable-context` | 0 | `load + markov + switch_steps=200` |
 | `Pendulum-v1` | `resac`, `bapr`, `csbapr-no-sindy-stable`, `bapr-stable-context`, `csbapr-stable-context` | 0 | `load + markov + switch_steps=50` |
+
+## v2.3: Controllable Pendulum Load
+
+The follow-up matrix above confirmed two separate issues:
+
+- Hopper: the NAU stability knobs worked. `csbapr-stable-context` recovered
+  from the legacy collapse and reached a seed-0 fixed-profile worst return of
+  878.4 under `load + markov`, comparable to the best non-NAU runs.
+- Pendulum: `load + markov + switch_steps=50` still did not reproduce the bus
+  effect. The fixed worst profile stayed dominated by `mega_event`, and the
+  NAU/context variants underperformed `resac`/`bapr`.
+
+For Pendulum, treat this as an environment-design failure rather than a final
+algorithmic result. The new `controllable_load` family keeps exaggerated hidden
+regime switches but makes the dominant OOD effect a recoverable action-bias
+disturbance. The next diagnostic matrix is:
+
+| Env | Methods | Seeds | Schedule |
+| --- | --- | --- | --- |
+| `Pendulum-v1` | `resac`, `bapr`, `bapr-stable-context`, `csbapr-stable-context` | 0, 1, 2 | `controllable_load + markov + switch_steps=50` |
+| `Hopper-v4` | `csbapr-stable-context`, `csbapr-no-sindy-stable` | 1, 2 | `load + markov + switch_steps=200` |

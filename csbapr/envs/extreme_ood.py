@@ -323,6 +323,76 @@ def default_load_profiles(env_name: Optional[str] = None, intensity: float = 50.
     return profiles
 
 
+def default_controllable_load_profiles(
+    env_name: Optional[str] = None,
+    intensity: float = 50.0,
+) -> List[Profile]:
+    """
+    Build latent-load regimes that stay severe but recoverable.
+
+    The bus benchmark's OOD axis is not mainly a harder physics task; it is an
+    exogenous load whose effect can be compensated by an approximately linear
+    control response. Pendulum's plain ``load`` family mixed mass, gravity,
+    length, and action loss strongly enough that the high-load profile mostly
+    measured torque saturation. This family keeps a large hidden regime shift
+    but makes the dominant disturbance an additive actuator/load torque that a
+    context-conditioned policy can infer and cancel.
+    """
+    hi = max(float(intensity), 1.0)
+    if hi <= 1.0:
+        stress = 0.0
+    else:
+        stress = np.log(hi) / np.log(50.0)
+    stress = float(np.clip(stress, 0.0, 1.5))
+    env_name = env_name or ""
+
+    def base(name, latent_load, **kwargs):
+        out = {
+            "name": name,
+            "latent_load": float(latent_load),
+            "obs_scale": 1.0,
+            "action_scale": 1.0,
+        }
+        out.update(kwargs)
+        return out
+
+    if "Pendulum" in env_name:
+        def p(name, z):
+            return base(
+                name,
+                z,
+                mass=float(max(0.70, 1.0 + 0.18 * z)),
+                gravity=float(max(0.75, 1.0 + 0.22 * z)),
+                length=float(max(0.88, 1.0 + 0.04 * z)),
+                action_bias=float(np.clip(1.05 * z, -1.10, 1.35)),
+                action_scale=float(np.clip(1.0 - 0.04 * max(z, 0.0), 0.90, 1.08)),
+                obs_noise=float(max(z, 0.0) * 0.002),
+                extra_control_cost=float(max(z, 0.0) * 0.00015),
+            )
+
+        profiles = [
+            base("id", 0.0),
+            p("low_load", -0.40 * stress),
+            p("rush_load", 0.65 * stress),
+            p("mega_event", 1.15 * stress),
+            base(
+                "recovery_aftershock",
+                0.35 * stress,
+                mass=float(1.0 + 0.10 * stress),
+                gravity=float(1.0 + 0.12 * stress),
+                length=float(max(0.90, 1.0 - 0.06 * stress)),
+                action_bias=float(np.clip(-0.70 * stress, -1.10, 0.0)),
+                action_scale=float(np.clip(1.0 - 0.02 * stress, 0.92, 1.0)),
+                obs_noise=float(0.0015 * stress),
+                extra_control_cost=float(0.0001 * stress),
+            ),
+        ]
+    else:
+        profiles = default_load_profiles(env_name, intensity=intensity)
+
+    return profiles
+
+
 def make_ood_profiles(
     env_name: Optional[str] = None,
     intensity: float = 50.0,
@@ -335,6 +405,8 @@ def make_ood_profiles(
         return default_structured_profiles(env_name, intensity=intensity)
     if family in ("load", "latent_load"):
         return default_load_profiles(env_name, intensity=intensity)
+    if family in ("controllable_load", "control_load", "adaptive_load"):
+        return default_controllable_load_profiles(env_name, intensity=intensity)
     raise ValueError(f"Unknown OOD profile family: {family}")
 
 
@@ -531,6 +603,12 @@ class ExtremeOODWrapper(gym.Wrapper):
         action_arr = np.asarray(action, dtype=np.float32)
         scale = _safe_float(self.current_profile.get("action_scale", 1.0))
         action_arr = action_arr * scale
+        if "action_bias" in self.current_profile:
+            bias = np.asarray(self.current_profile.get("action_bias", 0.0), dtype=np.float32)
+            try:
+                action_arr = action_arr + bias
+            except ValueError:
+                action_arr = action_arr + float(np.ravel(bias)[0])
         noise = _safe_float(self.current_profile.get("action_noise", 0.0), default=0.0)
         if self.config.include_action_noise and noise > 0:
             width = 1.0

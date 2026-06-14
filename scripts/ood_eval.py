@@ -1065,7 +1065,10 @@ Examples:
                         choices=["static", "episode_random", "abrupt", "oscillating", "step_random", "markov"],
                         help="Schedule for --extreme-random")
     parser.add_argument("--ood-profile-family", type=str, default="extreme",
-                        choices=["extreme", "structured", "load", "latent_load"],
+                        choices=[
+                            "extreme", "structured", "load", "latent_load",
+                            "controllable_load", "control_load", "adaptive_load",
+                        ],
                         help="Profile family for --extreme-random")
     parser.add_argument("--ood-abrupt-step", type=int, default=100,
                         help="Step for abrupt random OOD shift")

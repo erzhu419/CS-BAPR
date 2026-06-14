@@ -922,7 +922,10 @@ def main():
                         choices=["static", "episode_random", "abrupt", "oscillating", "step_random", "markov"],
                         help="Extreme OOD schedule used when --extreme-ood-train is set")
     parser.add_argument("--ood-profile-family", type=str, default="extreme",
-                        choices=["extreme", "structured", "load", "latent_load"],
+                        choices=[
+                            "extreme", "structured", "load", "latent_load",
+                            "controllable_load", "control_load", "adaptive_load",
+                        ],
                         help="OOD profile family: unstructured, structured, or latent-load regimes")
     parser.add_argument("--ood-intensity", type=float, default=50.0,
                         help="Max OOD multiplier used by the generic wrapper")
