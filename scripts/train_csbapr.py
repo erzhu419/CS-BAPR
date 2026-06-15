@@ -691,6 +691,9 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
         recent_rollout["context"] = deque(maxlen=rollout_window)
 
     best_eval_reward = -float('inf')
+    best_fixed_profile_reward = -float('inf')
+    best_fixed_profile_name = None
+    best_fixed_profile_episode = None
     start_time = time.time()
     total_steps = 0
 
@@ -819,10 +822,33 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
                         seed_base=199999 + (episode + 1) * 100 + len(profile_results) * 10,
                     )
                     agent.restore_context(context_snapshot)
+                profile_means = {
+                    name: result.get("mean")
+                    for name, result in profile_results.items()
+                    if isinstance(result.get("mean"), (int, float))
+                    and np.isfinite(result.get("mean"))
+                }
+                fixed_worst_profile = None
+                fixed_worst_reward = None
+                if profile_means:
+                    fixed_worst_profile, fixed_worst_reward = min(
+                        profile_means.items(), key=lambda item: item[1]
+                    )
                 history['fixed_profile_eval_rewards'].append({
                     'episode': episode + 1,
                     'profiles': profile_results,
+                    'worst_profile': fixed_worst_profile,
+                    'worst_mean': fixed_worst_reward,
                 })
+                if (
+                    fixed_worst_reward is not None
+                    and fixed_worst_reward > best_fixed_profile_reward
+                ):
+                    best_fixed_profile_reward = float(fixed_worst_reward)
+                    best_fixed_profile_name = str(fixed_worst_profile)
+                    best_fixed_profile_episode = int(episode + 1)
+                    os.makedirs(save_dir, exist_ok=True)
+                    agent.save(os.path.join(save_dir, f"{run_name}_best_fixed.pt"))
 
             # L_eff tracking
             L_eff = 0.0
@@ -877,6 +903,13 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
             'profile_events': history['profile_events'],
             'mode_events': history['mode_events'],
             'best_eval_reward': best_eval_reward,
+            'best_fixed_profile_reward': (
+                best_fixed_profile_reward
+                if np.isfinite(best_fixed_profile_reward)
+                else None
+            ),
+            'best_fixed_profile_name': best_fixed_profile_name,
+            'best_fixed_profile_episode': best_fixed_profile_episode,
             'total_time': total_time,
             'total_steps': total_steps,
             'mean_episode_time': float(np.mean(history['overhead'])),
@@ -900,7 +933,14 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
     env.close()
     for fixed_env in fixed_eval_envs.values():
         fixed_env.close()
+    best_fixed_str = "NA"
+    if np.isfinite(best_fixed_profile_reward):
+        best_fixed_str = (
+            f"{best_fixed_profile_reward:.1f}"
+            f"({best_fixed_profile_name}@ep{best_fixed_profile_episode})"
+        )
     print(f"[DONE] {run_name}: best_eval={best_eval_reward:.1f}, "
+          f"best_fixed_worst={best_fixed_str}, "
           f"time={total_time:.0f}s, steps={total_steps}, "
           f"gpu_mem={gpu_mem_peak:.0f}MB")
     return history

@@ -315,3 +315,22 @@ disturbance. The next diagnostic matrix is:
 | --- | --- | --- | --- |
 | `Pendulum-v1` | `resac`, `bapr`, `bapr-stable-context`, `csbapr-stable-context` | 0, 1, 2 | `controllable_load + markov + switch_steps=50` |
 | `Hopper-v4` | `csbapr-stable-context`, `csbapr-no-sindy-stable` | 1, 2 | `load + markov + switch_steps=200` |
+
+### v2.3 Readout
+
+The controllable Pendulum load did not recover the bus-style CS-BAPR advantage.
+Across three seeds, `bapr` had the best mean best-eval return and the best
+best-fixed worst return. `csbapr-stable-context` improved over
+`bapr-stable-context`, but it did not beat the plain `bapr` baseline. This
+keeps Pendulum as a useful negative control: even with a recoverable hidden
+action-bias disturbance, the task does not expose the same approximately
+linear exogenous-demand response that makes NAU valuable in the bus benchmark.
+
+Hopper gives a different signal. With the NAU stability knobs, all three
+`csbapr-stable-context` seeds reached a strong robust checkpoint under
+`load + markov`: the best fixed-profile worst return was about 918 on average
+with very low seed variance. However, seeds 1 and 2 later collapsed before the
+final checkpoint, despite the entropy temperature cap. Report both final and
+best-fixed checkpoints for this diagnostic, and use the saved
+`*_best_fixed.pt` checkpoint in follow-up runs instead of treating the final
+checkpoint as the robust policy.
