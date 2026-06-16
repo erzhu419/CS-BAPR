@@ -111,6 +111,29 @@ METHOD_PRESETS = {
         weight_sym=0.0,
         jac_weight=0.0,
     ),
+    'csbapr-stable-context-qguard': dict(
+        use_nau_actor=True,
+        use_context=True,
+        context_ema_alpha=0.05,
+        context_clip=4.0,
+        beta_bc=0.005,
+        beta_ood=0.5,
+        lr_actor=5e-5,
+        lr_critic=1e-4,
+        lr_alpha=1e-4,
+        alpha_cap=2.0,
+        actor_mean_clip=5.0,
+        actor_weight_decay=5e-4,
+        nau_reg_weight=0.02,
+        nau_l_eff_penalty_weight=0.002,
+        nau_l_eff_target=80.0,
+        penalty_scale=1.0,
+        policy_q_std_cap=200.0,
+        critic_q_std_cap=200.0,
+        critic_q_std_penalty_weight=0.1,
+        weight_sym=0.0,
+        jac_weight=0.0,
+    ),
     # Ablation: no Γ_sym in Q-loss (test Part III)
     'csbapr-no-sym': dict(
         use_nau_actor=True,
@@ -609,6 +632,7 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
         'bapr-stable-context',
         'csbapr-no-sindy', 'csbapr-no-sindy-stable',
         'csbapr-context', 'csbapr-stable-context',
+        'csbapr-stable-context-qguard',
         'dr', 'rarl',
     )
     if method_name not in skip_sindy_methods:

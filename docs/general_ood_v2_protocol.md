@@ -334,3 +334,14 @@ final checkpoint, despite the entropy temperature cap. Report both final and
 best-fixed checkpoints for this diagnostic, and use the saved
 `*_best_fixed.pt` checkpoint in follow-up runs instead of treating the final
 checkpoint as the robust policy.
+
+The first explicit best-fixed rerun confirmed that checkpoint selection is
+necessary but not sufficient. Seed 0 and seed 2 again produced strong
+best-fixed checkpoints, but seed 1 only reached a best fixed-profile worst
+return of 412.5 before the critic ensemble disagreement exploded
+(`q_std` around 1e6). The next algorithmic diagnostic is therefore
+`csbapr-stable-context-qguard`, which keeps the same no-oracle context input
+but adds a log-hinge penalty above a critic Q-std cap and caps the Q-std term
+inside the actor loss. This tests whether the Hopper context signal is robust
+once late-stage critic disagreement is prevented from dominating policy
+updates.

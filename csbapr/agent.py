@@ -23,6 +23,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import math
 from copy import deepcopy
 
 from csbapr.config import CSBAPRConfig
@@ -551,6 +552,19 @@ class CSBAPRAgent:
                 new_next_action, next_log_prob, reg_norm, batch_size
             )
 
+        q_std_guard_loss_val = 0.0
+        q_std_cap = float(getattr(self.config, "critic_q_std_cap", 0.0) or 0.0)
+        q_std_guard_weight = float(
+            getattr(self.config, "critic_q_std_penalty_weight", 0.0) or 0.0
+        )
+        if q_std_cap > 0.0 and q_std_guard_weight > 0.0:
+            predicted_q_std = predicted_q.std(dim=0)
+            q_std_guard_loss = torch.relu(
+                torch.log(predicted_q_std + 1e-6) - math.log(q_std_cap)
+            ).pow(2).mean()
+            q_loss = q_loss + q_std_guard_weight * q_std_guard_loss
+            q_std_guard_loss_val = float(q_std_guard_loss.detach().item())
+
         self.critic_optimizer.zero_grad()
         q_loss.backward()
         if self.config.grad_clip > 0:
@@ -563,6 +577,12 @@ class CSBAPRAgent:
         q_values = self.critic(state_aug, new_action)
         q_mean = q_values.mean(dim=0)
         q_std = q_values.std(dim=0)
+        policy_q_std_cap = float(getattr(self.config, "policy_q_std_cap", 0.0) or 0.0)
+        q_std_for_policy = (
+            torch.clamp(q_std, max=policy_q_std_cap)
+            if policy_q_std_cap > 0.0
+            else q_std
+        )
 
         # Adaptive beta from belief (directly from BAPR, with v10 fix).
         # P0: during warmup, force w_lambda=0 so β_eff=-2 (pure RE-SAC).
@@ -575,7 +595,7 @@ class CSBAPRAgent:
         #     steady-state too.
         w_lambda_eff = 0.0 if self.training_steps < self.config.bapr_warmup_iters else w_lambda
         effective_beta = -2.0 - w_lambda_eff * self.config.penalty_scale
-        policy_loss = -(q_mean + effective_beta * q_std - self.alpha * log_prob).mean()
+        policy_loss = -(q_mean + effective_beta * q_std_for_policy - self.alpha * log_prob).mean()
 
         # Behavior cloning regularization (RE-SAC dual reg, prevents policy drift
         # from replay buffer distribution after buffer saturation)
@@ -630,6 +650,8 @@ class CSBAPRAgent:
             'ood_loss': ood_loss.item(),
             'q_mean': predicted_q.mean().item(),
             'q_std': q_std.mean().item(),
+            'q_std_policy': q_std_for_policy.mean().item(),
+            'q_std_guard_loss': q_std_guard_loss_val,
             'alpha': self.alpha,
             'weighted_lambda': w_lambda,
             'weighted_lambda_effective': w_lambda_eff,   # 0 during BAPR warmup, else = w_lambda

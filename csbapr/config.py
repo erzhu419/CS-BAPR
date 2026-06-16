@@ -47,6 +47,9 @@ class CSBAPRConfig:
     beta_ood: float = 0.1         # OOD Q-std penalty weight
     beta_bc: float = 0.001        # behavior cloning weight (RE-SAC dual reg, prevents policy drift)
     actor_type: str = None        # None→NAU/MLP (via use_nau_actor), 'kan'→KAN, 'tanh-mlp'→smooth-activation MLP
+    policy_q_std_cap: float = 0.0  # optional cap on Q-std inside actor loss
+    critic_q_std_cap: float = 0.0  # optional soft cap for ensemble Q-std
+    critic_q_std_penalty_weight: float = 0.0  # log-hinge penalty above critic_q_std_cap
 
     # ===== Online OOD context adaptation =====
     # Generic Gym/MuJoCo environments do not expose bus-like route/demand
