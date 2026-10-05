@@ -1,0 +1,993 @@
+{
+  "revision": "nonlinear_load_v9_pilot",
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "NonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "evaluation_seeds": [
+    60000,
+    60001
+  ],
+  "identification_fits": [
+    {
+      "identification_seed": 91000,
+      "identification_interactions": 10000,
+      "validation_interactions": 1000,
+      "coefficients": [
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.050003740337827576,
+          0.0,
+          0.0017293936942779256,
+          0.0,
+          0.005011807936313894,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.05000036262553676,
+          0.0014152958150247036,
+          0.0,
+          0.0,
+          0.0049928303829239505
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.06936445470052442,
+          -0.02781012857756074,
+          0.2004681758577098,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.056979943978351495,
+          0.016912929742755184,
+          0.0,
+          0.19971469530270547
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -0.08956644507053485,
+          -0.005994167371403803,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -0.11409518431982318,
+          0.0,
+          0.0
+        ]
+      ],
+      "library_powers": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "validation_physical_increment_rmse": 0.01335091827367649,
+      "validation_physical_increment_r_squared": 0.9782573071866623,
+      "physical_intercept": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reference_gain": [
+        [
+          1.7766518592834473,
+          0.0,
+          1.0963448286056519,
+          0.0,
+          0.3460116982460022,
+          -0.13863925635814667
+        ],
+        [
+          0.0,
+          1.7771648168563843,
+          0.0,
+          1.0980396270751953,
+          0.28530555963516235,
+          0.08463256061077118
+        ]
+      ],
+      "reference_builder_error": null
+    },
+    {
+      "identification_seed": 92000,
+      "identification_interactions": 10000,
+      "validation_interactions": 1000,
+      "coefficients": [
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.050005913659296505,
+          0.0,
+          0.0013257012563227507,
+          0.0018418215363363599,
+          0.005026113610517017,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.05000259739147397,
+          0.0,
+          0.0,
+          0.0,
+          0.004994182201146736
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.05643848542373636,
+          0.07170560323091373,
+          0.20104327369413083,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.015665606735642264,
+          0.0,
+          0.19976591978687153
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -0.11866387891630746,
+          0.011399606261221454,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -0.09867179890462527,
+          0.0,
+          0.0
+        ]
+      ],
+      "library_powers": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      ],
+      "validation_physical_increment_rmse": 0.013455683073251781,
+      "validation_physical_increment_r_squared": 0.9763637098176924,
+      "physical_intercept": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "reference_gain": [
+        [
+          1.776261329650879,
+          0.0,
+          1.0950560569763184,
+          0.0,
+          0.2807174623012543,
+          0.35667362809181213
+        ],
+        [
+          0.0,
+          1.7771269083023071,
+          0.0,
+          1.097940444946289,
+          0.0,
+          0.0783708319067955
+        ]
+      ],
+      "reference_builder_error": null
+    }
+  ],
+  "local_linear_gain": [
+    [
+      1.8308695658308198,
+      0.0,
+      1.341605004974718,
+      0.0,
+      0.4,
+      0.0
+    ],
+    [
+      0.0,
+      1.8308695658308198,
+      0.0,
+      1.341605004974718,
+      0.0,
+      0.4
+    ]
+  ],
+  "inverse_reference_gain": [
+    [
+      1.7443094781511401,
+      0.0,
+      1.0009921811968023,
+      0.0
+    ],
+    [
+      0.0,
+      1.7443094781511401,
+      0.0,
+      1.0009921811968023
+    ]
+  ],
+  "results": {
+    "1": {
+      "zero": {
+        "mean_cost": 104.70924629834555,
+        "returns": [
+          -206.38509286939055,
+          -3.033399727300537
+        ],
+        "maximum_physical_state_norm": 1.733912964137091,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.5761677869249386,
+        "mean_force_rms": 0.00332380556280621,
+        "mean_storm_fraction": 0.0975
+      },
+      "inverse_force_cancel_only": {
+        "mean_cost": 101.86117684189783,
+        "returns": [
+          -201.42323834909638,
+          -2.299115334699272
+        ],
+        "maximum_physical_state_norm": 1.7044023404662778,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.5620398116960308,
+        "mean_force_rms": 0.00332380556280621,
+        "mean_storm_fraction": 0.0975
+      },
+      "local_linear_feedback": {
+        "mean_cost": 0.41642999395354907,
+        "returns": [
+          -0.35156633526357967,
+          -0.48129365264351853
+        ],
+        "maximum_physical_state_norm": 0.22723360245855875,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.05676873111782778,
+        "mean_force_rms": 0.00332380556280621,
+        "mean_storm_fraction": 0.0975
+      },
+      "inverse_feedback_no_force": {
+        "mean_cost": 0.44277374409125125,
+        "returns": [
+          -0.36463258757748757,
+          -0.5209149006050149
+        ],
+        "maximum_physical_state_norm": 0.2754600282848282,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.05720980301400726,
+        "mean_force_rms": 0.00332380556280621,
+        "mean_storm_fraction": 0.0975
+      },
+      "inverse_feedback": {
+        "mean_cost": 0.44308514211922556,
+        "returns": [
+          -0.3648753021246958,
+          -0.5212949821137554
+        ],
+        "maximum_physical_state_norm": 0.2757411771126822,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.057244724111001004,
+        "mean_force_rms": 0.00332380556280621,
+        "mean_storm_fraction": 0.0975
+      },
+      "linear_fitted_91000": {
+        "mean_cost": 0.4244589111630296,
+        "returns": [
+          -0.359941065981362,
+          -0.48897675634469717
+        ],
+        "maximum_physical_state_norm": 0.23536791378635744,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.05971689155873158,
+        "mean_force_rms": 0.00332380556280621,
+        "mean_storm_fraction": 0.0975
+      },
+      "linear_fitted_92000": {
+        "mean_cost": 0.42432864864950215,
+        "returns": [
+          -0.35959240029609546,
+          -0.4890648970029088
+        ],
+        "maximum_physical_state_norm": 0.23577542960375344,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.059654312012232806,
+        "mean_force_rms": 0.00332380556280621,
+        "mean_storm_fraction": 0.0975
+      }
+    },
+    "2": {
+      "zero": {
+        "mean_cost": 106.68638540346474,
+        "returns": [
+          -209.19344454971673,
+          -4.179326257212759
+        ],
+        "maximum_physical_state_norm": 1.750989197345157,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.5904596675194107,
+        "mean_force_rms": 0.006776888346535321,
+        "mean_storm_fraction": 0.1
+      },
+      "inverse_force_cancel_only": {
+        "mean_cost": 101.86177946530724,
+        "returns": [
+          -201.42415731583066,
+          -2.299401614783805
+        ],
+        "maximum_physical_state_norm": 1.7044023420139278,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.5620398119113404,
+        "mean_force_rms": 0.006776888346535321,
+        "mean_storm_fraction": 0.1
+      },
+      "local_linear_feedback": {
+        "mean_cost": 0.4173544795320776,
+        "returns": [
+          -0.3529544708544679,
+          -0.48175448820968736
+        ],
+        "maximum_physical_state_norm": 0.2272466240678756,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.056767405707598126,
+        "mean_force_rms": 0.006776888346535321,
+        "mean_storm_fraction": 0.1
+      },
+      "inverse_feedback_no_force": {
+        "mean_cost": 0.44320175267381445,
+        "returns": [
+          -0.3652914107049328,
+          -0.521112094642696
+        ],
+        "maximum_physical_state_norm": 0.27517454095410065,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.05718465771566328,
+        "mean_force_rms": 0.006776888346535321,
+        "mean_storm_fraction": 0.1
+      },
+      "inverse_feedback": {
+        "mean_cost": 0.4438608683627733,
+        "returns": [
+          -0.3659122077693136,
+          -0.5218095289562329
+        ],
+        "maximum_physical_state_norm": 0.27573612665259223,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.05724487638555574,
+        "mean_force_rms": 0.006776888346535321,
+        "mean_storm_fraction": 0.1
+      },
+      "linear_fitted_91000": {
+        "mean_cost": 0.4255291072539036,
+        "returns": [
+          -0.3616366071046096,
+          -0.48942160740319757
+        ],
+        "maximum_physical_state_norm": 0.23516128992016092,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.05974158281921464,
+        "mean_force_rms": 0.006776888346535321,
+        "mean_storm_fraction": 0.1
+      },
+      "linear_fitted_92000": {
+        "mean_cost": 0.4252209135222007,
+        "returns": [
+          -0.36086731485898865,
+          -0.4895745121854127
+        ],
+        "maximum_physical_state_norm": 0.23594392510056467,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.05960570689970411,
+        "mean_force_rms": 0.006776888346535321,
+        "mean_storm_fraction": 0.1
+      }
+    },
+    "5": {
+      "zero": {
+        "mean_cost": 120.57874583071143,
+        "returns": [
+          -224.43239798293482,
+          -16.72509367848804
+        ],
+        "maximum_physical_state_norm": 1.8355123332477636,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.682962166933581,
+        "mean_force_rms": 0.0199285976014845,
+        "mean_storm_fraction": 0.1375
+      },
+      "inverse_force_cancel_only": {
+        "mean_cost": 101.86739533407888,
+        "returns": [
+          -201.4307063325957,
+          -2.3040843355620635
+        ],
+        "maximum_physical_state_norm": 1.7044023428454484,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.5620398123018265,
+        "mean_force_rms": 0.0199285976014845,
+        "mean_storm_fraction": 0.1375
+      },
+      "local_linear_feedback": {
+        "mean_cost": 0.42394108416111476,
+        "returns": [
+          -0.3609172815349475,
+          -0.48696488678728195
+        ],
+        "maximum_physical_state_norm": 0.22728738936525897,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.056763339806265745,
+        "mean_force_rms": 0.0199285976014845,
+        "mean_storm_fraction": 0.1375
+      },
+      "inverse_feedback_no_force": {
+        "mean_cost": 0.4480074525801051,
+        "returns": [
+          -0.3702723938079052,
+          -0.525742511352305
+        ],
+        "maximum_physical_state_norm": 0.2743219791135811,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.05720064196876627,
+        "mean_force_rms": 0.0199285976014845,
+        "mean_storm_fraction": 0.1375
+      },
+      "inverse_feedback": {
+        "mean_cost": 0.4499783210077999,
+        "returns": [
+          -0.3728063942392476,
+          -0.5271502477763522
+        ],
+        "maximum_physical_state_norm": 0.2757206012253374,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.057245338978675835,
+        "mean_force_rms": 0.0199285976014845,
+        "mean_storm_fraction": 0.1375
+      },
+      "linear_fitted_91000": {
+        "mean_cost": 0.4336879029012697,
+        "returns": [
+          -0.37104549370586265,
+          -0.49633031209667666
+        ],
+        "maximum_physical_state_norm": 0.2345456728255691,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.05999638499432274,
+        "mean_force_rms": 0.0199285976014845,
+        "mean_storm_fraction": 0.1375
+      },
+      "linear_fitted_92000": {
+        "mean_cost": 0.4333496700422471,
+        "returns": [
+          -0.36978410649195237,
+          -0.4969152335925418
+        ],
+        "maximum_physical_state_norm": 0.2365931906216228,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.05971645788929121,
+        "mean_force_rms": 0.0199285976014845,
+        "mean_storm_fraction": 0.1375
+      }
+    },
+    "10": {
+      "zero": {
+        "mean_cost": 439.1427680112142,
+        "returns": [
+          -825.0977797314478,
+          -53.18775629098059
+        ],
+        "maximum_physical_state_norm": 4.143763266831726,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 1.2998705157288615,
+        "mean_force_rms": 0.05599471274598032,
+        "mean_storm_fraction": 0.22
+      },
+      "inverse_force_cancel_only": {
+        "mean_cost": 101.91726448987731,
+        "returns": [
+          -201.51530159544316,
+          -2.319227384311457
+        ],
+        "maximum_physical_state_norm": 1.7044023592082953,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.5620398156717963,
+        "mean_force_rms": 0.05599471274598032,
+        "mean_storm_fraction": 0.22
+      },
+      "local_linear_feedback": {
+        "mean_cost": 0.4756965826350028,
+        "returns": [
+          -0.4484436553126609,
+          -0.5029495099573447
+        ],
+        "maximum_physical_state_norm": 0.2273610868151146,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.056756197348396015,
+        "mean_force_rms": 0.05599471274598032,
+        "mean_storm_fraction": 0.22
+      },
+      "inverse_feedback_no_force": {
+        "mean_cost": 0.5095514485051343,
+        "returns": [
+          -0.47730442301104403,
+          -0.5417984739992247
+        ],
+        "maximum_physical_state_norm": 0.2729141685949088,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.05843881235394702,
+        "mean_force_rms": 0.05599471274598032,
+        "mean_storm_fraction": 0.22
+      },
+      "inverse_feedback": {
+        "mean_cost": 0.5006181676339234,
+        "returns": [
+          -0.4579360459451273,
+          -0.5433002893227195
+        ],
+        "maximum_physical_state_norm": 0.2756934752884871,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.057246128378259126,
+        "mean_force_rms": 0.05599471274598032,
+        "mean_storm_fraction": 0.22
+      },
+      "linear_fitted_91000": {
+        "mean_cost": 0.5456735673327495,
+        "returns": [
+          -0.5719270141747002,
+          -0.519420120490799
+        ],
+        "maximum_physical_state_norm": 0.23353390355958709,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.06458070777265876,
+        "mean_force_rms": 0.05599471274598032,
+        "mean_storm_fraction": 0.22
+      },
+      "linear_fitted_92000": {
+        "mean_cost": 0.5347467268685497,
+        "returns": [
+          -0.5478185590980301,
+          -0.5216748946390692
+        ],
+        "maximum_physical_state_norm": 0.23796198639815136,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.06365621873866481,
+        "mean_force_rms": 0.05599471274598032,
+        "mean_storm_fraction": 0.22
+      }
+    },
+    "20": {
+      "zero": {
+        "mean_cost": 1117.8988801269081,
+        "returns": [
+          -1990.123879244467,
+          -245.6738810093495
+        ],
+        "maximum_physical_state_norm": 6.659242871691932,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 2.2270774545125165,
+        "mean_force_rms": 0.19545132745890664,
+        "mean_storm_fraction": 0.4475
+      },
+      "inverse_force_cancel_only": {
+        "mean_cost": 102.45577968210782,
+        "returns": [
+          -201.78758457350705,
+          -3.1239747907085893
+        ],
+        "maximum_physical_state_norm": 1.704402378218502,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.5620398181958037,
+        "mean_force_rms": 0.19545132745890664,
+        "mean_storm_fraction": 0.4475
+      },
+      "local_linear_feedback": {
+        "mean_cost": 1.0244461641886993,
+        "returns": [
+          -0.7289243629280208,
+          -1.3199679654493777
+        ],
+        "maximum_physical_state_norm": 0.22753070053820118,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.05677653243714956,
+        "mean_force_rms": 0.19545132745890664,
+        "mean_storm_fraction": 0.4475
+      },
+      "inverse_feedback_no_force": {
+        "mean_cost": 1.230418365055403,
+        "returns": [
+          -0.8168591077268924,
+          -1.6439776223839138
+        ],
+        "maximum_physical_state_norm": 0.27058881475370344,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.07290313097925859,
+        "mean_force_rms": 0.19545132745890664,
+        "mean_storm_fraction": 0.4475
+      },
+      "inverse_feedback": {
+        "mean_cost": 1.039886520358992,
+        "returns": [
+          -0.730674949683312,
+          -1.3490980910346722
+        ],
+        "maximum_physical_state_norm": 0.275634362765126,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.057248131307250844,
+        "mean_force_rms": 0.19545132745890664,
+        "mean_storm_fraction": 0.4475
+      },
+      "linear_fitted_91000": {
+        "mean_cost": 1.3860385945293046,
+        "returns": [
+          -1.1829737841116033,
+          -1.5891034049470059
+        ],
+        "maximum_physical_state_norm": 0.23156449936288287,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.09178241430259701,
+        "mean_force_rms": 0.19545132745890664,
+        "mean_storm_fraction": 0.4475
+      },
+      "linear_fitted_92000": {
+        "mean_cost": 1.666976490360297,
+        "returns": [
+          -1.1098917497488485,
+          -2.2240612309717456
+        ],
+        "maximum_physical_state_norm": 0.2756236778116661,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.1012869828327195,
+        "mean_force_rms": 0.19545132745890664,
+        "mean_storm_fraction": 0.4475
+      }
+    },
+    "50": {
+      "zero": {
+        "mean_cost": 5663.762632745421,
+        "returns": [
+          -8952.543046977507,
+          -2374.9822185133344
+        ],
+        "maximum_physical_state_norm": 14.431311199443899,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 5.30930772526748,
+        "mean_force_rms": 0.575016956776169,
+        "mean_storm_fraction": 0.53
+      },
+      "inverse_force_cancel_only": {
+        "mean_cost": 105.75685604456464,
+        "returns": [
+          -204.30042930960664,
+          -7.213282779522645
+        ],
+        "maximum_physical_state_norm": 1.704402320317694,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.56203980842067,
+        "mean_force_rms": 0.575016956776169,
+        "mean_storm_fraction": 0.53
+      },
+      "local_linear_feedback": {
+        "mean_cost": 4.562576255762902,
+        "returns": [
+          -3.343622396144332,
+          -5.781530115381473
+        ],
+        "maximum_physical_state_norm": 0.22842716019681883,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.06033987439597009,
+        "mean_force_rms": 0.575016956776169,
+        "mean_storm_fraction": 0.53
+      },
+      "inverse_feedback_no_force": {
+        "mean_cost": 5.369557814390721,
+        "returns": [
+          -3.9465364684239717,
+          -6.792579160357471
+        ],
+        "maximum_physical_state_norm": 0.4353459638530035,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.14171110114772206,
+        "mean_force_rms": 0.575016956776169,
+        "mean_storm_fraction": 0.53
+      },
+      "inverse_feedback": {
+        "mean_cost": 4.252918318674801,
+        "returns": [
+          -3.2306112928788826,
+          -5.275225344470721
+        ],
+        "maximum_physical_state_norm": 0.27533067213543794,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.05746626361391807,
+        "mean_force_rms": 0.575016956776169,
+        "mean_storm_fraction": 0.53
+      },
+      "linear_fitted_91000": {
+        "mean_cost": 6.848008793552107,
+        "returns": [
+          -6.226678036412181,
+          -7.469339550692032
+        ],
+        "maximum_physical_state_norm": 0.5492491679678373,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.1899292816291498,
+        "mean_force_rms": 0.575016956776169,
+        "mean_storm_fraction": 0.53
+      },
+      "linear_fitted_92000": {
+        "mean_cost": 8.24636537354191,
+        "returns": [
+          -5.885934939523572,
+          -10.606795807560246
+        ],
+        "maximum_physical_state_norm": 0.7154257160394425,
+        "mean_saturated_component_fraction": 0.0,
+        "mean_physical_state_rms": 0.22242115001187493,
+        "mean_force_rms": 0.575016956776169,
+        "mean_storm_fraction": 0.53
+      }
+    }
+  },
+  "checks": {
+    "inverse_reference_beats_zero_all_severities": true,
+    "inverse_reference_50x_cost_below_fifth_of_zero": true,
+    "inverse_reference_stays_in_unit_physical_ball": true,
+    "inverse_reference_saturation_below_ten_percent": true,
+    "both_existing_linear_reference_builds_succeed": true
+  },
+  "controllability_passed": true,
+  "existing_symbolic_interface_passed": true,
+  "reference_is_optimal": false,
+  "rl_training_runs": 0,
+  "optimizer_updates": 0,
+  "identification_interactions": 20000,
+  "validation_interactions": 2000
+}

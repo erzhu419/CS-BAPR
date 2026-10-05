@@ -1,143 +1,95 @@
 #!/usr/bin/env python3
-"""
-Figure 1: Theoretical bound vs. actual OOD degradation.
-
-Extracts OOD sweep results from logs and overlays the CS-BAPR theoretical bound:
-    ‖err(d)‖ ≤ δ + (ε + (L_eff + M)·‖d‖)·‖d‖
-
-where d = OD_multiplier - 1 (distance from training domain 1x).
-
-Usage:
-    python scripts/plot_figure1.py --logdir /tmp/csbapr_exp --output figure1.pdf
-
-Reads logs produced by test_multiline_convergence.py (multi-seed).
-"""
+"""Plot demand-sweep return degradation from the reported table aggregates."""
 import argparse
+import csv
 import re
-from collections import defaultdict
 from pathlib import Path
 
-import numpy as np
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.ticker import NullLocator
 
-
-def parse_ood_and_L_eff(log_path):
-    """Extract ID total, OOD sweep, and (if logged) L_eff."""
-    text = log_path.read_text()
-    ood = {}
-    for m in re.finditer(r'od_\s*(\d+)x:\s*(-?\d+\.?\d*)\s*±\s*(\d+\.?\d*)', text):
-        mult, mean, std = int(m.group(1)), float(m.group(2)), float(m.group(3))
-        ood[mult] = (mean, std)
-    id_total = None
-    m = re.search(r'TOTAL\s*:\s*(-?\d+\.?\d*)', text)
-    if m:
-        id_total = float(m.group(1))
-    # L_eff logged? (not currently logged per-episode, so we return None)
-    return id_total, ood
-
-
-def theoretical_bound_corrected(d, delta=0.0, epsilon=0.05, L_eff=0.0,
-                                 M=0.0, gap=0.0):
-    """CSBAPR.lean Part X: δ + (ε_total + (L_eff+M)·d)·d"""
-    d = np.asarray(d, dtype=float)
-    eps_total = epsilon + gap
-    return delta + (eps_total + (L_eff + M) * d) * d
-
-
-# Fitted L_eff estimates (approximate, from architecture analysis):
-# NAU actor: L_eff ≈ 5-10 (tightly constrained)
-# KAN actor: L_eff ≈ 10-50 (spline-dependent)
-# MLP actor: L_eff = ∞ (no Lipschitz guarantee, fitted from data)
-L_EFF_PRIOR = {
-    'csbapr': 8.0,
-    'csbapr-kan': 20.0,
-    'csbapr-no-nau': 60.0,
-    'bapr': 100.0,  # effectively unbounded
+ROOT = Path(__file__).resolve().parents[1]
+MULTIPLIERS = (1, 2, 5, 10, 20, 50)
+METHODS = {
+    "bapr-pristine": ("Pristine ReLU", "#777777", "o", "--"),
+    "bapr": ("Legacy BAPR", "#c44e52", "s", "--"),
+    "csbapr-no-nau": ("Stabilized ReLU", "#0072b2", "^", "-"),
+    "csbapr": ("NAU + quadratic", "#009e73", "D", "-"),
+    "csbapr-tanh": ("Stabilized tanh", "#cc79a7", "v", "-"),
+    "csbapr-kan": ("Stabilized KAN", "#b87500", "P", "-"),
 }
 
 
+def read_sweep(path):
+    sweep = {method: {} for method in METHODS}
+    with path.open(newline="") as source:
+        for row in csv.DictReader(source):
+            if row["label"] != "tab:ood_sweep":
+                continue
+            match = re.fullmatch(r"m=(\d+) return median", row["metric"])
+            if match is None or row["unit"] != "K":
+                raise ValueError("Unexpected demand-sweep metric or return unit")
+            sweep[row["method"]][int(match.group(1))] = float(row["value"])
+    for method, values in sweep.items():
+        if set(values) != set(MULTIPLIERS):
+            raise ValueError(f"Incomplete demand sweep for {method}")
+    return sweep
+
+
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--logdir', default='/tmp/csbapr_exp')
-    parser.add_argument('--output', default='figure1.pdf')
-    parser.add_argument('--y-scale', choices=['linear', 'log'], default='linear')
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--source", type=Path,
+        default=ROOT / "paper/source_data/reported_tables.csv",
+    )
+    parser.add_argument(
+        "--output", type=Path, default=ROOT / "paper/figures/figure1.pdf",
+    )
     args = parser.parse_args()
+    sweep = read_sweep(args.source)
 
-    logdir = Path(args.logdir)
-    runs = defaultdict(list)
-    for log_path in sorted(logdir.glob('*.log')):
-        m = re.match(r'(.+)_seed(\d+)\.log$', log_path.name)
-        if not m:
-            continue
-        method = m.group(1)
-        id_total, ood = parse_ood_and_L_eff(log_path)
-        if id_total is None or not ood:
-            continue
-        runs[method].append({'id': id_total, 'ood': ood})
-
-    if not runs:
-        print(f"No valid logs in {logdir}")
-        return
-
-    # ── Plot ──
-    fig, ax = plt.subplots(figsize=(7, 5))
-
-    colors = {'csbapr': '#1f77b4', 'csbapr-kan': '#2ca02c',
-              'csbapr-no-nau': '#ff7f0e', 'bapr': '#d62728'}
-    labels = {'csbapr': 'CS-BAPR (NAU)', 'csbapr-kan': 'CS-BAPR (KAN)',
-              'csbapr-no-nau': 'CS-BAPR no-NAU (ablation)',
-              'bapr': 'BAPR (MLP baseline)'}
-
-    for method, method_runs in sorted(runs.items()):
-        all_mults = sorted(method_runs[0]['ood'].keys())
-        d_arr = np.array([m - 1 for m in all_mults])  # distance from 1x
-        # Actual error: degradation from ID reward (negative → less reward = more error)
-        err_per_seed = []
-        for r in method_runs:
-            id_r = r['id']
-            errs = [id_r - r['ood'][m][0] for m in all_mults]  # degradation magnitude
-            err_per_seed.append(errs)
-        err_arr = np.array(err_per_seed)  # [n_seeds, n_od]
-        mean = err_arr.mean(axis=0)
-        std = err_arr.std(axis=0) if len(method_runs) > 1 else np.zeros_like(mean)
-
-        c = colors.get(method, 'gray')
-        lbl = labels.get(method, method)
-        ax.plot(d_arr, mean, 'o-', color=c, label=f'{lbl} (actual)', lw=2, markersize=7)
-        if std.max() > 0:
-            ax.fill_between(d_arr, mean - std, mean + std, color=c, alpha=0.2)
-
-    # Theoretical bound — plot with CS-BAPR's L_eff for reference
-    d_fine = np.linspace(0, max(all_mults) - 1, 100)
-    for method in ['csbapr', 'bapr']:
-        if method not in runs:
-            continue
-        L_eff = L_EFF_PRIOR[method]
-        bound = theoretical_bound_corrected(
-            d_fine, delta=0.0, epsilon=5000.0, L_eff=L_eff, M=0.0
+    plt.rcParams.update({
+        "font.family": "DejaVu Sans",
+        "font.size": 11,
+        "axes.labelsize": 12,
+        "legend.fontsize": 10.5,
+        "pdf.fonttype": 42,
+        "ps.fonttype": 42,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+    })
+    fig, ax = plt.subplots(figsize=(6.2, 4.4))
+    for method, (label, color, marker, line) in METHODS.items():
+        values = sweep[method]
+        degradation = [values[1] - values[m] for m in MULTIPLIERS]
+        ax.plot(
+            MULTIPLIERS, degradation, label=label, color=color,
+            marker=marker, linestyle=line, linewidth=1.6, markersize=5,
         )
-        c = colors.get(method, 'gray')
-        ax.plot(d_fine, bound, '--', color=c, alpha=0.6, lw=1.5,
-                label=f'{labels[method]} (bound, L={L_eff:.0f})')
+    ax.set_xscale("log")
+    ax.set_xticks(MULTIPLIERS, labels=[str(m) for m in MULTIPLIERS])
+    ax.xaxis.set_minor_locator(NullLocator())
+    ax.set_xlabel(r"Demand multiplier $m$")
+    ax.set_ylabel(r"Return degradation ($10^3$)")
+    ax.set_ylim(-15, 710)
+    ax.set_xlim(0.9, 56)
+    ax.grid(axis="y", color="#dedede", linewidth=0.6)
+    ax.set_axisbelow(True)
+    fig.legend(
+        *ax.get_legend_handles_labels(), loc="lower center",
+        bbox_to_anchor=(0.5, 0.01), ncol=2, frameon=False,
+        handlelength=2, columnspacing=1.5,
+    )
+    fig.subplots_adjust(left=0.15, right=0.98, top=0.98, bottom=0.34)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(args.output)
+    fig.savefig(args.output.with_suffix(".png"), dpi=300)
+    plt.close(fig)
+    print(f"Saved {args.output} and {args.output.with_suffix('.png')}")
+    print("Source: Table 2 aggregate medians; no seed-level uncertainty or theory overlay.")
 
-    ax.set_xlabel('OOD distance $d = \\mathrm{od\\_mult} - 1$', fontsize=12)
-    ax.set_ylabel('Reward degradation $|R_{ID} - R_{OOD}|$', fontsize=12)
-    ax.set_title('CS-BAPR: Theoretical bound vs. actual OOD degradation\n'
-                 '(MultiLineEnv, 12 SUMO-calibrated bus lines)', fontsize=12)
-    ax.legend(loc='upper left', fontsize=9)
-    ax.grid(True, alpha=0.3)
-    if args.y_scale == 'log':
-        ax.set_yscale('log')
 
-    plt.tight_layout()
-    plt.savefig(args.output, dpi=150, bbox_inches='tight')
-    print(f"Saved {args.output}")
-
-    # Also save PNG for quick preview
-    png_path = str(args.output).replace('.pdf', '.png')
-    plt.savefig(png_path, dpi=150, bbox_inches='tight')
-    print(f"Saved {png_path}")
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

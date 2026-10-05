@@ -1,0 +1,424 @@
+{
+  "revision": "nonlinear_load_v32_reference",
+  "source_revision": "nonlinear_load_v31_symbolic",
+  "training_seed": 22,
+  "source_symbolic_constraint": "on",
+  "source_config": {
+    "env_name": "SustainedNonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.01,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.08,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 1.0,
+    "storm_probability_rule": "always-active load",
+    "tail_shape": 1.5,
+    "tail_rule": "0.5 + 0.5 * min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "SustainedNonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "reference_identification": {
+    "fits": {
+      "cubic": {
+        "gain": [
+          [
+            1.8308695672003048,
+            0.0,
+            1.3416051377849878,
+            0.0,
+            0.3999999588290739,
+            0.0
+          ],
+          [
+            0.0,
+            1.8308695675373379,
+            0.0,
+            1.3416050626511102,
+            0.0,
+            0.4000000157146353
+          ]
+        ],
+        "dynamics": [
+          [
+            1.0,
+            0.0,
+            0.04999999973950651,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.049999999740622886
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "load_matrix": [
+          [
+            0.0012499971391455628,
+            0.0
+          ],
+          [
+            0.0,
+            0.0012499984188644106
+          ],
+          [
+            0.04999999430084187,
+            0.0
+          ],
+          [
+            0.0,
+            0.050000001262083045
+          ]
+        ],
+        "linear_action_matrix": [
+          [
+            0.00312499112629563,
+            0.0
+          ],
+          [
+            0.0,
+            0.0031249963860192705
+          ],
+          [
+            0.12499999866909914,
+            0.0
+          ],
+          [
+            0.0,
+            0.12499999823284344
+          ]
+        ],
+        "cubic_action_matrix": [
+          [
+            0.0031250110296903904,
+            0.0
+          ],
+          [
+            0.0,
+            0.00312500285505237
+          ],
+          [
+            0.1250000005000614,
+            0.0
+          ],
+          [
+            0.0,
+            0.12500000402117142
+          ]
+        ]
+      }
+    }
+  },
+  "radius_results": {
+    "0.2": {
+      "1": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -0.510660358700383,
+              -0.4709067524823724
+            ]
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -0.5108129419452382,
+              -0.4723306956060101
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -0.5596162042723768,
+              -0.4901417904959654
+            ]
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -49.74452482883599,
+              -50.86930976151266
+            ]
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -45.03755157316245,
+              -43.58898560000511
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -45.0957506889703,
+              -43.65001970473798
+            ]
+          }
+        }
+      }
+    },
+    "0.5": {
+      "1": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -2.880520211349556,
+              -2.5235714637023374
+            ]
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -2.910852218916988,
+              -2.5884373854967806
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -2.9222073318678934,
+              -2.4963121894825604
+            ]
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -51.84477500451029,
+              -52.761249464676766
+            ]
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -47.01681623923588,
+              -45.97528565601154
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -47.14480936023753,
+              -45.54258641048063
+            ]
+          }
+        }
+      }
+    },
+    "1.0": {
+      "1": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -10.883407526099234,
+              -9.388013402746342
+            ]
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -11.225582074070333,
+              -9.881954780460283
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -10.690150413998772,
+              -9.197000736402696
+            ]
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -59.40645634672629,
+              -59.821905033478075
+            ]
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -54.548317379298446,
+              -53.96296865265264
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -54.43002425897233,
+              -52.24832654716018
+            ]
+          }
+        }
+      }
+    }
+  }
+}

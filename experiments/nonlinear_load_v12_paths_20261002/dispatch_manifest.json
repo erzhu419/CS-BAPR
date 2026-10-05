@@ -1,0 +1,593 @@
+{
+  "environment": "nonlinear_load",
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "NonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "training_episodes": 500,
+  "training_seeds": [
+    7,
+    8
+  ],
+  "severities": [
+    1,
+    2,
+    5,
+    10,
+    20,
+    50
+  ],
+  "checkpoint_selection": "last",
+  "data_accounting": {
+    "learning_interactions": 100000,
+    "learning_updates": 99001,
+    "symbolic_identification_interactions": 10000,
+    "symbolic_validation_interactions": 1000,
+    "total_non_evaluation_interactions_symbolic": 111000,
+    "total_non_evaluation_interactions_non_symbolic": 100000
+  },
+  "replication_criterion": {
+    "comparators": [
+      "csbapr-centered-mlp-no-sindy-no-target-shift",
+      "bapr-no-target-shift",
+      "resac-no-target-shift"
+    ],
+    "severities": [
+      1,
+      50
+    ],
+    "lower_mean_cost": true,
+    "required_matched_seed_wins": 2
+  },
+  "learner_added_value_criterion": {
+    "comparator": "own_fitted_model_feedback",
+    "severities": [
+      1,
+      50
+    ],
+    "required_matched_seed_wins": 2
+  },
+  "runtime_requirement": {
+    "torch": "2.5.1+cu121",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "pysindy": "2.1.0",
+    "sklearn": "1.7.2",
+    "python_minor_versions": [
+      "3.10",
+      "3.11"
+    ]
+  },
+  "arms": [
+    {
+      "method": "csbapr-centered-mlp-jacobian-only-no-target-shift",
+      "config": {
+        "env_name": "NonlinearLoad-v0",
+        "state_dim": 6,
+        "action_dim": 2,
+        "max_episodes": 500,
+        "max_steps_per_episode": 200,
+        "gamma": 0.99,
+        "tau": 0.005,
+        "alpha": 0.2,
+        "auto_alpha": true,
+        "alpha_cap": null,
+        "lr_actor": 0.0003,
+        "lr_critic": 0.0003,
+        "lr_alpha": 0.0003,
+        "hidden_dim": 64,
+        "num_critics": 3,
+        "buffer_size": 1000000,
+        "batch_size": 256,
+        "warmup_steps": 1000,
+        "max_run_length": 20,
+        "hazard_rate": 0.02,
+        "base_variance": 1.0,
+        "surprise_ema": 0.1,
+        "weight_reg": 0.0,
+        "beta_ood": 0.1,
+        "beta_bc": 0.0,
+        "actor_type": "centered-tanh-mlp",
+        "policy_q_std_cap": 0.0,
+        "critic_q_std_cap": 0.0,
+        "critic_q_std_penalty_weight": 0.0,
+        "use_context": false,
+        "context_ema_alpha": 0.2,
+        "context_clip": 5.0,
+        "enable_min_q_target": true,
+        "enable_reward_ema": true,
+        "enable_entropy_floor": true,
+        "entropy_floor": 0.01,
+        "enable_rollout_surprise": true,
+        "surprise_window": 256,
+        "bapr_warmup_iters": 100,
+        "penalty_scale": 2.0,
+        "weight_sym": 0.0,
+        "jac_weight": 0.01,
+        "action_anchor_weight": 0.0,
+        "grad_clip": 1.0,
+        "jac_curriculum_start": 100,
+        "actor_weight_decay": 0.0001,
+        "sindy_with_control": true,
+        "sindy_threshold": 0.001,
+        "sindy_lib_degree": 1,
+        "sindy_discrete_time": true,
+        "sindy_n_explore_episodes": 50,
+        "sindy_epsilon_threshold": 1.0,
+        "use_nau_actor": false,
+        "nau_reg_weight": 0.0,
+        "nau_l_eff_penalty_weight": 0.0,
+        "nau_l_eff_target": 200.0,
+        "actor_mean_clip": 0.0,
+        "irm_penalty_weight": 0.1,
+        "irm_n_envs": 3,
+        "ood_eval_interval": 50,
+        "log_interval": 10,
+        "save_interval": 100,
+        "log_dir": "logs",
+        "track_L_eff": false,
+        "device": "cuda"
+      },
+      "symbolic": true
+    },
+    {
+      "method": "csbapr-centered-mlp-no-sindy-no-target-shift",
+      "config": {
+        "env_name": "NonlinearLoad-v0",
+        "state_dim": 6,
+        "action_dim": 2,
+        "max_episodes": 500,
+        "max_steps_per_episode": 200,
+        "gamma": 0.99,
+        "tau": 0.005,
+        "alpha": 0.2,
+        "auto_alpha": true,
+        "alpha_cap": null,
+        "lr_actor": 0.0003,
+        "lr_critic": 0.0003,
+        "lr_alpha": 0.0003,
+        "hidden_dim": 64,
+        "num_critics": 3,
+        "buffer_size": 1000000,
+        "batch_size": 256,
+        "warmup_steps": 1000,
+        "max_run_length": 20,
+        "hazard_rate": 0.02,
+        "base_variance": 1.0,
+        "surprise_ema": 0.1,
+        "weight_reg": 0.0,
+        "beta_ood": 0.1,
+        "beta_bc": 0.0,
+        "actor_type": "centered-tanh-mlp",
+        "policy_q_std_cap": 0.0,
+        "critic_q_std_cap": 0.0,
+        "critic_q_std_penalty_weight": 0.0,
+        "use_context": false,
+        "context_ema_alpha": 0.2,
+        "context_clip": 5.0,
+        "enable_min_q_target": true,
+        "enable_reward_ema": true,
+        "enable_entropy_floor": true,
+        "entropy_floor": 0.01,
+        "enable_rollout_surprise": true,
+        "surprise_window": 256,
+        "bapr_warmup_iters": 100,
+        "penalty_scale": 2.0,
+        "weight_sym": 0.0,
+        "jac_weight": 0.0,
+        "action_anchor_weight": 0.0,
+        "grad_clip": 1.0,
+        "jac_curriculum_start": 100,
+        "actor_weight_decay": 0.0001,
+        "sindy_with_control": true,
+        "sindy_threshold": 0.001,
+        "sindy_lib_degree": 1,
+        "sindy_discrete_time": true,
+        "sindy_n_explore_episodes": 50,
+        "sindy_epsilon_threshold": 1.0,
+        "use_nau_actor": false,
+        "nau_reg_weight": 0.0,
+        "nau_l_eff_penalty_weight": 0.0,
+        "nau_l_eff_target": 200.0,
+        "actor_mean_clip": 0.0,
+        "irm_penalty_weight": 0.1,
+        "irm_n_envs": 3,
+        "ood_eval_interval": 50,
+        "log_interval": 10,
+        "save_interval": 100,
+        "log_dir": "logs",
+        "track_L_eff": false,
+        "device": "cuda"
+      },
+      "symbolic": false
+    },
+    {
+      "method": "bapr-no-target-shift",
+      "config": {
+        "env_name": "NonlinearLoad-v0",
+        "state_dim": 6,
+        "action_dim": 2,
+        "max_episodes": 500,
+        "max_steps_per_episode": 200,
+        "gamma": 0.99,
+        "tau": 0.005,
+        "alpha": 0.2,
+        "auto_alpha": true,
+        "alpha_cap": null,
+        "lr_actor": 0.0003,
+        "lr_critic": 0.0003,
+        "lr_alpha": 0.0003,
+        "hidden_dim": 64,
+        "num_critics": 3,
+        "buffer_size": 1000000,
+        "batch_size": 256,
+        "warmup_steps": 1000,
+        "max_run_length": 20,
+        "hazard_rate": 0.02,
+        "base_variance": 1.0,
+        "surprise_ema": 0.1,
+        "weight_reg": 0.0,
+        "beta_ood": 0.1,
+        "beta_bc": 0.001,
+        "actor_type": null,
+        "policy_q_std_cap": 0.0,
+        "critic_q_std_cap": 0.0,
+        "critic_q_std_penalty_weight": 0.0,
+        "use_context": false,
+        "context_ema_alpha": 0.2,
+        "context_clip": 5.0,
+        "enable_min_q_target": true,
+        "enable_reward_ema": true,
+        "enable_entropy_floor": true,
+        "entropy_floor": 0.01,
+        "enable_rollout_surprise": true,
+        "surprise_window": 256,
+        "bapr_warmup_iters": 100,
+        "penalty_scale": 2.0,
+        "weight_sym": 0.0,
+        "jac_weight": 0.0,
+        "action_anchor_weight": 0.0,
+        "grad_clip": 1.0,
+        "jac_curriculum_start": 100,
+        "actor_weight_decay": 0.0,
+        "sindy_with_control": true,
+        "sindy_threshold": 0.1,
+        "sindy_lib_degree": 2,
+        "sindy_discrete_time": true,
+        "sindy_n_explore_episodes": 50,
+        "sindy_epsilon_threshold": 1.0,
+        "use_nau_actor": false,
+        "nau_reg_weight": 0.0,
+        "nau_l_eff_penalty_weight": 0.0,
+        "nau_l_eff_target": 200.0,
+        "actor_mean_clip": 0.0,
+        "irm_penalty_weight": 0.1,
+        "irm_n_envs": 3,
+        "ood_eval_interval": 50,
+        "log_interval": 10,
+        "save_interval": 100,
+        "log_dir": "logs",
+        "track_L_eff": false,
+        "device": "cuda"
+      },
+      "symbolic": false
+    },
+    {
+      "method": "resac-no-target-shift",
+      "config": {
+        "env_name": "NonlinearLoad-v0",
+        "state_dim": 6,
+        "action_dim": 2,
+        "max_episodes": 500,
+        "max_steps_per_episode": 200,
+        "gamma": 0.99,
+        "tau": 0.005,
+        "alpha": 0.2,
+        "auto_alpha": true,
+        "alpha_cap": null,
+        "lr_actor": 0.0003,
+        "lr_critic": 0.0003,
+        "lr_alpha": 0.0003,
+        "hidden_dim": 64,
+        "num_critics": 3,
+        "buffer_size": 1000000,
+        "batch_size": 256,
+        "warmup_steps": 1000,
+        "max_run_length": 20,
+        "hazard_rate": 0.02,
+        "base_variance": 1.0,
+        "surprise_ema": 0.1,
+        "weight_reg": 0.0,
+        "beta_ood": 0.1,
+        "beta_bc": 0.001,
+        "actor_type": null,
+        "policy_q_std_cap": 0.0,
+        "critic_q_std_cap": 0.0,
+        "critic_q_std_penalty_weight": 0.0,
+        "use_context": false,
+        "context_ema_alpha": 0.2,
+        "context_clip": 5.0,
+        "enable_min_q_target": true,
+        "enable_reward_ema": true,
+        "enable_entropy_floor": true,
+        "entropy_floor": 0.01,
+        "enable_rollout_surprise": true,
+        "surprise_window": 256,
+        "bapr_warmup_iters": 1000000000000,
+        "penalty_scale": 0.0,
+        "weight_sym": 0.0,
+        "jac_weight": 0.0,
+        "action_anchor_weight": 0.0,
+        "grad_clip": 1.0,
+        "jac_curriculum_start": 100,
+        "actor_weight_decay": 0.0,
+        "sindy_with_control": true,
+        "sindy_threshold": 0.1,
+        "sindy_lib_degree": 2,
+        "sindy_discrete_time": true,
+        "sindy_n_explore_episodes": 50,
+        "sindy_epsilon_threshold": 1.0,
+        "use_nau_actor": false,
+        "nau_reg_weight": 0.0,
+        "nau_l_eff_penalty_weight": 0.0,
+        "nau_l_eff_target": 200.0,
+        "actor_mean_clip": 0.0,
+        "irm_penalty_weight": 0.1,
+        "irm_n_envs": 3,
+        "ood_eval_interval": 50,
+        "log_interval": 10,
+        "save_interval": 100,
+        "log_dir": "logs",
+        "track_L_eff": false,
+        "device": "cuda"
+      },
+      "symbolic": false
+    }
+  ],
+  "node_preference": null,
+  "gpu_preference": null,
+  "required_os": "linux",
+  "require_cuda": true,
+  "revision": "nonlinear_load_v12_paths",
+  "status": "complete",
+  "frozen_at_utc": "2026-10-02T03:40:01.087462+00:00",
+  "source_revision": "nonlinear_load_v11_replication",
+  "source_study": "experiments/nonlinear_load_v11_replication_20261002",
+  "source_tasks": [
+    {
+      "id": "t120854",
+      "method": "csbapr-centered-mlp-jacobian-only-no-target-shift",
+      "seed": 7
+    },
+    {
+      "id": "t120855",
+      "method": "csbapr-centered-mlp-no-sindy-no-target-shift",
+      "seed": 7
+    },
+    {
+      "id": "t120856",
+      "method": "bapr-no-target-shift",
+      "seed": 7
+    },
+    {
+      "id": "t120857",
+      "method": "resac-no-target-shift",
+      "seed": 7
+    },
+    {
+      "id": "t120858",
+      "method": "csbapr-centered-mlp-jacobian-only-no-target-shift",
+      "seed": 8
+    },
+    {
+      "id": "t120859",
+      "method": "csbapr-centered-mlp-no-sindy-no-target-shift",
+      "seed": 8
+    },
+    {
+      "id": "t120860",
+      "method": "bapr-no-target-shift",
+      "seed": 8
+    },
+    {
+      "id": "t120861",
+      "method": "resac-no-target-shift",
+      "seed": 8
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t121303",
+      "method": "csbapr-centered-mlp-jacobian-only-no-target-shift",
+      "seed": 7,
+      "source_task_id": "t120854"
+    },
+    {
+      "id": "t121304",
+      "method": "csbapr-centered-mlp-no-sindy-no-target-shift",
+      "seed": 7,
+      "source_task_id": "t120855"
+    },
+    {
+      "id": "t121305",
+      "method": "bapr-no-target-shift",
+      "seed": 7,
+      "source_task_id": "t120856"
+    },
+    {
+      "id": "t121306",
+      "method": "resac-no-target-shift",
+      "seed": 7,
+      "source_task_id": "t120857"
+    },
+    {
+      "id": "t121307",
+      "method": "csbapr-centered-mlp-jacobian-only-no-target-shift",
+      "seed": 8,
+      "source_task_id": "t120858"
+    },
+    {
+      "id": "t121308",
+      "method": "csbapr-centered-mlp-no-sindy-no-target-shift",
+      "seed": 8,
+      "source_task_id": "t120859"
+    },
+    {
+      "id": "t121309",
+      "method": "bapr-no-target-shift",
+      "seed": 8,
+      "source_task_id": "t120860"
+    },
+    {
+      "id": "t121310",
+      "method": "resac-no-target-shift",
+      "seed": 8,
+      "source_task_id": "t120861"
+    }
+  ],
+  "source_directory": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v12_paths_20261002/runtime",
+  "evaluation_seed_start": 60000,
+  "evaluation_episodes_per_severity": 100,
+  "confirmation_criterion_applies_to_training_seeds": [
+    7,
+    8
+  ],
+  "new_training_interactions": 0,
+  "new_identification_interactions": 0,
+  "new_optimizer_updates": 0,
+  "formal_evaluation_episodes_including_controls": 15600,
+  "reproduction_episodes_including_controls": 52,
+  "reproduction": {
+    "evaluation_seed": 50000,
+    "severities": [
+      1,
+      50
+    ],
+    "rtol": 0.0001,
+    "atol": 0.001,
+    "fail_before_new_paths": true
+  },
+  "validation": {
+    "new_paths_absent_from_existing_local_evaluation_artifacts": true,
+    "all_source_policy_exports_verified": true,
+    "preflight_tasks": [
+      {
+        "id": "t121296",
+        "method": "csbapr-centered-mlp-jacobian-only-no-target-shift",
+        "seed": 7
+      },
+      {
+        "id": "t121297",
+        "method": "resac-no-target-shift",
+        "seed": 8
+      }
+    ],
+    "inference_json_bytes": 836866,
+    "preflight_passed": true,
+    "unit_tests_passed": 2,
+    "preflight_evaluation_episodes_including_controls": 14,
+    "startup_reproduction_passed_tasks": 8,
+    "startup_observations": "results/nonlinear_load_v12_paths/startup_observations.json",
+    "completed_tasks": 8,
+    "final_protocol_and_source_reference_match": true,
+    "new_path_comparison_gates_passed": true,
+    "new_path_added_value_gate_passed": true,
+    "summary_tests_passed": 3
+  },
+  "preflight_submitted_at_utc": "2026-10-02T03:42:06.655007+00:00",
+  "validated_at_utc": "2026-10-02T03:51:22.589570+00:00",
+  "submitted_at_utc": "2026-10-02T03:53:11.024646+00:00",
+  "startup_verified_at_utc": "2026-10-02T03:56:50.381512+00:00",
+  "initial_placement": [
+    {
+      "id": "t121303",
+      "node": "node007",
+      "gpu_idx": 1,
+      "method": "csbapr-centered-mlp-jacobian-only-no-target-shift",
+      "seed": 7
+    },
+    {
+      "id": "t121304",
+      "node": "node007",
+      "gpu_idx": 2,
+      "method": "csbapr-centered-mlp-no-sindy-no-target-shift",
+      "seed": 7
+    },
+    {
+      "id": "t121305",
+      "node": "node007",
+      "gpu_idx": 3,
+      "method": "bapr-no-target-shift",
+      "seed": 7
+    },
+    {
+      "id": "t121306",
+      "node": "jtl110gpu2",
+      "gpu_idx": 0,
+      "method": "resac-no-target-shift",
+      "seed": 7
+    },
+    {
+      "id": "t121307",
+      "node": "node007",
+      "gpu_idx": 1,
+      "method": "csbapr-centered-mlp-jacobian-only-no-target-shift",
+      "seed": 8
+    },
+    {
+      "id": "t121308",
+      "node": "node007",
+      "gpu_idx": 2,
+      "method": "csbapr-centered-mlp-no-sindy-no-target-shift",
+      "seed": 8
+    },
+    {
+      "id": "t121309",
+      "node": "node007",
+      "gpu_idx": 3,
+      "method": "bapr-no-target-shift",
+      "seed": 8
+    },
+    {
+      "id": "t121310",
+      "node": "local",
+      "gpu_idx": 0,
+      "method": "resac-no-target-shift",
+      "seed": 8
+    }
+  ],
+  "completed_at_utc": "2026-10-02T04:10:03.741132+00:00",
+  "summary": "results/nonlinear_load_v12_paths/summary.json"
+}

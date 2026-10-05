@@ -102,12 +102,13 @@ class CSBAPRConfig:
     # ===== CS-BAPR New =====
     weight_sym: float = 0.01      # λ_sym — symbolic consistency penalty (Lean: p.lam_sym ≥ 0)
     jac_weight: float = 0.01      # Jacobian consistency weight in policy loss (reduced 0.1→0.01)
+    action_anchor_weight: float = 0.0  # deterministic-action MSE against fitted feedback
     grad_clip: float = 1.0        # gradient clipping for Jacobian loss (trap #1)
     jac_curriculum_start: int = 100  # episodes before JC loss is enabled (curriculum warm-up)
     actor_weight_decay: float = 1e-4  # weight decay on actor optimizer (prevents K_g explosion)
 
     # ===== SINDy =====
-    sindy_with_control: bool = False  # if True, fit dx/dt = f(x) + B u (action-aware)
+    sindy_with_control: bool = True  # fit increments/derivatives in the joint (state, action) library
     sindy_threshold: float = 0.1  # STLSQ sparsity threshold
     sindy_lib_degree: int = 2     # polynomial library degree (1-4)
     sindy_discrete_time: bool = True  # prefer discrete mode (trap #10)
@@ -125,10 +126,9 @@ class CSBAPRConfig:
     irm_penalty_weight: float = 0.1
     irm_n_envs: int = 3           # minimum environments for IRM filtering
 
-    # ===== OOD Bound (Part X + XIII) =====
-    physics_smoothness_M: float = 0.0   # f_real derivative Lipschitz (Lean: HasLipschitzFderiv)
-                                         # 0 = conservative (only L_eff contributes to quadratic term)
-    ood_confidence_delta: float = 0.05   # PAC confidence δ (0.05 → 95%)
+    # ===== Conditional policy-output bound =====
+    # Boundary errors are measured against an explicit action reference;
+    # replay sample counts do not supply a pointwise confidence correction.
     ood_eval_interval: int = 50          # evaluate OOD bound every N episodes
 
     # ===== Logging =====

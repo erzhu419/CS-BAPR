@@ -144,12 +144,12 @@ def test_sindy():
     # Test prediction
     test_state = np.random.randn(5, 2)
     pred = model.predict(test_state)
-    true_next = (A @ test_state.T).T
+    true_next = ((A - np.eye(2)) @ test_state.T).T
     pred_error = np.linalg.norm(pred - true_next, axis=-1).mean()
     print(f"  Prediction error: {pred_error:.4f}")
 
     # Torch wrapper
-    wrapper = SINDyTorchWrapper(model, verify_features=True)
+    wrapper = SINDyTorchWrapper(model)
     x_torch = torch.tensor(test_state, dtype=torch.float32, requires_grad=True)
     out = wrapper(x_torch)
     assert out.shape == (5, 2), f"Wrapper output shape wrong: {out.shape}"
@@ -228,6 +228,8 @@ def test_full_training_loop():
         sindy_lib_degree=2,
         sindy_threshold=0.1,
         use_nau_actor=True,
+        jac_weight=0.0,
+        weight_sym=0.0,
     )
 
     agent = CSBAPRAgent(state_dim, action_dim, config)

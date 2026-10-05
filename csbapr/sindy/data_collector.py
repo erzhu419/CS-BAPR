@@ -34,13 +34,15 @@ def collect_trajectories(env, policy=None, n_episodes: int = 50,
     X_list = []
     U_list = []
     X_dot_list = []
+    if seed is not None:
+        env.action_space.seed(seed)
 
     for ep in range(n_episodes):
         states = []
         actions = []
         derivatives = []
 
-        state, info = env.reset(seed=seed + ep if seed else None)
+        state, info = env.reset(seed=seed + ep if seed is not None else None)
         states.append(state)
 
         for step in range(max_steps):

@@ -1,0 +1,369 @@
+{
+  "revision": "nonlinear_load_v34_linear_confirmation",
+  "source_revision": "nonlinear_load_v33_cost_reference",
+  "source_formal_validation_passed": true,
+  "source_task_ids": [
+    "t134576",
+    "t134577"
+  ],
+  "source_primary_decision": {
+    "original_reference_improvement_all_blocks": false,
+    "nonlinear_added_value_all_blocks": false,
+    "reference_intervention_admitted": false,
+    "learner_replication_admitted": false,
+    "historical_hold_unchanged": true
+  },
+  "source_hypothesis": "positive cost_linear secondary control; independent confirmation required",
+  "source_learner_gate": {
+    "radius1_repair_passed": true,
+    "small_radius_retention_passed": true,
+    "all_radius_own_fitted_added_value_passed": false,
+    "ready_for_learner_replication": false,
+    "historical_hold_unchanged": true
+  },
+  "source_config": {
+    "env_name": "SustainedNonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.01,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.08,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 1.0,
+    "storm_probability_rule": "always-active load",
+    "tail_shape": 1.5,
+    "tail_rule": "0.5 + 0.5 * min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "SustainedNonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "runtime_requirement": {
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "python_minor_versions": [
+      "3.10",
+      "3.11"
+    ]
+  },
+  "source_candidate_gains": {
+    "21": [
+      [
+        1.8308695636613228,
+        0.0,
+        1.3416050824755654,
+        0.0,
+        0.3038881283232111,
+        0.0
+      ],
+      [
+        0.0,
+        1.8308695690043504,
+        0.0,
+        1.3416049518367306,
+        0.0,
+        0.3038874575716283
+      ]
+    ],
+    "22": [
+      [
+        1.8308695672003175,
+        0.0,
+        1.3416051377849951,
+        0.0,
+        0.30388775837723964,
+        0.0
+      ],
+      [
+        0.0,
+        1.8308695675373416,
+        0.0,
+        1.341605062651111,
+        0.0,
+        0.3038877883349774
+      ]
+    ]
+  },
+  "training_seeds": [
+    21,
+    22
+  ],
+  "controllers": [
+    "fitted_local",
+    "cost_linear",
+    "fitted_inverse",
+    "known_inverse"
+  ],
+  "primary_comparator": "fitted_local",
+  "radii": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "severities": [
+    1,
+    50
+  ],
+  "evaluation_seed_start": 65000,
+  "preflight_seed_start": 65500,
+  "evaluation_episodes_per_severity": 100,
+  "formal_fresh_controller_episodes": 4800,
+  "formal_reproduction_episodes": 96,
+  "formal_evaluation_interactions": 979200,
+  "preflight_episodes": 96,
+  "preflight_interactions": 19200,
+  "new_training_interactions": 0,
+  "new_identification_interactions": 0,
+  "optimizer_updates": 0,
+  "checkpoint_access": false,
+  "references_changed": false,
+  "source_input_json_bytes": 22393,
+  "status": "complete",
+  "preflight_tasks": [
+    {
+      "id": "t134589",
+      "signature": "CS-BAPR/nonlinear_load_v34/preflight/seed21",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v34.sh --seed 21 --source-evaluation ../inputs/source_seed21.json --result-dir ../preflight_outputs/seed21 --preflight-only",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v34_linear_confirmation_20261004",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v34_linear_confirmation_20261004/preflight_outputs/seed21",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v34_linear_confirmation/preflight/seed21",
+      "status": "done",
+      "node": "local",
+      "gpu_idx": null,
+      "started_at": 1791074868.9301844,
+      "finished_at": 1791074992.4205878,
+      "exit_code": 0,
+      "last_block_reason": null,
+      "exit_status_path": "/tmp/scheduleurm_exit_t134589_e7b8669cb69c39aacb713cfb.status",
+      "stage_input_paths": [
+        "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v34_linear_confirmation_20261004/runtime"
+      ],
+      "seed": 21,
+      "result_synced_at": null,
+      "result_sync_error": null,
+      "elapsed_seconds": 123.49040341377258
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t134595",
+      "signature": "CS-BAPR/nonlinear_load_v34/formal/seed21",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v34.sh --seed 21 --source-evaluation ../inputs/source_seed21.json --result-dir ../outputs/seed21",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v34_linear_confirmation_20261004",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v34_linear_confirmation_20261004/outputs/seed21",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v34_linear_confirmation/seed21",
+      "status": "done",
+      "node": "local",
+      "gpu_idx": null,
+      "started_at": 1791075599.0744867,
+      "finished_at": 1791075655.560729,
+      "exit_code": 0,
+      "result_synced_at": null,
+      "result_sync_error": null,
+      "last_block_reason": null,
+      "exit_status_path": "/tmp/scheduleurm_exit_t134595_3013126f8dfa2eaa653dee3f.status",
+      "stage_input_paths": [
+        "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v34_linear_confirmation_20261004/runtime"
+      ],
+      "stage_excludes": [
+        ".runtime/",
+        "preflight_outputs/",
+        "outputs/"
+      ],
+      "seed": 21,
+      "terminal_evidence": "scheduler exit0 receipt and complete diagnostic JSON",
+      "local_result_collection": "compact JSON copied from local output; no remote transfer"
+    },
+    {
+      "id": "t134591",
+      "signature": "CS-BAPR/nonlinear_load_v34/formal/seed22",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v34.sh --seed 22 --source-evaluation ../inputs/source_seed22.json --result-dir ../outputs/seed22",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v34_linear_confirmation_20261004",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v34_linear_confirmation_20261004/outputs/seed22",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v34_linear_confirmation/seed22",
+      "status": "done",
+      "node": "local",
+      "gpu_idx": null,
+      "started_at": 1791075256.3223193,
+      "finished_at": 1791075318.270585,
+      "exit_code": 0,
+      "result_synced_at": null,
+      "result_sync_error": null,
+      "last_block_reason": null,
+      "exit_status_path": "/tmp/scheduleurm_exit_t134591_31ea7f37492b7a54a6cf2758.status",
+      "stage_input_paths": [
+        "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v34_linear_confirmation_20261004/runtime"
+      ],
+      "seed": 22,
+      "terminal_evidence": "scheduler exit0 receipt and complete diagnostic JSON",
+      "local_result_collection": "compact JSON copied from local output; no remote transfer"
+    }
+  ],
+  "formal_results_pending": false,
+  "formal_validation": {
+    "passed": true,
+    "completed_task_ids": [
+      "t134595",
+      "t134591"
+    ],
+    "source_controls_reproduced": true,
+    "source_candidate_gain_reproduced": true,
+    "evaluation_episodes": 4896,
+    "evaluation_interactions": 979200,
+    "evaluation_json_bytes": 2918488,
+    "improved_primary_blocks": 12,
+    "total_primary_blocks": 12
+  },
+  "decision": {
+    "all_seed_radius_load_reference_improvement": true,
+    "reference_intervention_admitted": true,
+    "learner_replication_admitted": false,
+    "historical_hold_unchanged": true
+  },
+  "follow_on_tasks_submitted": 2,
+  "next_step": "Track the admitted v35 reference-only learner trial t134718/t134719; training/restoration/evaluation mapping and numerical preflight passed. Apply unchanged learner gates after completion; historical HOLD unchanged.",
+  "historical_hold_unchanged": true,
+  "placement": "any free compatible Linux/WSL CPU; no preference, pin, allowlist or Windows",
+  "artifact_policy": "compact ID fit/gain and source reproduction controls only; no checkpoints or trajectories",
+  "decision_rule": "strict lower mean total cost versus fitted_local in every seed/radius/load block admits one reference-only learner intervention; inverse/known comparisons descriptive; no replication or baseline/seed expansion",
+  "scheduler_evaluation_policy_override": "Generic run_* wrapper classified as training; CPU/one-shot overrides apply only to read-only NumPy/SciPy evaluation, with zero fitting/training/optimizer updates or checkpoint access.",
+  "protocol_document": "docs/nonlinear_load_v34_linear_confirmation_protocol.md",
+  "results_document": "docs/nonlinear_load_v34_linear_confirmation_results.md",
+  "tests": {
+    "focused_and_regressions": "39 passed in 6.35s",
+    "test_runtime": "existing v27 learner runtime for Torch-dependent legacy tests; worker uses unchanged CPU-only pinned v33 dependencies",
+    "launcher_syntax": "passed",
+    "scheduler_doctor": "ok; no issues"
+  },
+  "local_runtime_reuse": "Hard-linked unchanged v33 dependencies and wheelhouse; worker runtime directories excluded from staging. No new local package installation.",
+  "preflight_validation": {
+    "passed": true,
+    "task_id": "t134589",
+    "exit_code": 0,
+    "evaluation_json_bytes": 68435,
+    "evaluation_interactions": 19200,
+    "source_controls_reproduced": true,
+    "source_candidate_gain_reproduced": true,
+    "interpretation": "numerical admission only; separate preflight paths do not enter formal gate"
+  },
+  "failed_formal_attempts": [
+    {
+      "id": "t134590",
+      "signature": "CS-BAPR/nonlinear_load_v34/formal/seed21",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v34.sh --seed 21 --source-evaluation ../inputs/source_seed21.json --result-dir ../outputs/seed21",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v34_linear_confirmation_20261004",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v34_linear_confirmation_20261004/outputs/seed21",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v34_linear_confirmation/seed21",
+      "status": "failed",
+      "node": "jtl110gpu2",
+      "gpu_idx": null,
+      "started_at": 1791075257.3982348,
+      "finished_at": 1791075317.953675,
+      "exit_code": 127,
+      "result_synced_at": null,
+      "result_sync_error": null,
+      "last_block_reason": "launcher exit-status sentinel recorded rc=127; died after only 60s with no success marker",
+      "exit_status_path": "/tmp/scheduleurm_exit_t134590_3be985c09aabd67d1fe5807e.status",
+      "stage_input_paths": [
+        "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v34_linear_confirmation_20261004/runtime"
+      ],
+      "seed": 21,
+      "failure": "startup only: staged local runtime ready marker with unavailable worker Python",
+      "numerical_outcomes_produced": false,
+      "repair": "Isolated leaked worker runtime at /tmp/csbapr_v34_incomplete_runtime_t134590; exclude .runtime/ in both cwd and explicit runtime-input staging; numerical code unchanged."
+    }
+  ],
+  "worker_runtime_staging": "Exclude .runtime/ by directory name in every staging root, including explicit runtime input; bootstrap pinned dependencies on each worker.",
+  "follow_on_revision": "nonlinear_load_v35_reference_intervention",
+  "follow_on_task_ids": [
+    "t134718",
+    "t134719"
+  ],
+  "follow_on_preflight_task_id": "t134705",
+  "follow_on_preflight_validation_passed": true
+}

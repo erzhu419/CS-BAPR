@@ -6,6 +6,7 @@ Simplified for continuous-state Gymnasium environments.
 """
 
 import numpy as np
+import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -23,8 +24,8 @@ class GaussianPolicy(nn.Module):
         activation: hidden-layer activation function. 'relu' (default) for the
             standard SAC tanh-Gaussian baseline (with ReLU hidden + tanh output);
             'tanh' / 'gelu' / 'softplus' for smooth-activation hidden layers,
-            which give the policy a finite derivative-Lipschitz constant
-            independent of weight magnitudes (relevant for the OOD bound).
+            which can give a finite derivative-Lipschitz constant for fixed
+            finite weights; the constant still depends on those weights.
     """
     def __init__(self, state_dim: int, action_dim: int, hidden_dim: int = 256,
                  action_range: float = 1.0,
@@ -98,3 +99,30 @@ class GaussianPolicy(nn.Module):
                 z = torch.randn_like(mean)
                 action = self.action_range * torch.tanh(mean + std * z)
         return action.squeeze(0).cpu().numpy()
+
+    def compute_L_eff(self):
+        """Whole deterministic tanh-MLP bound; other activations are uncertified."""
+        if self.activation_name != "tanh":
+            return math.inf
+        with torch.no_grad():
+            curvature = 4.0 / (3.0 * math.sqrt(3.0))
+            w1 = torch.linalg.matrix_norm(self.net[0].weight.double(), ord=2).item()
+            w2 = torch.linalg.matrix_norm(self.net[2].weight.double(), ord=2).item()
+            k_g = w2 * w1
+            l_g = curvature * (k_g ** 2 + w2 * w1 ** 2)
+            k_h = torch.linalg.matrix_norm(self.mean_linear.weight.double(), ord=2).item()
+            return abs(self.action_range) * (curvature * (k_h * k_g) ** 2 + k_h * l_g)
+
+
+class EquilibriumGaussianPolicy(GaussianPolicy):
+    """Tanh Gaussian actor whose deterministic mean is zero at the origin.
+
+    Used where zero state and zero exogenous force define the task equilibrium.
+    The std head is unchanged. Centering is differentiable in both mean terms;
+    it adds a state-constant shift, so the inherited curvature bound still holds.
+    """
+
+    def forward(self, state: torch.Tensor):
+        mean, log_std = super().forward(state)
+        origin_mean, _ = super().forward(torch.zeros_like(state[:1]))
+        return mean - origin_mean, log_std

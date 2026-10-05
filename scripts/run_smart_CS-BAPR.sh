@@ -98,6 +98,7 @@ for method in "${METHODS[@]}"; do
         CUDA_VISIBLE_DEVICES=$gpu OMP_NUM_THREADS=$CORES_PER_RUN \
             python -u scripts/test_multiline_convergence.py \
                 --episodes "$EPISODES" --seed "$seed" --method "$method" \
+                --env-path "$(pwd)/../offline-sumo/env/calibrated_env" \
                 >> "$log" 2>&1 &
         pids+=($!)
         sleep 10  # stagger: avoids GPU-memory spike during init overlap
@@ -108,16 +109,11 @@ echo ""
 echo "All jobs launched. Waiting for ${#pids[@]} background runs..."
 wait
 
-# ── Aggregate + plot ──
+# Aggregate experiment results.
 echo ""
 echo "===== Collecting results ====="
 python scripts/collect_results.py --logdir "$LOGDIR" \
     --output "${LOGDIR}/results.json" | tee "${LOGDIR}/results_table.md"
-
-echo ""
-echo "===== Generating Figure 1 ====="
-python scripts/plot_figure1.py --logdir "$LOGDIR" \
-    --output "${LOGDIR}/figure1.pdf" || echo "Figure 1 generation skipped (matplotlib?)"
 
 echo ""
 echo "===================================================="

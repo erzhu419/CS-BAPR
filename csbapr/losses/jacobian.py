@@ -1,93 +1,63 @@
-"""
-Jacobian Consistency Loss (Γ_sym) for CS-BAPR.
-
-Corresponds to CSBAPR.lean:
-- IsJacobianConsistent_nD (L400): ‖fderiv pol x - fderiv f_sym x‖ ≤ ε
-- sindy_implies_jacobian_consistency_nD (L518): SINDy → Jacobian consistency
-
-⚠️ CRITICAL: f_sym gradients must be .detach()'d (Frozen Penalty, L251).
-   If not detached, violates t_mode_pointwise_bound assumption.
-
-⚠️ Performance: jacrev is O(n²) for large networks (trap #5).
-   Use JVP with random vector for O(n) approximation.
-"""
+"""Full action-space Jacobian consistency for a frozen policy reference."""
 
 import torch
 import torch.nn as nn
 
 
-def compute_jacobian_loss(policy_net: nn.Module, f_sym: nn.Module,
-                          states_batch: torch.Tensor) -> torch.Tensor:
-    """
-    Compute Jacobian consistency loss: ‖∇π - ∇f_sym‖²
-    
-    Corresponds to CSBAPR.lean: IsJacobianConsistent_nD (L400)
-    Implements n-D version (autograd returns gradient vectors).
-    When state_dim=1, degenerates to 1D IsJacobianConsistent (L39).
-    
-    Minimizing this loss drives ε → 0 in the OOD bound.
-    
-    Args:
-        policy_net: Policy network π(s) → action
-        f_sym: Frozen SINDy torch wrapper (coefficients immutable)
-        states_batch: [batch, state_dim] states from replay buffer
-    
-    Returns:
-        Scalar Jacobian consistency loss (batch-averaged)
-    """
-    states = states_batch.detach().clone().requires_grad_(True)
-
-    # Policy network gradient ∇π ∈ ℝ^{batch × state_dim}
-    pi_output = policy_net(states)
-    # Handle (mean, log_std) tuple output from SAC-style policies
-    if isinstance(pi_output, tuple):
-        pi_output = pi_output[0]  # use mean only
-    grad_pi = torch.autograd.grad(
-        pi_output.sum(), states, create_graph=True
-    )[0]
-
-    # SINDy formula gradient (MUST detach — Frozen Penalty assumption)
-    sym_output = f_sym(states)
-    grad_sym = torch.autograd.grad(
-        sym_output.sum(), states
-    )[0]
-
-    # ‖∇π - ∇f_sym‖² — corresponds to Lean's ‖fderiv pol x - fderiv f_sym x‖
-    jac_loss = (grad_pi - grad_sym.detach()).pow(2).mean()
-    return jac_loss
+def deterministic_action(policy_net: nn.Module, states: torch.Tensor) -> torch.Tensor:
+    output = policy_net(states)
+    if isinstance(output, tuple):
+        return float(getattr(policy_net, "action_range", 1.0)) * torch.tanh(output[0])
+    return output
 
 
-def compute_jacobian_loss_nD(policy_net: nn.Module, f_sym: nn.Module,
-                              states_batch: torch.Tensor) -> torch.Tensor:
-    """
-    Full n-D Jacobian consistency using torch.func.jacrev.
-    
-    Corresponds to Part V (L394-460): n-D generalization.
-    
-    ⚠️ O(n²) cost. For large networks or state dims, use compute_jacobian_loss instead.
-    
-    Args:
-        policy_net: Policy network
-        f_sym: Frozen SINDy wrapper
-        states_batch: [batch, state_dim]
-    
-    Returns:
-        Scalar Frobenius-norm Jacobian loss
-    """
-    def policy_fn(x):
-        out = policy_net(x.unsqueeze(0))
-        if isinstance(out, tuple):
-            out = out[0]
-        return out.squeeze(0)
+def action_jacobian(output, states, create_graph):
+    """One reverse pass per action component; do not sum distinct output rows."""
+    rows = [
+        torch.autograd.grad(output[:, index].sum(), states,
+                            create_graph=create_graph, retain_graph=True)[0]
+        for index in range(output.shape[1])
+    ]
+    return torch.stack(rows, dim=1)
 
-    def sym_fn(x):
-        return f_sym(x.unsqueeze(0)).squeeze(0)
 
-    # Batched Jacobian computation
-    jac_pi = torch.vmap(torch.func.jacrev(policy_fn))(states_batch)
-    
+def compute_action_anchor_loss(policy_net: nn.Module, pi_sym: nn.Module,
+                               states_batch: torch.Tensor) -> torch.Tensor:
+    actions = deterministic_action(policy_net, states_batch)
     with torch.no_grad():
-        jac_sym = torch.vmap(torch.func.jacrev(sym_fn))(states_batch)
+        targets = pi_sym(states_batch)
+    if actions.shape != targets.shape:
+        raise ValueError("Action anchor requires matching action-space shapes")
+    return (actions - targets).square().mean()
 
-    # Frobenius norm of Jacobian difference
-    return (jac_pi - jac_sym).norm(dim=(-2, -1)).mean()
+
+def compute_jacobian_loss(policy_net: nn.Module, pi_sym: nn.Module,
+                          states_batch: torch.Tensor, input_columns=None) -> torch.Tensor:
+    """Mean squared Frobenius error of normalized deterministic-action Jacobians."""
+    with torch.enable_grad():
+        states = states_batch.detach().requires_grad_(True)
+        actions = deterministic_action(policy_net, states)
+        reference_actions = pi_sym(states)
+        if actions.shape != reference_actions.shape:
+            raise ValueError("Jacobian targets must have the same action-space shape")
+        jac_pi = action_jacobian(actions, states, create_graph=True)
+        jac_sym = action_jacobian(reference_actions, states, create_graph=False).detach()
+        difference = jac_pi - jac_sym
+        if input_columns is not None:
+            difference = difference[..., input_columns]
+        return difference.square().sum(dim=(-2, -1)).mean()
+
+
+def compute_jacobian_loss_nD(policy_net: nn.Module, pi_sym: nn.Module,
+                             states_batch: torch.Tensor) -> torch.Tensor:
+    def policy_fn(x):
+        return deterministic_action(policy_net, x.unsqueeze(0)).squeeze(0)
+
+    def reference_fn(x):
+        return pi_sym(x.unsqueeze(0)).squeeze(0)
+
+    if policy_fn(states_batch[0]).shape != reference_fn(states_batch[0]).shape:
+        raise ValueError("Jacobian targets must have the same action-space shape")
+    jac_pi = torch.vmap(torch.func.jacrev(policy_fn))(states_batch)
+    jac_sym = torch.vmap(torch.func.jacrev(reference_fn))(states_batch).detach()
+    return (jac_pi - jac_sym).square().sum(dim=(-2, -1)).mean()

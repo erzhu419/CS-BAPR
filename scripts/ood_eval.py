@@ -1,35 +1,8 @@
 #!/usr/bin/env python3
-"""
-CS-BAPR OOD Evaluation Script
-==============================
+"""OOD return evaluation under parameter perturbations and randomized profiles.
 
-Validates CS-BAPR core claims:
-  1. Theory-experiment alignment: bound predicts actual error trend (Figure 1)
-  2. NAU vs ReLU: quadratic growth vs catastrophic collapse (Figure 2)
-  3. Ablation: each component contributes to OOD robustness (Table 2)
-
-Supports two evaluation protocols:
-  A. Gymnasium/MuJoCo: perturb env params (mass, friction, gravity)
-  B. Bus simulation: parametric OD sweep (1x-100x)
-
-Usage:
-    # MuJoCo OOD sweep (Pendulum, perturb mass)
-    python scripts/ood_eval.py --env Pendulum-v1 --param mass --range 1,2,5,10,20
-
-    # MuJoCo with trained checkpoint
-    python scripts/ood_eval.py --env Hopper-v4 --param body_mass --range 1,2,4,8 \\
-        --checkpoint-nau ckpt_nau.pt --checkpoint-relu ckpt_relu.pt
-
-    # Bus simulation OOD sweep
-    python scripts/ood_eval.py --env bus --od-range 1,5,10,20,50,100
-
-    # Plot bound vs actual (Figure 1)
-    python scripts/ood_eval.py --env Pendulum-v1 --param mass --range 1,2,5,10,20 --plot
-
-Corresponds to CSBAPR.lean:
-  - ood_bound_no_assumption4_nD (L1117): δ + (ε + (L_eff+M)·d)·d
-  - composed_deriv_lipschitz_simple (L1417): L_eff computation
-  - jc_generalization_to_ood (L1663): generalization gap
+Parameter-shift indices are not state-space displacements in a policy-output bound.
+Use csbapr.losses.ood_bound for comparisons against explicit action-valued references.
 """
 
 import argparse
@@ -46,43 +19,6 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from csbapr.envs.extreme_ood import ExtremeOODConfig, make_extreme_ood_env
-
-
-# ============================================================
-# Theoretical Bounds (Part X corrected)
-# ============================================================
-
-def theoretical_bound_corrected(d, delta=0.0, epsilon=0.05, L_eff=0.0,
-                                M=0.0, gap=0.0):
-    """
-    Corrected CS-BAPR OOD bound (Part X: ood_bound_no_assumption4_nD, L1117).
-
-    ‖π(x_ood) - f_real(x_ood)‖ ≤ δ + (ε_total + (L_eff + M)·‖d‖)·‖d‖
-
-    where ε_total = ε_emp + generalization_gap.
-
-    No Assumption 4 needed. Only requires:
-    (A) JC at training boundary (ε)
-    (B) NAU architecture (L_eff, from Part XI)
-    (C) Physics smoothness (M, from Part X)
-    (D) Generalization gap (from Part XIII)
-    """
-    d = np.asarray(d, dtype=float)
-    eps_total = epsilon + gap
-    return delta + (eps_total + (L_eff + M) * d) * d
-
-
-def theoretical_bound_fencing(d, delta=0.0, epsilon=0.05, L=1.0):
-    """
-    Original fencing-theorem bound (Part VII: scbapr_ood_quadratic_nD, L672).
-
-    ‖π(x_ood) - f_real(x_ood)‖ ≤ δ + ε·‖d‖ + L/2·‖d‖²
-
-    Requires stronger Assumption 4 (JC on entire OOD path).
-    Kept for comparison; prefer theoretical_bound_corrected.
-    """
-    d = np.asarray(d, dtype=float)
-    return delta + epsilon * d + L / 2.0 * d ** 2
 
 
 # ============================================================
@@ -428,7 +364,8 @@ def load_policy(checkpoint_path, state_dim, action_dim, use_nau=True):
             num_critics = len(critic_keys)
 
     config = CSBAPRConfig(use_nau_actor=use_nau, hidden_dim=hidden_dim,
-                          num_critics=num_critics)
+                          num_critics=num_critics,
+                          actor_type=saved_config.get('actor_type'))
     agent = CSBAPRAgent(state_dim, action_dim, config)
     agent.load(checkpoint_path)
     agent.actor.eval()
@@ -572,79 +509,6 @@ def compute_ood_distance_compound(mode_params, baseline_params=None):
     return float(np.linalg.norm(log_diffs))
 
 
-def estimate_bound_params_from_agent(agent, env, n_samples=200):
-    """
-    Estimate theoretical bound parameters (δ, ε) from a trained agent,
-    instead of using hardcoded defaults.
-
-    δ = ‖π(x₀) - f_real(x₀)‖ at training domain (base accuracy)
-        → proxy: mean JC loss over recent training steps
-    ε = Jacobian consistency error at training boundary
-        → proxy: last JC loss value from training metrics
-
-    Args:
-        agent: Trained CSBAPRAgent
-        env: Training environment (for sampling states)
-        n_samples: number of states to sample
-
-    Returns:
-        dict with delta, epsilon, L_eff, gap estimates
-    """
-    import torch
-    from csbapr.losses.ood_bound import compute_generalization_gap, estimate_deriv_bound_B
-
-    delta = 0.1   # conservative default
-    epsilon = 0.05
-
-    # Try to get actual JC loss from training history
-    if hasattr(agent, '_ood_bound_cache') and agent._ood_bound_cache:
-        epsilon = agent._ood_bound_cache.get('epsilon_emp', epsilon)
-
-    # Try to compute live JC loss
-    if agent.f_sym_torch is not None:
-        from csbapr.losses.jacobian import compute_jacobian_loss
-        try:
-            states = []
-            state, _ = env.reset()
-            for _ in range(min(n_samples, 50)):
-                states.append(state)
-                action = env.action_space.sample()
-                state, _, term, trunc, _ = env.step(action)
-                if term or trunc:
-                    state, _ = env.reset()
-            states_t = torch.FloatTensor(np.array(states)).to(agent.device)
-            with torch.no_grad():
-                # delta: policy output vs SINDy output deviation (proxy for base accuracy)
-                pi_out = agent.actor(states_t)
-                if isinstance(pi_out, tuple):
-                    pi_out = pi_out[0]
-                sym_out = agent.f_sym_torch(states_t)
-                delta = (pi_out - sym_out).norm(dim=-1).mean().item()
-            # epsilon: JC loss (needs grad for policy, so can't use no_grad)
-            epsilon = compute_jacobian_loss(agent.actor, agent.f_sym_torch, states_t).item()
-        except Exception:
-            pass  # fall back to defaults
-
-    # L_eff from architecture
-    L_eff = 0.0
-    if hasattr(agent.actor, 'compute_L_eff'):
-        L_eff = agent.actor.compute_L_eff()
-
-    # Generalization gap
-    B = estimate_deriv_bound_B(agent.actor)
-    n_train = max(agent._n_train_samples, 1)
-    gap = compute_generalization_gap(B, n_train)
-
-    return {
-        'delta': delta,
-        'epsilon': epsilon,
-        'L_eff': L_eff,
-        'gap': gap,
-        'B': B,
-        'n_train_samples': n_train,
-    }
-
-
 def gym_ood_sweep(env_name, param_name, multipliers, n_seeds=5,
                   checkpoint_nau=None, checkpoint_relu=None,
                   max_steps=1000, compound_modes=None):
@@ -693,17 +557,6 @@ def gym_ood_sweep(env_name, param_name, multipliers, n_seeds=5,
         policy_fns['BA-PR (ReLU)'] = fn_relu
     policy_fns['Random'] = None
 
-    # Estimate bound parameters from trained agent (not hardcoded)
-    bound_params = {'delta': 0.1, 'epsilon': 0.05, 'L_eff': 0.0, 'gap': 0.0}
-    if 'CS-BAPR (NAU)' in agents:
-        est_env = gym.make(env_name)
-        bound_params = estimate_bound_params_from_agent(agents['CS-BAPR (NAU)'], est_env)
-        est_env.close()
-        print(f"  Bound params from agent: δ={bound_params['delta']:.4f}, "
-              f"ε={bound_params['epsilon']:.4f}, L_eff={bound_params['L_eff']:.4f}, "
-              f"gap={bound_params['gap']:.6f}")
-    L_eff = bound_params['L_eff']
-
     results = {}
     for mode_name, mode_params in sweep_items:
         d = compute_ood_distance_compound(mode_params)
@@ -729,33 +582,22 @@ def gym_ood_sweep(env_name, param_name, multipliers, n_seeds=5,
             }
             print(f"  {method_name}: {np.mean(seed_rewards):.1f} ± {np.std(seed_rewards):.1f}")
 
-        bound_corrected = float(theoretical_bound_corrected(
-            d, delta=bound_params['delta'], epsilon=bound_params['epsilon'],
-            L_eff=L_eff, M=0.0, gap=bound_params['gap']
-        ))
-        bound_fencing = float(theoretical_bound_fencing(
-            d, delta=bound_params['delta'], epsilon=bound_params['epsilon'], L=L_eff
-        ))
-
         results[mode_name] = {
             'mode_name': mode_name,
             'mode_params': mode_params,
             'ood_distance': d,
             'methods': method_results,
-            'bound_corrected': bound_corrected,
-            'bound_fencing': bound_fencing,
-            'L_eff': L_eff,
         }
 
     # Summary
     print("\n" + "=" * 70)
-    header = f"{'Mode':>20s} {'d':>6s} {'Bound':>8s}"
+    header = f"{'Mode':>20s} {'Shift':>6s}"
     for m in policy_fns:
         header += f" {m:>16s}"
     print(header)
     print("-" * len(header))
     for key, r in sorted(results.items(), key=lambda x: x[1]['ood_distance']):
-        line = f"{r['mode_name']:>20s} {r['ood_distance']:>6.3f} {r['bound_corrected']:>8.3f}"
+        line = f"{r['mode_name']:>20s} {r['ood_distance']:>6.3f}"
         for m in policy_fns:
             mr = r['methods'].get(m, {})
             line += f" {mr.get('mean_reward', 0):>8.1f}±{mr.get('std_reward', 0):>4.1f}"
@@ -836,8 +678,6 @@ def gym_extreme_random_sweep(env_name, intensities, n_seeds=5,
             print(f"  {method_name}: {np.mean(seed_rewards):.1f} ± {np.std(seed_rewards):.1f} "
                   f"(len={np.mean(seed_lengths):.0f})")
 
-        bound_corrected = float(theoretical_bound_corrected(d))
-        bound_fencing = float(theoretical_bound_fencing(d))
         results[f"extreme_{intensity:g}"] = {
             'mode_name': f"extreme_{intensity:g}",
             'intensity': float(intensity),
@@ -846,9 +686,6 @@ def gym_extreme_random_sweep(env_name, intensities, n_seeds=5,
             'switch_probability': float(switch_probability),
             'ood_distance': d,
             'methods': method_results,
-            'bound_corrected': bound_corrected,
-            'bound_fencing': bound_fencing,
-            'L_eff': 0.0,
         }
 
     print("\n" + "=" * 70)
@@ -921,8 +758,6 @@ def bus_ood_sweep(env_path, od_range, n_seeds=3, max_steps=5000):
         results[f"od_{mult}x"] = {
             'multiplier': mult,
             'ood_distance': d,
-            'bound_corrected': float(theoretical_bound_corrected(d)),
-            'bound_fencing': float(theoretical_bound_fencing(d)),
             'mean_reward': float(np.mean(seed_results)),
             'std_reward': float(np.std(seed_results)),
             'n_seeds': n_seeds,
@@ -935,77 +770,32 @@ def bus_ood_sweep(env_path, od_range, n_seeds=3, max_steps=5000):
 # Plotting (Figure 1: Bound vs Actual)
 # ============================================================
 
-def plot_bound_vs_actual(results, output_path=None, title=None):
-    """
-    Generate Figure 1: theoretical bound vs actual OOD error.
+def plot_rewards(results, output_path=None, title=None):
+    """Plot measured return, without an unrelated policy-output envelope."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
 
-    Plots:
-    - Corrected bound (Part X) as upper envelope
-    - Fencing bound (Part VII) for comparison
-    - Actual reward degradation for each method
-    """
-    try:
-        import matplotlib
-        matplotlib.use('Agg')
-        import matplotlib.pyplot as plt
-    except ImportError:
-        print("matplotlib not installed, skipping plot")
-        return
-
-    distances = []
-    bounds_corrected = []
-    bounds_fencing = []
-    method_rewards = defaultdict(list)
-
-    for key, r in sorted(results.items(), key=lambda x: x[1]['ood_distance']):
-        d = r['ood_distance']
-        distances.append(d)
-        bounds_corrected.append(r['bound_corrected'])
-        bounds_fencing.append(r['bound_fencing'])
-        if 'methods' in r:
-            for m, mr in r['methods'].items():
-                method_rewards[m].append(mr['mean_reward'])
-
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-
-    # Left: Theoretical bounds
-    ax1 = axes[0]
-    ax1.plot(distances, bounds_corrected, 'r-', lw=2,
-             label='Corrected bound (Part X)', marker='s')
-    ax1.plot(distances, bounds_fencing, 'r--', lw=1.5, alpha=0.6,
-             label='Fencing bound (Part VII)')
-    ax1.set_xlabel('OOD distance ‖d‖')
-    ax1.set_ylabel('Theoretical upper bound')
-    ax1.set_title('OOD Error Bound')
-    ax1.legend()
-    ax1.grid(True, alpha=0.3)
-
-    # Right: Actual rewards by method
-    ax2 = axes[1]
-    markers = {'CS-BAPR (NAU)': 'o', 'BA-PR (ReLU)': 'x', 'Random': 'd'}
-    colors = {'CS-BAPR (NAU)': 'blue', 'BA-PR (ReLU)': 'red', 'Random': 'gray'}
-    for m, rewards in method_rewards.items():
-        ax2.plot(distances[:len(rewards)], rewards,
-                 marker=markers.get(m, '.'), color=colors.get(m, 'green'),
-                 lw=2, label=m)
-    ax2.set_xlabel('OOD distance ‖d‖')
-    ax2.set_ylabel('Mean episode reward')
-    ax2.set_title('Reward vs OOD Distance')
-    ax2.legend()
-    ax2.grid(True, alpha=0.3)
-
-    if title:
-        fig.suptitle(title, fontsize=14, fontweight='bold')
-    plt.tight_layout()
-
-    if output_path:
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
-        print(f"Plot saved to {output_path}")
-    else:
-        plt.savefig('ood_bound_vs_actual.png', dpi=150, bbox_inches='tight')
-        print("Plot saved to ood_bound_vs_actual.png")
-
-    plt.close()
+    rewards = defaultdict(list)
+    for _, row in sorted(results.items(), key=lambda item: item[1]["ood_distance"]):
+        shift = row["ood_distance"]
+        if "methods" in row:
+            for method, values in row["methods"].items():
+                rewards[method].append((shift, values["mean_reward"]))
+        else:
+            rewards["Bus"].append((shift, row["mean_reward"]))
+    fig, ax = plt.subplots(figsize=(7, 4))
+    for method, values in rewards.items():
+        shifts, returns = zip(*values)
+        ax.plot(shifts, returns, marker="o", label=method)
+    ax.set(xlabel="Parameter-shift index", ylabel="Mean episode return", title=title)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    path = output_path or "ood_returns.png"
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Plot saved to {path}")
 
 
 # ============================================================
@@ -1078,7 +868,7 @@ Examples:
                         help="Switch probability at each period tick for markov random OOD")
     parser.add_argument("--output", type=str, default=None)
     parser.add_argument("--plot", action="store_true",
-                        help="Generate bound vs actual plot (Figure 1)")
+                        help="Plot measured episode returns")
     parser.add_argument("--env-path", type=str,
                         default=str(project_root / "bapr_reference"),
                         help="Bus simulation env path")
@@ -1145,7 +935,7 @@ Examples:
 
     if results and args.plot:
         plot_name = f"ood_{args.env.replace('-', '_')}_{args.param}.png"
-        plot_bound_vs_actual(results, output_path=plot_name,
+        plot_rewards(results, output_path=plot_name,
                              title=f"CS-BAPR OOD: {args.env} ({args.param})")
 
     if results and args.output:

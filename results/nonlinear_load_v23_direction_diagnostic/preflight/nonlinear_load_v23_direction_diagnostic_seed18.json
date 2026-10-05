@@ -1,0 +1,1270 @@
+{
+  "revision": "nonlinear_load_v23_direction_diagnostic",
+  "source_revision": "nonlinear_load_v22_entropy_floor",
+  "training_seed": 18,
+  "source_ids": {
+    "floor": "t128679",
+    "no-floor": "t128680"
+  },
+  "configs": {
+    "floor": {
+      "env_name": "NonlinearLoad-v0",
+      "state_dim": 6,
+      "action_dim": 2,
+      "max_episodes": 500,
+      "max_steps_per_episode": 200,
+      "gamma": 0.99,
+      "tau": 0.005,
+      "alpha": 0.2,
+      "auto_alpha": true,
+      "alpha_cap": null,
+      "lr_actor": 0.0003,
+      "lr_critic": 0.0003,
+      "lr_alpha": 0.0003,
+      "hidden_dim": 64,
+      "num_critics": 3,
+      "buffer_size": 1000000,
+      "batch_size": 256,
+      "warmup_steps": 1000,
+      "max_run_length": 20,
+      "hazard_rate": 0.02,
+      "base_variance": 1.0,
+      "surprise_ema": 0.1,
+      "weight_reg": 0.0,
+      "beta_ood": 0.1,
+      "beta_bc": 0.0,
+      "actor_type": "centered-tanh-mlp",
+      "policy_q_std_cap": 0.0,
+      "critic_q_std_cap": 0.0,
+      "critic_q_std_penalty_weight": 0.0,
+      "use_context": false,
+      "context_ema_alpha": 0.2,
+      "context_clip": 5.0,
+      "enable_min_q_target": true,
+      "enable_reward_ema": true,
+      "enable_entropy_floor": true,
+      "entropy_floor": 0.01,
+      "enable_rollout_surprise": true,
+      "surprise_window": 256,
+      "bapr_warmup_iters": 100,
+      "penalty_scale": 2.0,
+      "weight_sym": 0.0,
+      "jac_weight": 0.01,
+      "action_anchor_weight": 0.0,
+      "grad_clip": 1.0,
+      "jac_curriculum_start": 100,
+      "actor_weight_decay": 0.0001,
+      "sindy_with_control": true,
+      "sindy_threshold": 0.001,
+      "sindy_lib_degree": 1,
+      "sindy_discrete_time": true,
+      "sindy_n_explore_episodes": 50,
+      "sindy_epsilon_threshold": 1.0,
+      "use_nau_actor": false,
+      "nau_reg_weight": 0.0,
+      "nau_l_eff_penalty_weight": 0.0,
+      "nau_l_eff_target": 200.0,
+      "actor_mean_clip": 0.0,
+      "irm_penalty_weight": 0.1,
+      "irm_n_envs": 3,
+      "ood_eval_interval": 50,
+      "log_interval": 10,
+      "save_interval": 100,
+      "log_dir": "logs",
+      "track_L_eff": false,
+      "device": "cuda"
+    },
+    "no-floor": {
+      "env_name": "NonlinearLoad-v0",
+      "state_dim": 6,
+      "action_dim": 2,
+      "max_episodes": 500,
+      "max_steps_per_episode": 200,
+      "gamma": 0.99,
+      "tau": 0.005,
+      "alpha": 0.2,
+      "auto_alpha": true,
+      "alpha_cap": null,
+      "lr_actor": 0.0003,
+      "lr_critic": 0.0003,
+      "lr_alpha": 0.0003,
+      "hidden_dim": 64,
+      "num_critics": 3,
+      "buffer_size": 1000000,
+      "batch_size": 256,
+      "warmup_steps": 1000,
+      "max_run_length": 20,
+      "hazard_rate": 0.02,
+      "base_variance": 1.0,
+      "surprise_ema": 0.1,
+      "weight_reg": 0.0,
+      "beta_ood": 0.1,
+      "beta_bc": 0.0,
+      "actor_type": "centered-tanh-mlp",
+      "policy_q_std_cap": 0.0,
+      "critic_q_std_cap": 0.0,
+      "critic_q_std_penalty_weight": 0.0,
+      "use_context": false,
+      "context_ema_alpha": 0.2,
+      "context_clip": 5.0,
+      "enable_min_q_target": true,
+      "enable_reward_ema": true,
+      "enable_entropy_floor": false,
+      "entropy_floor": 0.01,
+      "enable_rollout_surprise": true,
+      "surprise_window": 256,
+      "bapr_warmup_iters": 100,
+      "penalty_scale": 2.0,
+      "weight_sym": 0.0,
+      "jac_weight": 0.01,
+      "action_anchor_weight": 0.0,
+      "grad_clip": 1.0,
+      "jac_curriculum_start": 100,
+      "actor_weight_decay": 0.0001,
+      "sindy_with_control": true,
+      "sindy_threshold": 0.001,
+      "sindy_lib_degree": 1,
+      "sindy_discrete_time": true,
+      "sindy_n_explore_episodes": 50,
+      "sindy_epsilon_threshold": 1.0,
+      "use_nau_actor": false,
+      "nau_reg_weight": 0.0,
+      "nau_l_eff_penalty_weight": 0.0,
+      "nau_l_eff_target": 200.0,
+      "actor_mean_clip": 0.0,
+      "irm_penalty_weight": 0.1,
+      "irm_n_envs": 3,
+      "ood_eval_interval": 50,
+      "log_interval": 10,
+      "save_interval": 100,
+      "log_dir": "logs",
+      "track_L_eff": false,
+      "device": "cuda"
+    }
+  },
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "NonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "finite_difference_steps": [
+    0.01,
+    0.005
+  ],
+  "gamma": 0.99,
+  "terminal": {
+    "floor": {
+      "alpha": 0.01,
+      "weighted_lambda": 0.32499098777770996,
+      "reward_std": 14.627767972545016
+    },
+    "no-floor": {
+      "alpha": 0.0008778206538408995,
+      "weighted_lambda": 0.32517358660697937,
+      "reward_std": 14.63225569496604
+    }
+  },
+  "checkpoint_selection": "last",
+  "preflight_only": true,
+  "runtime": {
+    "torch": "2.5.1+cu121",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "pysindy": "2.1.0",
+    "sklearn": "1.7.2",
+    "python": "3.11.15 | packaged by conda-forge | (main, Mar  5 2026, 16:45:40) [GCC 14.3.0]",
+    "device": "cuda"
+  },
+  "radius_results": {
+    "1.0": {
+      "50": {
+        "evaluation_seeds": [
+          60000,
+          60001
+        ],
+        "initial_observations": [
+          [
+            -0.5362853407859802,
+            -0.20284754037857056,
+            -0.7328752279281616,
+            0.3383147120475769,
+            -0.07900130748748779,
+            -0.04912799969315529
+          ],
+          [
+            0.8103775978088379,
+            -0.47049322724342346,
+            -0.09418223053216934,
+            0.036047033965587616,
+            0.27719560265541077,
+            0.4518720507621765
+          ]
+        ],
+        "disturbance_paths_matched": true,
+        "models": {
+          "floor": {
+            "continuations": {
+              "actor": {
+                "total_cost": [
+                  10.762947051922122,
+                  16.856543352690725
+                ],
+                "discounted_cost": [
+                  8.251619801445651,
+                  12.558998384202813
+                ],
+                "state_cost": [
+                  6.493749662629101,
+                  10.74306288576998
+                ],
+                "command_cost": [
+                  4.26919738929301,
+                  6.113480466920735
+                ],
+                "early_state_cost": [
+                  6.4838030088342675,
+                  10.673715138725747
+                ],
+                "late_state_cost": [
+                  0.009946653794840386,
+                  0.0693477470442348
+                ]
+              },
+              "plus_0.01": {
+                "total_cost": [
+                  10.760463831301095,
+                  16.852643484250855
+                ],
+                "discounted_cost": [
+                  8.249465014953012,
+                  12.555654875219709
+                ],
+                "state_cost": [
+                  6.491336339725418,
+                  10.73873328040985
+                ],
+                "command_cost": [
+                  4.269127491575672,
+                  6.113910203841009
+                ],
+                "early_state_cost": [
+                  6.481392422952194,
+                  10.669386045626359
+                ],
+                "late_state_cost": [
+                  0.009943916773221538,
+                  0.06934723478350019
+                ]
+              },
+              "minus_0.01": {
+                "total_cost": [
+                  10.765474404670739,
+                  16.86046220565818
+                ],
+                "discounted_cost": [
+                  8.25381334667946,
+                  12.562362030537036
+                ],
+                "state_cost": [
+                  6.496202209082557,
+                  10.747381296529973
+                ],
+                "command_cost": [
+                  4.269272195588185,
+                  6.113080909128203
+                ],
+                "early_state_cost": [
+                  6.486252793521077,
+                  10.678032982313164
+                ],
+                "late_state_cost": [
+                  0.009949415561484468,
+                  0.06934831421681453
+                ]
+              },
+              "plus_0.005": {
+                "total_cost": [
+                  10.761700215261829,
+                  16.854591221341252
+                ],
+                "discounted_cost": [
+                  8.250537720994192,
+                  12.557324248827111
+                ],
+                "state_cost": [
+                  6.492538223273398,
+                  10.740899629269485
+                ],
+                "command_cost": [
+                  4.269161991988433,
+                  6.1136915920717705
+                ],
+                "early_state_cost": [
+                  6.482592944696526,
+                  10.671552122115235
+                ],
+                "late_state_cost": [
+                  0.009945278576877548,
+                  0.06934750715425907
+                ]
+              },
+              "minus_0.005": {
+                "total_cost": [
+                  10.764205365463555,
+                  16.85850006912802
+                ],
+                "discounted_cost": [
+                  8.252711822316481,
+                  12.560677430631689
+                ],
+                "state_cost": [
+                  6.4949711636333465,
+                  10.74522322957604
+                ],
+                "command_cost": [
+                  4.269234201830214,
+                  6.113276839551973
+                ],
+                "early_state_cost": [
+                  6.485023128587122,
+                  10.675875156692
+                ],
+                "late_state_cost": [
+                  0.009948035046223174,
+                  0.06934807288403816
+                ]
+              }
+            },
+            "scores": {
+              "latent_direction": [
+                [
+                  0.9596514105796814,
+                  0.28119245171546936
+                ],
+                [
+                  -0.36881402134895325,
+                  0.9295032620429993
+                ]
+              ],
+              "latent_distance_to_fitted": [
+                0.28337857127189636,
+                0.3741772174835205
+              ],
+              "noise_seeds": [
+                92000,
+                92001
+              ],
+              "deterministic": {
+                "q_mean": [
+                  [
+                    0.00010487344115972519,
+                    0.41064852476119995
+                  ]
+                ],
+                "risk_penalty": [
+                  [
+                    0.028656689450144768,
+                    0.6158008575439453
+                  ]
+                ],
+                "entropy_bonus": [
+                  [
+                    -0.01721498928964138,
+                    -0.011562771163880825
+                  ]
+                ],
+                "risk_score": [
+                  [
+                    0.028761562891304493,
+                    1.0264493823051453
+                  ]
+                ],
+                "soft_score": [
+                  [
+                    0.011546573601663113,
+                    1.0148866111412644
+                  ]
+                ]
+              },
+              "expected": {
+                "q_mean": [
+                  [
+                    0.027482671663165092,
+                    0.3360556960105896
+                  ],
+                  [
+                    0.008530833758413792,
+                    0.6640602946281433
+                  ]
+                ],
+                "risk_penalty": [
+                  [
+                    0.054026924073696136,
+                    0.702192485332489
+                  ],
+                  [
+                    0.030497176572680473,
+                    0.6658943295478821
+                  ]
+                ],
+                "entropy_bonus": [
+                  [
+                    -0.014043401926755905,
+                    -0.0002899817191064358
+                  ],
+                  [
+                    -0.015310274437069893,
+                    -0.007671740371733904
+                  ]
+                ],
+                "risk_score": [
+                  [
+                    0.08150959573686123,
+                    1.0382481813430786
+                  ],
+                  [
+                    0.039028010331094265,
+                    1.3299546241760254
+                  ]
+                ],
+                "soft_score": [
+                  [
+                    0.06746619381010532,
+                    1.0379581996239722
+                  ],
+                  [
+                    0.023717735894024372,
+                    1.3222828838042915
+                  ]
+                ]
+              }
+            },
+            "reproduction_max_abs_errors": {
+              "total_cost": 2.5567531025671997e-07,
+              "state_cost": 2.533533880466621e-07,
+              "command_cost": 1.4740718867756186e-08
+            },
+            "summary": {
+              "mean_cost_directional_derivatives": {
+                "0.01": {
+                  "total_cost": -0.3207323694242259,
+                  "discounted_cost": -0.2763871760943726,
+                  "state_cost": -0.3378471369315461,
+                  "command_cost": 0.017114767507320217,
+                  "early_state_cost": -0.33768268139220403,
+                  "late_state_cost": -0.00016445553943185073
+                },
+                "0.005": {
+                  "total_cost": -0.32069989942469235,
+                  "discounted_cost": -0.2763641563433339,
+                  "state_cost": -0.3378270333251443,
+                  "command_cost": 0.017127133900851632,
+                  "early_state_cost": -0.33766092336802167,
+                  "late_state_cost": -0.00016610995623592487
+                }
+              },
+              "mean_score_directional_derivatives": {
+                "deterministic": {
+                  "q_mean": 0.20537669910117984,
+                  "risk_penalty": 0.32222877349704504,
+                  "entropy_bonus": -0.014388880226761103,
+                  "risk_score": 0.5276054725982249,
+                  "soft_score": 0.5132165923714638
+                },
+                "expected": {
+                  "q_mean": 0.25903237401507795,
+                  "risk_penalty": 0.3631527288816869,
+                  "entropy_bonus": -0.009328849613666534,
+                  "risk_score": 0.6221851028967649,
+                  "soft_score": 0.6128562532830983
+                }
+              },
+              "finite_difference_step_sign_disagreements": {
+                "total_cost": 0,
+                "discounted_cost": 0
+              },
+              "ordering": {
+                "0.01": {
+                  "total_cost": {
+                    "deterministic": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    },
+                    "expected": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    }
+                  },
+                  "discounted_cost": {
+                    "deterministic": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    },
+                    "expected": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    }
+                  }
+                },
+                "0.005": {
+                  "total_cost": {
+                    "deterministic": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    },
+                    "expected": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    }
+                  },
+                  "discounted_cost": {
+                    "deterministic": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    },
+                    "expected": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "no-floor": {
+            "continuations": {
+              "actor": {
+                "total_cost": [
+                  10.647572897091818,
+                  17.235664501167133
+                ],
+                "discounted_cost": [
+                  8.159435850062062,
+                  12.867839366914524
+                ],
+                "state_cost": [
+                  6.349408950591416,
+                  11.245295950960434
+                ],
+                "command_cost": [
+                  4.2981639465003925,
+                  5.990368550206709
+                ],
+                "early_state_cost": [
+                  6.339758884257724,
+                  11.17085478475892
+                ],
+                "late_state_cost": [
+                  0.00965006633369535,
+                  0.07444116620150858
+                ]
+              },
+              "plus_0.01": {
+                "total_cost": [
+                  10.645511286802098,
+                  17.23077082855982
+                ],
+                "discounted_cost": [
+                  8.157638084597254,
+                  12.863651965171206
+                ],
+                "state_cost": [
+                  6.3474533635544965,
+                  11.239920627030676
+                ],
+                "command_cost": [
+                  4.298057923247609,
+                  5.990850201529115
+                ],
+                "early_state_cost": [
+                  6.337804635294844,
+                  11.165479884777163
+                ],
+                "late_state_cost": [
+                  0.009648728259647897,
+                  0.07444074225351334
+                ]
+              },
+              "minus_0.01": {
+                "total_cost": [
+                  10.649676339813348,
+                  17.24058669564073
+                ],
+                "discounted_cost": [
+                  8.161272007300735,
+                  12.872054261400681
+                ],
+                "state_cost": [
+                  6.351390165334703,
+                  11.250677516926233
+                ],
+                "command_cost": [
+                  4.298286174478647,
+                  5.989909178714512
+                ],
+                "early_state_cost": [
+                  6.341738762586733,
+                  11.176235903335659
+                ],
+                "late_state_cost": [
+                  0.0096514027479703,
+                  0.07444161359056961
+                ]
+              },
+              "plus_0.005": {
+                "total_cost": [
+                  10.646537105104667,
+                  17.233214417364927
+                ],
+                "discounted_cost": [
+                  8.158532399965265,
+                  12.865742433435598
+                ],
+                "state_cost": [
+                  6.348428343886362,
+                  11.242607674778268
+                ],
+                "command_cost": [
+                  4.298108761218281,
+                  5.990606742586661
+                ],
+                "early_state_cost": [
+                  6.338778933742924,
+                  11.168166688626222
+                ],
+                "late_state_cost": [
+                  0.009649410143435486,
+                  0.07444098615204647
+                ]
+              },
+              "minus_0.005": {
+                "total_cost": [
+                  10.648619141355503,
+                  17.238121955724992
+                ],
+                "discounted_cost": [
+                  8.16034896665951,
+                  12.869943265279048
+                ],
+                "state_cost": [
+                  6.350396171969687,
+                  11.247985816892234
+                ],
+                "command_cost": [
+                  4.29822296938583,
+                  5.990136138832757
+                ],
+                "early_state_cost": [
+                  6.34074544577614,
+                  11.173544383031077
+                ],
+                "late_state_cost": [
+                  0.00965072619353866,
+                  0.07444143386115938
+                ]
+              }
+            },
+            "scores": {
+              "latent_direction": [
+                [
+                  0.8036619424819946,
+                  0.5950860977172852
+                ],
+                [
+                  -0.6171033382415771,
+                  0.786882221698761
+                ]
+              ],
+              "latent_distance_to_fitted": [
+                0.208282008767128,
+                0.46095672249794006
+              ],
+              "noise_seeds": [
+                92000,
+                92001
+              ],
+              "deterministic": {
+                "q_mean": [
+                  [
+                    0.007891939952969551,
+                    0.29959872364997864
+                  ]
+                ],
+                "risk_penalty": [
+                  [
+                    -0.08223439753055573,
+                    0.2959372103214264
+                  ]
+                ],
+                "entropy_bonus": [
+                  [
+                    -0.0011471238685771823,
+                    -0.0012613831786438823
+                  ]
+                ],
+                "risk_score": [
+                  [
+                    -0.07434245757758617,
+                    0.595535933971405
+                  ]
+                ],
+                "soft_score": [
+                  [
+                    -0.07548958144616336,
+                    0.5942745507927611
+                  ]
+                ]
+              },
+              "expected": {
+                "q_mean": [
+                  [
+                    0.01480674184858799,
+                    0.3015574514865875
+                  ],
+                  [
+                    0.026680799201130867,
+                    0.3817935287952423
+                  ]
+                ],
+                "risk_penalty": [
+                  [
+                    -0.08119082450866699,
+                    0.3155076503753662
+                  ],
+                  [
+                    -0.10775298625230789,
+                    0.2695736885070801
+                  ]
+                ],
+                "entropy_bonus": [
+                  [
+                    -0.0010852718260139227,
+                    -0.001121101900935173
+                  ],
+                  [
+                    -0.001079085166566074,
+                    -0.0011521732667461038
+                  ]
+                ],
+                "risk_score": [
+                  [
+                    -0.066384082660079,
+                    0.6170651018619537
+                  ],
+                  [
+                    -0.08107218705117702,
+                    0.6513672173023224
+                  ]
+                ],
+                "soft_score": [
+                  [
+                    -0.06746935448609293,
+                    0.6159439999610186
+                  ],
+                  [
+                    -0.0821512722177431,
+                    0.6502150440355763
+                  ]
+                ]
+              }
+            },
+            "reproduction_max_abs_errors": {
+              "total_cost": 2.0348099383227236e-07,
+              "state_cost": 2.1819998963223952e-07,
+              "command_cost": 5.429693938907576e-08
+            },
+            "summary": {
+              "mean_cost_directional_derivatives": {
+                "0.01": {
+                  "total_cost": -0.34952300230401967,
+                  "discounted_cost": -0.30090547332388695,
+                  "state_cost": -0.3673422918940794,
+                  "command_cost": 0.017819289589149356,
+                  "early_state_cost": -0.3672536462596243,
+                  "late_state_cost": -8.864563446685063e-05
+                },
+                "0.005": {
+                  "total_cost": -0.34947873054509415,
+                  "discounted_cost": -0.30086992688476144,
+                  "state_cost": -0.36729850986452206,
+                  "command_cost": 0.01781977931774037,
+                  "early_state_cost": -0.36721032190349945,
+                  "late_state_cost": -8.818796080403701e-05
+                }
+              },
+              "mean_score_directional_derivatives": {
+                "deterministic": {
+                  "q_mean": 0.1537453318014741,
+                  "risk_penalty": 0.10685140639543533,
+                  "entropy_bonus": -0.0012042535236105323,
+                  "risk_score": 0.2605967381969094,
+                  "soft_score": 0.2593924846732989
+                },
+                "expected": {
+                  "q_mean": 0.18120963033288717,
+                  "risk_penalty": 0.09903438203036785,
+                  "entropy_bonus": -0.0011094080400653183,
+                  "risk_score": 0.280244012363255,
+                  "soft_score": 0.2791346043231897
+                }
+              },
+              "finite_difference_step_sign_disagreements": {
+                "total_cost": 0,
+                "discounted_cost": 0
+              },
+              "ordering": {
+                "0.01": {
+                  "total_cost": {
+                    "deterministic": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    },
+                    "expected": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    }
+                  },
+                  "discounted_cost": {
+                    "deterministic": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    },
+                    "expected": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    }
+                  }
+                },
+                "0.005": {
+                  "total_cost": {
+                    "deterministic": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    },
+                    "expected": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    }
+                  },
+                  "discounted_cost": {
+                    "deterministic": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    },
+                    "expected": {
+                      "q_mean": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 0,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_penalty": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "entropy_bonus": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 2,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "risk_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      },
+                      "soft_score": {
+                        "toward_fitted_lower_cost_paths": 2,
+                        "score_opposes_lower_cost_direction_paths": 1,
+                        "score_favors_higher_cost_direction_paths": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters_unchanged": true,
+  "optimizer_updates": 0,
+  "fitting_interactions": 0,
+  "controller_episodes": 20
+}

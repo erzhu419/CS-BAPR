@@ -1,0 +1,231 @@
+{
+  "revision": "nonlinear_load_v30_environment_qualification",
+  "status": "complete",
+  "radii": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "severities": [
+    1,
+    50
+  ],
+  "evaluation_seed_start": 61000,
+  "evaluation_episodes_per_block": 100,
+  "profiles": {
+    "original": {
+      "initial_amplitude": 0.2,
+      "base_force_cap": 0.05,
+      "refresh_probability": 0.1,
+      "base_storm_probability": 0.05,
+      "storm_probability_rule": "base_probability * sqrt(severity)",
+      "tail_shape": 1.5,
+      "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+      "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+      "action_force_scale": 5.0,
+      "episode_length": 200,
+      "observation": [
+        "x",
+        "y",
+        "vx",
+        "vy",
+        "current_force_x",
+        "current_force_y"
+      ],
+      "environment": "NonlinearLoad-v0",
+      "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+      "linear_share": 0.5,
+      "local_force_gain": 2.5,
+      "maximum_force": 5.0,
+      "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+      "state_cost_diagonal": [
+        1.0,
+        1.0,
+        0.1,
+        0.1
+      ],
+      "command_force_cost_diagonal": [
+        0.01,
+        0.01
+      ]
+    },
+    "sustained": {
+      "initial_amplitude": 0.2,
+      "base_force_cap": 0.08,
+      "refresh_probability": 0.1,
+      "base_storm_probability": 1.0,
+      "storm_probability_rule": "always-active load",
+      "tail_shape": 1.5,
+      "tail_rule": "0.5 + 0.5 * min(1, 0.1 * (1 + Pareto(tail_shape)))",
+      "action_force_scale": 5.0,
+      "episode_length": 200,
+      "observation": [
+        "x",
+        "y",
+        "vx",
+        "vy",
+        "current_force_x",
+        "current_force_y"
+      ],
+      "environment": "SustainedNonlinearLoad-v0",
+      "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+      "linear_share": 0.5,
+      "local_force_gain": 2.5,
+      "maximum_force": 5.0,
+      "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+      "state_cost_diagonal": [
+        1.0,
+        1.0,
+        0.1,
+        0.1
+      ],
+      "command_force_cost_diagonal": [
+        0.01,
+        0.01
+      ]
+    }
+  },
+  "controllers": [
+    "zero",
+    "known_local",
+    "known_inverse",
+    "no_load_feedback",
+    "force_cancel_feedback"
+  ],
+  "window_steps": 50,
+  "formal_controller_episodes": 6000,
+  "formal_evaluation_interactions": 1200000,
+  "rl_training_runs": 0,
+  "optimizer_updates": 0,
+  "fitting_interactions": 0,
+  "runtime_requirement": {
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "gym": "0.26.2",
+    "tqdm": "4.67.1",
+    "python_minor_versions": [
+      "3.10",
+      "3.11"
+    ]
+  },
+  "preflight_tasks": [
+    {
+      "id": "t132251",
+      "status": "done",
+      "signature": "CS-BAPR/nonlinear_load_v30/preflight/radius0.2",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v30.sh --radius 0.2 --result-dir ../outputs/preflight/radius0.2 --preflight-only",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v30_environment_20261003",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v30_environment_20261003/outputs/preflight/radius0.2",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v30_environment_qualification/preflight/radius0.2",
+      "node": "node007",
+      "gpu_idx": null,
+      "started_at": 1791043556.0479722,
+      "finished_at": 1791043625.4710228,
+      "exit_code": 0,
+      "result_synced_at": 1791043647.7823417,
+      "result_sync_error": null,
+      "radius": 0.2,
+      "elapsed_seconds": 69.42305064201355
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t132277",
+      "status": "done",
+      "signature": "CS-BAPR/nonlinear_load_v30/formal/radius0.2",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v30.sh --radius 0.2 --result-dir ../outputs/formal/radius0.2",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v30_environment_20261003",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v30_environment_20261003/outputs/formal/radius0.2",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v30_environment_qualification/radius0.2",
+      "node": "local",
+      "gpu_idx": null,
+      "started_at": 1791043821.9292648,
+      "finished_at": 1791043854.3632631,
+      "exit_code": 0,
+      "result_synced_at": null,
+      "result_sync_error": null,
+      "radius": 0.2,
+      "elapsed_seconds": 32.433998346328735,
+      "local_result_collection": "compact JSON copied from existing local output; no remote transfer"
+    },
+    {
+      "id": "t132278",
+      "status": "done",
+      "signature": "CS-BAPR/nonlinear_load_v30/formal/radius0.5",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v30.sh --radius 0.5 --result-dir ../outputs/formal/radius0.5",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v30_environment_20261003",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v30_environment_20261003/outputs/formal/radius0.5",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v30_environment_qualification/radius0.5",
+      "node": "local",
+      "gpu_idx": null,
+      "started_at": 1791043821.9401448,
+      "finished_at": 1791043854.3635023,
+      "exit_code": 0,
+      "result_synced_at": null,
+      "result_sync_error": null,
+      "radius": 0.5,
+      "elapsed_seconds": 32.42335748672485,
+      "local_result_collection": "compact JSON copied from existing local output; no remote transfer"
+    },
+    {
+      "id": "t132279",
+      "status": "done",
+      "signature": "CS-BAPR/nonlinear_load_v30/formal/radius1.0",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v30.sh --radius 1.0 --result-dir ../outputs/formal/radius1.0",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v30_environment_20261003",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v30_environment_20261003/outputs/formal/radius1.0",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v30_environment_qualification/radius1.0",
+      "node": "node007",
+      "gpu_idx": null,
+      "started_at": 1791043827.1235943,
+      "finished_at": 1791043944.6630208,
+      "exit_code": 0,
+      "result_synced_at": 1791043960.8368025,
+      "result_sync_error": null,
+      "radius": 1.0,
+      "elapsed_seconds": 117.53942656517029
+    }
+  ],
+  "formal_results_pending": false,
+  "historical_hold_unchanged": true,
+  "placement": "any free compatible Linux CPU node; no preference, pin, allowlist or Windows",
+  "artifact_policy": "compact per-path/window JSON only; no raw trajectories or checkpoint access",
+  "tests": {
+    "focused_and_regressions": "42 passed in 7.51s",
+    "launcher_syntax": "passed",
+    "scheduler_doctor": "ok; no issues"
+  },
+  "protocol_document": "docs/nonlinear_load_v30_environment_protocol.md",
+  "preflight_validation": {
+    "passed": true,
+    "task_id": "t132251",
+    "evidence_validated": true,
+    "evaluation_json_bytes": 41645,
+    "controller_episodes": 40,
+    "evaluation_interactions": 8000,
+    "interpretation": "execution/accounting admission only; environment criteria judged on formal paths"
+  },
+  "formal_validation": {
+    "passed": true,
+    "evidence_validated": true,
+    "evaluation_json_bytes": 3078645,
+    "controller_episodes": 6000,
+    "evaluation_interactions": 1200000,
+    "matched_paths_and_window_costs": "passed"
+  },
+  "follow_on_tasks_submitted": 2,
+  "next_step": "v31 approved and independently frozen; numerical preflight passed and seed21/22 symbolic-off/on learner tasks dispatched. Await compact final evidence and unchanged per-seed gates; v30 qualification and historical HOLD unchanged.",
+  "environment_qualified": true,
+  "decision": {
+    "historical_hold_unchanged": true,
+    "new_environment_qualification_passed": true,
+    "learner_performance_established": false,
+    "learner_replication_admitted": false
+  },
+  "results_document": "docs/nonlinear_load_v30_environment_results.md",
+  "follow_on_revision": "nonlinear_load_v31_symbolic",
+  "follow_on_task_ids": [
+    "t132398",
+    "t132399"
+  ]
+}

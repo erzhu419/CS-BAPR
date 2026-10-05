@@ -24,6 +24,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import math
+import random
 from copy import deepcopy
 
 from csbapr.config import CSBAPRConfig
@@ -33,15 +34,15 @@ from csbapr.networks.policy import GaussianPolicy
 from csbapr.belief.tracker import BeliefTracker
 from csbapr.belief.surprise import SurpriseComputer
 from csbapr.context import TransitionContextTracker
-from csbapr.losses.jacobian import compute_jacobian_loss
+from csbapr.losses.jacobian import compute_jacobian_loss, compute_action_anchor_loss
 from csbapr.losses.q_loss import compute_q_loss_csbapr
-from csbapr.losses.ood_bound import compute_ood_bound, estimate_deriv_bound_B
+from csbapr.losses.ood_bound import compute_ood_bound
 from csbapr.utils import soft_update, compute_reg_norm, ReplayBuffer
 
 
 class CSBAPRAgent:
     """
-    CS-BAPR Agent: Causal-Symbolic Bayesian Adaptive Policy Regularization.
+    CS-BAPR agent with optional action-valued symbolic feedback.
     
     Extends BAPR's SAC_Trainer with SINDy + NAU/NMU + IRM components.
     """
@@ -72,7 +73,13 @@ class CSBAPRAgent:
             ).to(self.device)
         elif self.config.use_nau_actor:
             self.actor = NAU_NMU_Actor(
-                self.actor_state_dim, action_dim, self.config.hidden_dim
+                self.actor_state_dim, action_dim, self.config.hidden_dim,
+                activation="tanh" if actor_type == "smooth-nau" else "leaky_relu",
+            ).to(self.device)
+        elif actor_type == "centered-tanh-mlp":
+            from csbapr.networks.policy import EquilibriumGaussianPolicy
+            self.actor = EquilibriumGaussianPolicy(
+                self.actor_state_dim, action_dim, self.config.hidden_dim, activation="tanh",
             ).to(self.device)
         elif actor_type in ("tanh-mlp", "gelu-mlp", "softplus-mlp"):
             # Smooth-activation MLP fallback (for the four-way head ablation).
@@ -121,11 +128,12 @@ class CSBAPRAgent:
 
         # ===== CS-BAPR: SINDy components (initialized in Phase 0) =====
         self.f_sym_torch = None  # set after sindy_preidentify()
+        self.pi_sym_torch = None  # separate action-valued feedback reference
         self.sindy_model = None
 
         # ===== OOD Bound tracking (Part X + XI + XIII) =====
         self._ood_bound_cache = None  # latest OOD bound estimate
-        self._n_train_samples = 0     # running count for generalization gap
+        self._n_train_samples = 0     # sampled transitions, including replay reuse
 
         # ===== Logging =====
         self.training_steps = 0
@@ -195,213 +203,92 @@ class CSBAPRAgent:
             )
         return torch.cat([state, context], dim=-1)
 
-    def sindy_preidentify(self, env, policy=None, extra_envs=None):
+    def sindy_preidentify(self, env, policy=None, extra_envs=None, reference_builder=None):
+        """Fit controlled dynamics, then optionally build an action-valued reference.
+
+        reference_builder receives the fitted world model and must return a
+        frozen policy reference in the actor's normalized action coordinates.
         """
-        Phase 0: SINDy pre-identification with optional IRM multi-env filtering.
-
-        Single-env path:
-          1. Collect exploration trajectories
-          2. Fit SINDy model
-          3. Verify quality (ε₁ < threshold)
-          4. Create PyTorch wrapper (frozen coefficients)
-
-        Multi-env path (IRM, when extra_envs provided):
-          1. Collect trajectories in EACH environment
-          2. Fit SINDy per-env → IRM coefficient selection (mean coefficients)
-          3. Quantify IRM advantage (ε_s proxy)
-          4. Create PyTorch wrapper from IRM-filtered coefficients
-
-        Args:
-            env: Primary Gymnasium environment
-            policy: Optional exploration policy (None = random)
-            extra_envs: List of (env_instance, env_name) for IRM multi-env.
-                        If None or empty, falls back to single-env SINDy.
-        """
-        from csbapr.sindy.data_collector import collect_trajectories, prepare_sindy_data_discrete
+        from csbapr.sindy.data_collector import collect_trajectories
         from csbapr.sindy.world_model import SymbolicWorldModel
         from csbapr.sindy.torch_wrapper import SINDyTorchWrapper
+        from csbapr.irm.causal_filter import select_best_sindy_coefficients
 
-        # SINDy fit: state-only by default, action-aware when
-        # config.sindy_with_control = True. Action-aware fits
-        # dx/dt ≈ f(x) + B u, identifying both the open-loop dynamics and
-        # the input matrix B; this is the prerequisite for the closed-loop
-        # Jacobian-Consistency target ∇π ≈ -K (the LQR-style optimal
-        # feedback gain) rather than the open-loop ∇π ≈ A used by the
-        # state-only fit.
-        n_control = self.action_dim if getattr(self.config, "sindy_with_control", False) else 0
-
-        # ---- Multi-env IRM path ----
-        if extra_envs and len(extra_envs) >= 1:
-            all_envs = [('primary', env)] + list(extra_envs)
-            print(f"[Phase 0-IRM] Multi-environment SINDy ({len(all_envs)} envs)")
-
-            envs_data = {}  # for IRM coefficient selection
-            envs_eval_data = {}  # for IRM advantage estimation
-
-            for env_tag, e in all_envs:
-                print(f"[Phase 0-IRM] Collecting from env '{env_tag}'...")
-                X_list, U_list, X_dot_list = collect_trajectories(
-                    e, policy=policy,
-                    n_episodes=self.config.sindy_n_explore_episodes,
-                    max_steps=self.config.max_steps_per_episode,
-                )
-                if self.config.sindy_discrete_time:
-                    X_trimmed, _ = prepare_sindy_data_discrete(X_list, U_list)
-                    envs_data[env_tag] = (X_trimmed, None, None)
-                else:
-                    from csbapr.sindy.data_collector import compute_state_derivatives
-                    X_flat, X_dot_flat = compute_state_derivatives(X_list)
-                    envs_data[env_tag] = (None, None, None)
-                    envs_eval_data[env_tag] = (X_flat, X_dot_flat)
-
-            # Build a template model for IRM selection
-            template = SymbolicWorldModel(
-                n_state=self.state_dim,
-                n_control=n_control,
-                poly_degree=self.config.sindy_lib_degree,
-                threshold=self.config.sindy_threshold,
-                discrete_time=self.config.sindy_discrete_time,
-            )
-
-            from csbapr.irm.causal_filter import select_best_sindy_coefficients, compute_irm_advantage
-
-            # Reformat for select_best_sindy_coefficients:
-            # expects env_name → (X_list, U_list, X_dot_list)
-            irm_fit_data = {}
-            for env_tag, e in all_envs:
-                X_list, U_list, X_dot_list = collect_trajectories(
-                    e, policy=policy,
-                    n_episodes=max(self.config.sindy_n_explore_episodes // len(all_envs), 5),
-                    max_steps=self.config.max_steps_per_episode,
-                )
-                if self.config.sindy_discrete_time:
-                    X_trimmed, _ = prepare_sindy_data_discrete(X_list, U_list)
-                    irm_fit_data[env_tag] = (X_trimmed, None, None)
-                else:
-                    irm_fit_data[env_tag] = (X_list, U_list, X_dot_list)
-
-            best_coeffs, irm_variance = select_best_sindy_coefficients(
-                template, irm_fit_data,
-                threshold=self.config.sindy_threshold,
-                verbose=True,
-            )
-
-            # Build final model with IRM-selected coefficients
-            self.sindy_model = SymbolicWorldModel(
-                n_state=self.state_dim,
-                n_control=n_control,
-                poly_degree=self.config.sindy_lib_degree,
-                threshold=self.config.sindy_threshold,
-                discrete_time=self.config.sindy_discrete_time,
-            )
-            # Fit on primary env first (to initialize model internals), then overwrite coeffs
-            X_list0, U_list0, X_dot_list0 = collect_trajectories(
-                env, policy=policy,
+        if self.use_context and (self.config.jac_weight > 0 or self.config.weight_sym > 0
+                                 or self.config.action_anchor_weight > 0):
+            raise ValueError("Symbolic reference must include context before enabling its penalties")
+        if reference_builder is None and (self.config.jac_weight > 0 or self.config.weight_sym > 0
+                                          or self.config.action_anchor_weight > 0):
+            raise ValueError("Symbolic penalties require an action-valued reference_builder")
+        n_control = self.action_dim if self.config.sindy_with_control else 0
+        if reference_builder is not None and not n_control:
+            raise ValueError("Feedback construction requires control-aware identification")
+        model = SymbolicWorldModel(
+            n_state=self.state_dim, n_control=n_control,
+            poly_degree=self.config.sindy_lib_degree,
+            threshold=self.config.sindy_threshold,
+            discrete_time=self.config.sindy_discrete_time,
+        )
+        dt = 1.0 if self.config.sindy_discrete_time else float(env.unwrapped.dt)
+        envs_data = {}
+        for tag, current_env in [("primary", env)] + list(extra_envs or []):
+            envs_data[tag] = collect_trajectories(
+                current_env, policy=policy,
                 n_episodes=self.config.sindy_n_explore_episodes,
-                max_steps=self.config.max_steps_per_episode,
+                max_steps=self.config.max_steps_per_episode, dt=dt,
             )
-            if self.config.sindy_discrete_time:
-                X_tr, _ = prepare_sindy_data_discrete(X_list0, U_list0)
-                self.sindy_model.fit(X_tr, U=None, multiple_trajectories=True, t=1.0)
-            else:
-                from csbapr.sindy.data_collector import compute_state_derivatives
-                X_f, Xd_f = compute_state_derivatives(X_list0)
-                self.sindy_model.fit(X_f, X_dot=Xd_f)
-
-            # Overwrite with IRM-selected mean coefficients
-            self.sindy_model.coeffs = best_coeffs
-            if hasattr(self.sindy_model.model, 'coefficients_'):
-                self.sindy_model.model.coefficients_ = best_coeffs
-            elif hasattr(self.sindy_model.model, 'optimizer'):
-                self.sindy_model.model.optimizer.coef_ = best_coeffs
-
-            # Compute IRM advantage if possible
-            irm_report = {'irm_variance': float(irm_variance), 'n_envs': len(all_envs)}
-            if envs_eval_data:
-                try:
-                    adv = compute_irm_advantage(self.sindy_model, envs_eval_data)
-                    irm_report.update(adv)
-                except Exception:
-                    pass
-            self._irm_report = irm_report
-
-            sparsity = self.sindy_model.sparsity
-            print(f"[Phase 0-IRM] IRM-filtered SINDy: sparsity={sparsity:.3f}, "
-                  f"coeff_var={irm_variance:.6f}, n_envs={len(all_envs)}")
-            print(f"[Phase 0-IRM] Discovered equations (IRM-filtered):")
-            self.sindy_model.print_equations()
-
-        # ---- Single-env path ----
-        else:
-            print("[Phase 0] Collecting exploration trajectories...")
-            X_list, U_list, X_dot_list = collect_trajectories(
-                env, policy=policy,
-                n_episodes=self.config.sindy_n_explore_episodes,
-                max_steps=self.config.max_steps_per_episode,
+        x, u, y = envs_data["primary"]
+        model.fit(x, U=u, X_dot=None if model.discrete_time else y,
+                  multiple_trajectories=True, t=dt)
+        self._irm_report = None
+        if extra_envs:
+            coeffs, variance = select_best_sindy_coefficients(
+                model, envs_data, threshold=self.config.sindy_threshold,
             )
+            model.coeffs = coeffs.copy()
+            model.model.optimizer.coef_ = coeffs.copy()
+            model.sparsity = float((np.abs(coeffs) > 1e-6).mean())
+            self._irm_report = {"prediction_error_variance": float(variance),
+                                "n_envs": len(envs_data)}
+        self.sindy_model = model
+        self.f_sym_torch = SINDyTorchWrapper(model).to(self.device).eval()
+        self.pi_sym_torch = None
+        if reference_builder is not None:
+            self.pi_sym_torch = reference_builder(model).to(self.device).eval()
+            self.pi_sym_torch.requires_grad_(False)
 
-            print(f"[Phase 0] Fitting SINDy model (degree={self.config.sindy_lib_degree}, "
-                  f"threshold={self.config.sindy_threshold}, state_only=True)...")
-            self.sindy_model = SymbolicWorldModel(
-                n_state=self.state_dim,
-                n_control=n_control,
-                poly_degree=self.config.sindy_lib_degree,
-                threshold=self.config.sindy_threshold,
-                discrete_time=self.config.sindy_discrete_time,
-            )
-
-            if self.config.sindy_discrete_time:
-                X_trimmed, _ = prepare_sindy_data_discrete(X_list, U_list)
-                self.sindy_model.fit(
-                    X_trimmed, U=None,
-                    multiple_trajectories=True, t=1.0
-                )
-            else:
-                from csbapr.sindy.data_collector import compute_state_derivatives
-                X_flat, X_dot_flat = compute_state_derivatives(X_list)
-                self.sindy_model.fit(X_flat, X_dot=X_dot_flat)
-
-            sparsity = self.sindy_model.sparsity
-            print(f"[Phase 0] SINDy fitted: sparsity = {sparsity:.3f}")
-            print(f"[Phase 0] Discovered equations:")
-            self.sindy_model.print_equations()
-            self._irm_report = None
-
-        # Create PyTorch wrapper (frozen coefficients)
-        self.f_sym_torch = SINDyTorchWrapper(self.sindy_model).to(self.device).eval()
-
-        # Store SINDy quality metrics for reporting
+        x_test, u_test, y_test = collect_trajectories(
+            env, policy=policy, n_episodes=5,
+            max_steps=self.config.max_steps_per_episode, dt=dt,
+        )
+        all_x, all_u, all_y = model.training_arrays(
+            x_test, u_test, None if model.discrete_time else y_test, True,
+        )
+        pred_y = model.predict(all_x, all_u)
+        ss_res = np.sum((all_y - pred_y) ** 2)
+        ss_tot = np.sum((all_y - all_y.mean(axis=0)) ** 2)
         self._sindy_report = {
-            'sparsity': float(self.sindy_model.sparsity),
-            'n_coeffs': int(self.sindy_model.coeffs.size) if self.sindy_model.coeffs is not None else 0,
-            'n_nonzero': int((np.abs(self.sindy_model.coeffs) > 1e-6).sum()) if self.sindy_model.coeffs is not None else 0,
+            "sparsity": model.sparsity,
+            "n_coeffs": int(model.coeffs.size),
+            "n_nonzero": int((np.abs(model.coeffs) > 1e-6).sum()),
+            "n_control": n_control,
+            "r_squared": float(1 - ss_res / max(ss_tot, 1e-10)),
+            "action_reference": type(self.pi_sym_torch).__name__ if self.pi_sym_torch else None,
         }
-        # Compute R² on held-out trajectories
-        # PySINDy 2.x: predict() returns x_dot (derivatives), so compare against derivatives
-        try:
-            X_test, U_test, Xdot_test = collect_trajectories(
-                env, policy=policy, n_episodes=5,
-                max_steps=self.config.max_steps_per_episode,
-            )
-            if self.config.sindy_discrete_time:
-                X_tr_test, _ = prepare_sindy_data_discrete(X_test, U_test)
-                all_x = np.vstack([x[:-1] for x in X_tr_test])
-                # Ground-truth derivatives: x_{t+1} - x_t
-                all_y = np.vstack([x[1:] - x[:-1] for x in X_tr_test])
-            else:
-                from csbapr.sindy.data_collector import compute_state_derivatives
-                all_x, all_y = compute_state_derivatives(X_test)
-            pred_y = self.sindy_model.predict(all_x)
-            ss_res = np.sum((all_y - pred_y) ** 2)
-            ss_tot = np.sum((all_y - all_y.mean(axis=0)) ** 2)
-            r2 = 1 - ss_res / max(ss_tot, 1e-10)
-            self._sindy_report['r_squared'] = float(r2)
-            print(f"[Phase 0] SINDy R² = {r2:.4f}")
-        except Exception:
-            self._sindy_report['r_squared'] = None
+        print(f"[Phase 0] controlled SINDy: {self._sindy_report}")
+        model.print_equations()
 
-        print(f"[Phase 0] SINDyTorchWrapper created (coefficients frozen)")
-        print(f"[Phase 0] ✓ Phase 0 complete")
+    def _jacobian_loss_states(self, states):
+        return states
+
+    def _compute_jacobian_loss(self, states):
+        return compute_jacobian_loss(self.actor, self.pi_sym_torch, states)
+
+    def _critic_loss_batch(self, batch, next_noise):
+        return batch
+
+    def _actor_loss_batch(self, states, actions, log_probs, noise):
+        return states, actions, log_probs
 
     def update(self, batch_size: int = None, recent_rollout: dict = None):
         """
@@ -410,15 +297,17 @@ class CSBAPRAgent:
         Order (immutable):
         1. Sample from buffer
         2. Compute surprise → update belief
-        3. Q-loss with Γ_sym → update critic
-        4. Policy loss with Jacobian consistency → update actor
-        5. Alpha loss → update entropy coefficient
+        3. Alpha loss → update entropy coefficient
+        4. Q-loss with Γ_sym → update critic
+        5. Policy loss with Jacobian consistency → update actor
         6. Soft update target network
         """
         batch_size = batch_size or self.config.batch_size
 
         if self.replay_buffer.size < batch_size:
             return None
+        if self.config.action_anchor_weight > 0 and (self.pi_sym_torch is None or self.use_context):
+            raise ValueError("Action anchoring requires a fitted reference in the actor's action coordinates")
 
         # ===== Sample batch =====
         sample = self.replay_buffer.sample(batch_size)
@@ -440,13 +329,13 @@ class CSBAPRAgent:
         next_state_aug = self._augment_state_tensor(next_state, next_context)
 
         # Evaluate policy on current states (graph needed for policy loss)
-        new_action, log_prob, _, _, _ = self.actor.evaluate(state_aug)
+        new_action, log_prob, action_noise, _, _ = self.actor.evaluate(state_aug)
 
         # Evaluate on next states for target Q — no_grad: target computation
         # must NOT accumulate a computation graph (would never be freed by
         # q_loss.backward() since target is detached, causing a memory leak).
         with torch.no_grad():
-            new_next_action, next_log_prob, _, _, _ = self.actor.evaluate(next_state_aug)
+            new_next_action, next_log_prob, next_noise, _, _ = self.actor.evaluate(next_state_aug)
 
         # Reward scaling: divide by running std (no mean shift — preserves sign).
         # Group-A2 fix; toggle via config.enable_reward_ema.
@@ -528,12 +417,15 @@ class CSBAPRAgent:
                     self.log_alpha.clamp_(max=float(np.log(float(alpha_cap))))
 
         # ===== Step 3: Q-loss (CS-BAPR, with Γ_sym) =====
-        if self.f_sym_torch is not None and not self.use_context:
+        q_state, q_action, q_reward, q_next_state, q_done, q_next_action, q_next_log_prob = self._critic_loss_batch(
+            (state_aug, action, reward, next_state_aug, done, new_next_action, next_log_prob), next_noise
+        )
+        if self.pi_sym_torch is not None and not self.use_context:
             q_loss, predicted_q, ood_loss, w_lambda, sym_p = compute_q_loss_csbapr(
                 self.critic, self.target_critic, self.actor,
-                self.f_sym_torch,
-                state, action, reward, next_state, done,
-                new_next_action, next_log_prob, reg_norm,
+                self.pi_sym_torch,
+                q_state, q_action, q_reward, q_next_state, q_done,
+                q_next_action, q_next_log_prob, reg_norm,
                 self.belief_tracker,
                 alpha=self.alpha,
                 gamma=self.config.gamma,
@@ -548,8 +440,8 @@ class CSBAPRAgent:
         else:
             # Fallback: BA-PR Q-loss without Γ_sym
             q_loss, predicted_q, ood_loss, w_lambda, sym_p = self._compute_q_loss_bapr_fallback(
-                state_aug, action, reward, next_state_aug, done,
-                new_next_action, next_log_prob, reg_norm, batch_size
+                q_state, q_action, q_reward, q_next_state, q_done,
+                q_next_action, q_next_log_prob, reg_norm, batch_size
             )
 
         q_std_guard_loss_val = 0.0
@@ -572,9 +464,11 @@ class CSBAPRAgent:
         self.critic_optimizer.step()
 
         # ===== Step 4: Policy loss (with Jacobian consistency) =====
-        # Reuse new_action/log_prob from L330: alpha_loss uses log_prob.detach(),
-        # and q_loss.backward() only touches critic params — actor graph still intact.
-        q_values = self.critic(state_aug, new_action)
+        # Alpha keeps the native batch; actor coverage can reuse its policy noise.
+        policy_state, policy_action, policy_log_prob = self._actor_loss_batch(
+            state_aug, new_action, log_prob, action_noise
+        )
+        q_values = self.critic(policy_state, policy_action)
         q_mean = q_values.mean(dim=0)
         q_std = q_values.std(dim=0)
         policy_q_std_cap = float(getattr(self.config, "policy_q_std_cap", 0.0) or 0.0)
@@ -595,7 +489,7 @@ class CSBAPRAgent:
         #     steady-state too.
         w_lambda_eff = 0.0 if self.training_steps < self.config.bapr_warmup_iters else w_lambda
         effective_beta = -2.0 - w_lambda_eff * self.config.penalty_scale
-        policy_loss = -(q_mean + effective_beta * q_std_for_policy - self.alpha * log_prob).mean()
+        policy_loss = -(q_mean + effective_beta * q_std_for_policy - self.alpha * policy_log_prob).mean()
 
         # Behavior cloning regularization (RE-SAC dual reg, prevents policy drift
         # from replay buffer distribution after buffer saturation)
@@ -604,12 +498,16 @@ class CSBAPRAgent:
 
         # CS-BAPR: Add Jacobian consistency loss
         jac_loss_val = 0.0
-        if self.f_sym_torch is not None and not self.use_context and self.config.jac_weight > 0:
-            jac_loss = compute_jacobian_loss(self.actor, self.f_sym_torch, state)
-            # Clamp JC loss to [0, 2.0] to prevent runaway gradients when L_eff is large
-            jac_loss_clamped = torch.clamp(jac_loss, max=2.0)
-            policy_loss = policy_loss + self.config.jac_weight * jac_loss_clamped
+        if self.pi_sym_torch is not None and not self.use_context and self.config.jac_weight > 0:
+            jac_loss = self._compute_jacobian_loss(self._jacobian_loss_states(state))
+            policy_loss = policy_loss + self.config.jac_weight * jac_loss
             jac_loss_val = jac_loss.item()
+
+        action_anchor_loss_val = 0.0
+        if self.config.action_anchor_weight > 0:
+            action_anchor_loss = compute_action_anchor_loss(self.actor, self.pi_sym_torch, state)
+            policy_loss = policy_loss + self.config.action_anchor_weight * action_anchor_loss
+            action_anchor_loss_val = action_anchor_loss.item()
 
         # NAU regularization
         if hasattr(self.actor, 'regularization_loss') and self.config.nau_reg_weight > 0:
@@ -640,8 +538,8 @@ class CSBAPRAgent:
         self._n_train_samples += batch_size
 
         # L_eff logging (Part XI: composed_deriv_lipschitz_simple)
-        L_eff = 0.0
-        if hasattr(self.actor, 'compute_L_eff'):
+        L_eff = math.inf
+        if self.config.track_L_eff and hasattr(self.actor, 'compute_L_eff'):
             L_eff = self.actor.compute_L_eff()
 
         return {
@@ -657,6 +555,7 @@ class CSBAPRAgent:
             'weighted_lambda_effective': w_lambda_eff,   # 0 during BAPR warmup, else = w_lambda
             'sym_penalty': sym_p,
             'jac_loss': jac_loss_val,
+            'action_anchor_loss': action_anchor_loss_val,
             'surprise': surprise,
             'belief_entropy': self.belief_tracker.entropy,
             'L_eff': L_eff,
@@ -665,33 +564,14 @@ class CSBAPRAgent:
         }
 
     def estimate_ood_bound(self, x_train_boundary: torch.Tensor,
-                           x_ood: torch.Tensor,
-                           delta: float,
-                           epsilon_emp: float) -> dict:
-        """
-        Estimate OOD bound using Part X + XI + XIII full pipeline.
-
-        Corresponds to CSBAPR.lean: ood_bound_no_assumption4_nD (L1117)
-        No Assumption 4 needed.
-
-        Args:
-            x_train_boundary: [state_dim] training domain boundary point.
-            x_ood: [state_dim] OOD evaluation point.
-            delta: Training domain base accuracy.
-            epsilon_emp: Empirical Jacobian consistency error.
-
-        Returns:
-            dict with bound details (see losses/ood_bound.py).
-        """
+                           x_ood: torch.Tensor, reference=None) -> dict:
+        """Evaluate a boundary-point certificate against an action-valued reference."""
+        reference = self.pi_sym_torch if reference is None else reference
+        if reference is None:
+            raise ValueError("An explicit action-valued reference is required")
         result = compute_ood_bound(
-            actor=self.actor,
-            x_train_boundary=x_train_boundary.to(self.device),
-            x_ood=x_ood.to(self.device),
-            delta=delta,
-            epsilon_emp=epsilon_emp,
-            n_train_samples=max(self._n_train_samples, 1),
-            M=self.config.physics_smoothness_M,
-            confidence_delta=self.config.ood_confidence_delta,
+            self.actor, reference,
+            x_train_boundary.to(self.device), x_ood.to(self.device),
         )
         self._ood_bound_cache = result
         return result
@@ -734,33 +614,84 @@ class CSBAPRAgent:
         state_tensor = torch.FloatTensor(self._augment_state_np(state)).to(self.device)
         return self.actor.get_action(state_tensor, deterministic=deterministic)
 
-    def save(self, path: str):
+    def save(self, path: str, extra_state=None):
         torch.save({
             'actor': self.actor.state_dict(),
             'critic': self.critic.state_dict(),
             'target_critic': self.target_critic.state_dict(),
             'actor_optimizer': self.actor_optimizer.state_dict(),
             'critic_optimizer': self.critic_optimizer.state_dict(),
-            'log_alpha': self.log_alpha,
+            'alpha_optimizer': self.alpha_optimizer.state_dict(),
+            'log_alpha': self.log_alpha.detach(),
+            'alpha': self.alpha,
             'training_steps': self.training_steps,
             'n_train_samples': self._n_train_samples,
             'use_context': self.use_context,
             'context_dim': self.context_dim,
             'sindy_report': getattr(self, '_sindy_report', None),
             'irm_report': getattr(self, '_irm_report', None),
+            'symbolic_reference_gain': (self.pi_sym_torch.gain
+                                        if self.pi_sym_torch is not None else None),
+            'symbolic_reference_mapping': (self.pi_sym_torch.action_mapping
+                                           if self.pi_sym_torch is not None else None),
             'config': {k: v for k, v in vars(self.config).items()
                        if isinstance(v, (int, float, str, bool))},
+            # Evaluation snapshots stay small; the training runner supplies
+            # episode state when it needs a complete resumable checkpoint.
+            'training_state': {
+                'replay': vars(self.replay_buffer),
+                'belief': vars(self.belief_tracker),
+                'surprise': vars(self.surprise_computer),
+                'context': (vars(self.context_tracker)
+                            if self.context_tracker is not None else None),
+                'reward_ema_var': getattr(self, '_reward_ema_var', 1.0),
+                'numpy_rng': np.random.get_state(),
+                'python_rng': random.getstate(),
+                'torch_rng': torch.get_rng_state(),
+                'cuda_rng': (torch.cuda.get_rng_state_all()
+                             if torch.device(self.device).type == 'cuda' else None),
+            } if extra_state is not None else None,
+            'extra_state': extra_state,
         }, path)
 
     def load(self, path: str):
-        checkpoint = torch.load(path, map_location=self.device)
+        # These are our own full-state checkpoints, including NumPy replay data.
+        checkpoint = torch.load(path, map_location='cpu', weights_only=False)
+        if checkpoint.get('config', {}).get('actor_type') != self.config.actor_type:
+            raise ValueError("Checkpoint actor type differs from the current architecture")
         self.actor.load_state_dict(checkpoint['actor'])
         self.critic.load_state_dict(checkpoint['critic'])
         self.target_critic.load_state_dict(checkpoint['target_critic'])
         self.actor_optimizer.load_state_dict(checkpoint['actor_optimizer'])
         self.critic_optimizer.load_state_dict(checkpoint['critic_optimizer'])
-        self.log_alpha = checkpoint['log_alpha']
+        with torch.no_grad():
+            self.log_alpha.copy_(checkpoint['log_alpha'].to(self.device))
+        if 'alpha_optimizer' in checkpoint:
+            self.alpha_optimizer.load_state_dict(checkpoint['alpha_optimizer'])
+        self.alpha = checkpoint.get('alpha', self.log_alpha.exp().item())
         self.training_steps = checkpoint['training_steps']
         self._n_train_samples = checkpoint.get('n_train_samples', 0)
         self._sindy_report = checkpoint.get('sindy_report', None)
         self._irm_report = checkpoint.get('irm_report', None)
+        gain = checkpoint.get('symbolic_reference_gain')
+        self.pi_sym_torch = None
+        if gain is not None:
+            from csbapr.sindy.feedback import LQRFeedbackReference
+            self.pi_sym_torch = LQRFeedbackReference(
+                gain, checkpoint.get('symbolic_reference_mapping', 'tanh')
+            ).to(self.device).eval()
+            self.pi_sym_torch.requires_grad_(False)
+        state = checkpoint.get('training_state')
+        if state is not None:
+            vars(self.replay_buffer).update(state['replay'])
+            vars(self.belief_tracker).update(state['belief'])
+            vars(self.surprise_computer).update(state['surprise'])
+            if self.context_tracker is not None:
+                vars(self.context_tracker).update(state['context'])
+            self._reward_ema_var = state['reward_ema_var']
+            np.random.set_state(state['numpy_rng'])
+            random.setstate(state['python_rng'])
+            torch.set_rng_state(state['torch_rng'])
+            if torch.device(self.device).type == 'cuda' and state['cuda_rng'] is not None:
+                torch.cuda.set_rng_state_all(state['cuda_rng'])
+        return checkpoint.get('extra_state')

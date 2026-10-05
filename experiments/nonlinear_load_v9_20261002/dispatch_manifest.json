@@ -1,0 +1,104 @@
+{
+  "revision": "nonlinear_load_v9_pilot",
+  "frozen_at_utc": "2026-10-01T16:56:59.358236+00:00",
+  "protocol": "docs/nonlinear_load_v9_pilot_protocol.md",
+  "source_directory": "experiments/nonlinear_load_v9_20261002/runtime",
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "NonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "evaluation_seed_start": 50000,
+  "evaluation_paths": 100,
+  "severities": [
+    1,
+    2,
+    5,
+    10,
+    20,
+    50
+  ],
+  "identification_seeds": [
+    91000,
+    92000
+  ],
+  "identification_interactions": 20000,
+  "validation_interactions": 2000,
+  "rl_training_runs": 0,
+  "optimizer_updates": 0,
+  "node_preference": null,
+  "validation": {
+    "focused_tests_passed": 9,
+    "smoke_exit_code": 0,
+    "smoke_paths": [
+      60000,
+      60001
+    ],
+    "smoke_peak_ram_mb": 456,
+    "smoke_duration_s": 3,
+    "requested_cpu_cores": 1,
+    "requested_ram_mb": 1024,
+    "reserved_vram_mb": 0
+  },
+  "tasks": [
+    {
+      "task_id": "t119827",
+      "status": "failed",
+      "node": "jtl110cpu",
+      "exit_code": 1,
+      "reason": "Windows bash invokes unavailable WSL; no evaluation began"
+    },
+    {
+      "task_id": "t119861",
+      "status": "cancelled",
+      "reason": "Automatic retry cancelled before launch"
+    }
+  ],
+  "execution_notes": [
+    "Added scheduler-recognized Eval complete log marker; numerical source and protocol unchanged."
+  ],
+  "execution": {
+    "execution": "scheduler profile-local, local Linux",
+    "exit_code": 0,
+    "duration_s": 49,
+    "artifact": "results/nonlinear_load_v9/pilot.json",
+    "formal_log": "experiments/nonlinear_load_v9_20261002/formal.log"
+  },
+  "subsequent_placement": {
+    "os": "linux",
+    "node_preference": null,
+    "gpu_preference": null
+  },
+  "completion_record": "results/nonlinear_load_v9/completion.json"
+}

@@ -59,7 +59,7 @@ def solve_lqr_K(A, B, Q, R, n_iter=500):
 
 
 # Pre-compute the optimal feedback gain (used only for diagnostics)
-K_OPT = solve_lqr_K(A, B * ACTION_SCALE, Q, R)
+K_OPT = solve_lqr_K(A, B * ACTION_SCALE, Q, R * ACTION_SCALE ** 2)
 
 
 class LQREnv(gym.Env):

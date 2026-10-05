@@ -10,8 +10,8 @@ Supports:
   - Multi-seed: 5 seeds per config
 
 Usage:
-    # Full CS-BAPR on Pendulum
-    python scripts/train_csbapr.py --env Pendulum-v1 --method csbapr --seed 0
+    # Smooth arithmetic actor on Pendulum (no task-specific symbolic reference)
+    python scripts/train_csbapr.py --env Pendulum-v1 --method csbapr-smooth --seed 0
 
     # BA-PR baseline (ReLU, no SINDy)
     python scripts/train_csbapr.py --env Hopper-v4 --method bapr --seed 0
@@ -49,6 +49,12 @@ from csbapr.envs.extreme_ood import ExtremeOODConfig, ExtremeOODWrapper
 # ============================================================
 
 METHOD_PRESETS = {
+    'csbapr-smooth': dict(
+        use_nau_actor=True,
+        actor_type='smooth-nau',
+        weight_sym=0.0,
+        jac_weight=0.0,
+    ),
     # Full CS-BAPR (NAU + SINDy + IRM + Jac)
     'csbapr': dict(
         use_nau_actor=True,
@@ -631,6 +637,7 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
         'sac', 'resac', 'bapr', 'bapr-context',
         'bapr-stable-context',
         'csbapr-no-sindy', 'csbapr-no-sindy-stable',
+        'csbapr-smooth',
         'csbapr-context', 'csbapr-stable-context',
         'csbapr-stable-context-qguard',
         'dr', 'rarl',
@@ -659,8 +666,9 @@ def train(env_name, method_name, seed, save_dir, max_episodes=None, eval_interva
                 for _, e in extra_envs:
                     e.close()
         except Exception as e:
-            print(f"[WARN] SINDy Phase 0 failed: {e}. Continuing without SINDy.")
+            print(f"[ERROR] SINDy Phase 0 failed: {e}. Refusing a mislabeled symbolic run.")
             tb.print_exc()
+            raise
 
     # Training loop
     run_name = f"{method_name}_{env_name}_{seed}"
@@ -974,7 +982,7 @@ def main():
     parser = argparse.ArgumentParser(description="CS-BAPR Training")
     parser.add_argument("--env", type=str, default="Pendulum-v1",
                         choices=list(ENV_PRESETS.keys()))
-    parser.add_argument("--method", type=str, default="csbapr",
+    parser.add_argument("--method", type=str, default="csbapr-smooth",
                         choices=list(METHOD_PRESETS.keys()))
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--max-episodes", type=int, default=None)

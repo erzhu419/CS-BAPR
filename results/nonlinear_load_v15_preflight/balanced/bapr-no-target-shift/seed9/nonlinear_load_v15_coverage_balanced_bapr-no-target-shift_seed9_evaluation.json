@@ -1,0 +1,1485 @@
+{
+  "revision": "nonlinear_load_v15_coverage",
+  "method": "bapr-no-target-shift",
+  "training_seed": 9,
+  "condition": "balanced",
+  "training_episodes": 6,
+  "config": {
+    "env_name": "NonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 6,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.001,
+    "actor_type": null,
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.0,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.1,
+    "sindy_lib_degree": 2,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "environment": "nonlinear_load",
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "NonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "training_load_severity": 1,
+  "reset_cycle": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "reset_index": "absolute_episode",
+  "identification_reset_radius": 0.2,
+  "radii": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "severities": [
+    1,
+    50
+  ],
+  "evaluation_seed_start": 60000,
+  "evaluation_episodes_per_severity": 2,
+  "preflight_only": true,
+  "radius_results": {
+    "0.2": {
+      "1": {
+        "controllers": {
+          "actor": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -105.36117367805039,
+              -362.1165963173289
+            ],
+            "mean_cost": 233.73888499768964,
+            "state_costs": [
+              105.34145332351586,
+              362.081720747342
+            ],
+            "command_costs": [
+              0.019720354534419032,
+              0.03487556998704218
+            ],
+            "early_state_costs": [
+              3.957909343994312,
+              2.4005571384002784
+            ],
+            "early_command_costs": [
+              0.004717836585683972,
+              0.005901397030282645
+            ],
+            "late_state_costs": [
+              101.38354397952155,
+              359.6811636089417
+            ],
+            "late_command_costs": [
+              0.01500251794873506,
+              0.028974172956759532
+            ],
+            "mean_state_cost": 233.71158703542892,
+            "mean_command_cost": 0.027297962260730606,
+            "mean_early_state_cost": 3.179233241197295,
+            "mean_early_command_cost": 0.005309616807983308,
+            "mean_late_state_cost": 230.53235379423162,
+            "mean_late_command_cost": 0.021988345452747297
+          },
+          "known_local": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -0.35156633732812204,
+              -0.4812936518151359
+            ],
+            "mean_cost": 0.416429994571629,
+            "state_costs": [
+              0.22459930696434055,
+              0.3988951331327644
+            ],
+            "command_costs": [
+              0.12696703036378168,
+              0.08239851868237129
+            ],
+            "early_state_costs": [
+              0.22455110836892986,
+              0.39881766375561684
+            ],
+            "early_command_costs": [
+              0.12683169279563997,
+              0.08231745193564591
+            ],
+            "late_state_costs": [
+              4.819859541069227e-05,
+              7.746937714758761e-05
+            ],
+            "late_command_costs": [
+              0.0001353375681417135,
+              8.106674672538061e-05
+            ],
+            "mean_state_cost": 0.3117472200485525,
+            "mean_command_cost": 0.10468277452307648,
+            "mean_early_state_cost": 0.31168438606227333,
+            "mean_early_command_cost": 0.10457457236564294,
+            "mean_late_state_cost": 6.283398627913994e-05,
+            "mean_late_command_cost": 0.00010820215743354705
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -0.3648753021246958,
+              -0.5212949821137554
+            ],
+            "mean_cost": 0.44308514211922556,
+            "state_costs": [
+              0.16589927840991472,
+              0.332761416493756
+            ],
+            "command_costs": [
+              0.19897602371478082,
+              0.18853356561999945
+            ],
+            "early_state_costs": [
+              0.1658986035844827,
+              0.3327603534655412
+            ],
+            "early_command_costs": [
+              0.19886422841150025,
+              0.18845893849296164
+            ],
+            "late_state_costs": [
+              6.748254320343428e-07,
+              1.0630282147872094e-06
+            ],
+            "late_command_costs": [
+              0.0001117953032805652,
+              7.462712703781849e-05
+            ],
+            "mean_state_cost": 0.24933034745183535,
+            "mean_command_cost": 0.19375479466739015,
+            "mean_early_state_cost": 0.24932947852501197,
+            "mean_early_command_cost": 0.19366158345223095,
+            "mean_late_state_cost": 8.689268234107761e-07,
+            "mean_late_command_cost": 9.321121515919184e-05
+          }
+        },
+        "paired_excess_costs": {
+          "known_local": {
+            "mean_total_cost": 233.32245500311802,
+            "actor_better_paths": 0,
+            "mean_state_cost": 233.39983981538037,
+            "mean_command_cost": -0.07738481226234588,
+            "mean_early_state_cost": 2.8675488551350217,
+            "mean_early_command_cost": -0.09926495555765963,
+            "mean_late_state_cost": 230.53229096024532,
+            "mean_late_command_cost": 0.02188014329531375,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 105.00960734072217,
+                "state_cost": 105.11685401655153,
+                "command_cost": -0.10724667582936265,
+                "early_state_cost": 3.7333582356253823,
+                "early_command_cost": -0.12211385620995599,
+                "late_state_cost": 101.38349578092614,
+                "late_command_cost": 0.014867180380593346
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 361.6353026655139,
+                "state_cost": 361.6828256142092,
+                "command_cost": -0.04752294869532911,
+                "early_state_cost": 2.0017394746446615,
+                "early_command_cost": -0.07641605490536327,
+                "late_state_cost": 359.6810861395645,
+                "late_command_cost": 0.02889310621003415
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 361.6353026655139
+              },
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 105.00960734072217
+              }
+            ]
+          },
+          "known_inverse": {
+            "mean_total_cost": 233.2957998555704,
+            "actor_better_paths": 0,
+            "mean_state_cost": 233.4622566879771,
+            "mean_command_cost": -0.16645683240665954,
+            "mean_early_state_cost": 2.929903762672283,
+            "mean_early_command_cost": -0.18835196664424764,
+            "mean_late_state_cost": 230.5323529253048,
+            "mean_late_command_cost": 0.021895134237588106,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 104.99629837592559,
+                "state_cost": 105.17555404510595,
+                "command_cost": -0.1792556691803618,
+                "early_state_cost": 3.7920107404098293,
+                "early_command_cost": -0.19414639182581628,
+                "late_state_cost": 101.38354330469612,
+                "late_command_cost": 0.014890722645454494
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 361.59530133521525,
+                "state_cost": 361.7489593308482,
+                "command_cost": -0.1536579956329573,
+                "early_state_cost": 2.067796784934737,
+                "early_command_cost": -0.182557541462679,
+                "late_state_cost": 359.6811625459135,
+                "late_command_cost": 0.028899545829721714
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 361.59530133521525
+              },
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 104.99629837592559
+              }
+            ]
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "actor": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -6582.523026330532,
+              -1236.108002794723
+            ],
+            "mean_cost": 3909.3155145626274,
+            "state_costs": [
+              6582.50489268503,
+              1236.081881381984
+            ],
+            "command_costs": [
+              0.01813364550193852,
+              0.026121412739141328
+            ],
+            "early_state_costs": [
+              7.13240499294404,
+              5.548260589853076
+            ],
+            "early_command_costs": [
+              0.004487531660323642,
+              0.006173402202784684
+            ],
+            "late_state_costs": [
+              6575.372487692086,
+              1230.533620792131
+            ],
+            "late_command_costs": [
+              0.013646113841614876,
+              0.019948010536356645
+            ],
+            "mean_state_cost": 3909.2933870335073,
+            "mean_command_cost": 0.022127529120539925,
+            "mean_early_state_cost": 6.340332791398557,
+            "mean_early_command_cost": 0.005330466931554163,
+            "mean_late_state_cost": 3902.9530542421085,
+            "mean_late_command_cost": 0.01679706218898576
+          },
+          "known_local": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -3.3436224393470124,
+              -5.781530153154851
+            ],
+            "mean_cost": 4.562576296250931,
+            "state_costs": [
+              0.2289694334677021,
+              0.4614476510819497
+            ],
+            "command_costs": [
+              3.1146530058793105,
+              5.320082502072905
+            ],
+            "early_state_costs": [
+              0.22352780398633015,
+              0.3956356121109857
+            ],
+            "early_command_costs": [
+              0.4776429912258187,
+              0.13244213801264854
+            ],
+            "late_state_costs": [
+              0.005441629481371946,
+              0.06581203897096399
+            ],
+            "late_command_costs": [
+              2.637010014653492,
+              5.187640364060257
+            ],
+            "mean_state_cost": 0.3452085422748259,
+            "mean_command_cost": 4.217367753976108,
+            "mean_early_state_cost": 0.3095817080486579,
+            "mean_early_command_cost": 0.3050425646192336,
+            "mean_late_state_cost": 0.03562683422616797,
+            "mean_late_command_cost": 3.9123251893568742
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -3.2306112928788826,
+              -5.275225344470721
+            ],
+            "mean_cost": 4.252918318674801,
+            "state_costs": [
+              0.16630050667713847,
+              0.3367237788197291
+            ],
+            "command_costs": [
+              3.0643107862017467,
+              4.93850156565099
+            ],
+            "early_state_costs": [
+              0.16624211047183007,
+              0.3333329232103537
+            ],
+            "early_command_costs": [
+              0.48419654220283864,
+              0.21027075772768164
+            ],
+            "late_state_costs": [
+              5.839620530839751e-05,
+              0.0033908556093754094
+            ],
+            "late_command_costs": [
+              2.580114243998908,
+              4.728230807923308
+            ],
+            "mean_state_cost": 0.2515121427484338,
+            "mean_command_cost": 4.001406175926368,
+            "mean_early_state_cost": 0.24978751684109188,
+            "mean_early_command_cost": 0.3472336499652601,
+            "mean_late_state_cost": 0.0017246259073419035,
+            "mean_late_command_cost": 3.654172525961108
+          }
+        },
+        "paired_excess_costs": {
+          "known_local": {
+            "mean_total_cost": 3904.752938266377,
+            "actor_better_paths": 0,
+            "mean_state_cost": 3908.9481784912323,
+            "mean_command_cost": -4.195240224855568,
+            "mean_early_state_cost": 6.0307510833499,
+            "mean_early_command_cost": -0.2997120976876795,
+            "mean_late_state_cost": 3902.9174274078823,
+            "mean_late_command_cost": -3.8955281271678883,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 6579.179403891186,
+                "state_cost": 6582.275923251563,
+                "command_cost": -3.096519360377372,
+                "early_state_cost": 6.90887718895771,
+                "early_command_cost": -0.4731554595654951,
+                "late_state_cost": 6575.3670460626045,
+                "late_command_cost": -2.623363900811877
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1230.3264726415682,
+                "state_cost": 1235.620433730902,
+                "command_cost": -5.293961089333764,
+                "early_state_cost": 5.15262497774209,
+                "early_command_cost": -0.12626873580986386,
+                "late_state_cost": 1230.46780875316,
+                "late_command_cost": -5.1676923535239
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 6579.179403891186
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1230.3264726415682
+              }
+            ]
+          },
+          "known_inverse": {
+            "mean_total_cost": 3905.0625962439526,
+            "actor_better_paths": 0,
+            "mean_state_cost": 3909.0418748907587,
+            "mean_command_cost": -3.9792786468058283,
+            "mean_early_state_cost": 6.090545274557465,
+            "mean_early_command_cost": -0.341903183033706,
+            "mean_late_state_cost": 3902.9513296162013,
+            "mean_late_command_cost": -3.637375463772122,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 6579.292415037653,
+                "state_cost": 6582.338592178353,
+                "command_cost": -3.0461771406998084,
+                "early_state_cost": 6.96616288247221,
+                "early_command_cost": -0.479709010542515,
+                "late_state_cost": 6575.3724292958805,
+                "late_command_cost": -2.5664681301572934
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1230.8327774502525,
+                "state_cost": 1235.7451576031642,
+                "command_cost": -4.912380152911848,
+                "early_state_cost": 5.214927666642722,
+                "early_command_cost": -0.20409735552489697,
+                "late_state_cost": 1230.5302299365217,
+                "late_command_cost": -4.708282797386951
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 6579.292415037653
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1230.8327774502525
+              }
+            ]
+          }
+        }
+      }
+    },
+    "0.5": {
+      "1": {
+        "controllers": {
+          "actor": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -702.9607804363046,
+              -426.80009725580294
+            ],
+            "mean_cost": 564.8804388460537,
+            "state_costs": [
+              702.9451446388425,
+              426.76343212812424
+            ],
+            "command_costs": [
+              0.01563579746220203,
+              0.03666512767857859
+            ],
+            "early_state_costs": [
+              28.496997796738746,
+              10.658236364526294
+            ],
+            "early_command_costs": [
+              0.00382929597742875,
+              0.006403354968383522
+            ],
+            "late_state_costs": [
+              674.4481468421038,
+              416.1051957635979
+            ],
+            "late_command_costs": [
+              0.011806501484773281,
+              0.030261772710195065
+            ],
+            "mean_state_cost": 564.8542883834834,
+            "mean_command_cost": 0.02615046257039031,
+            "mean_early_state_cost": 19.57761708063252,
+            "mean_early_command_cost": 0.005116325472906136,
+            "mean_late_state_cost": 545.2766713028509,
+            "mean_late_command_cost": 0.021034137097484175
+          },
+          "known_local": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -1.894886276416995,
+              -2.8975087830913866
+            ],
+            "mean_cost": 2.3961975297541906,
+            "state_costs": [
+              1.32986289461513,
+              2.452477283075148
+            ],
+            "command_costs": [
+              0.5650233818018633,
+              0.4450315000162421
+            ],
+            "early_state_costs": [
+              1.3295894843815768,
+              2.4520219423978484
+            ],
+            "early_command_costs": [
+              0.5648389926218346,
+              0.4449145987407787
+            ],
+            "late_state_costs": [
+              0.0002734102335533173,
+              0.000455340677299354
+            ],
+            "late_command_costs": [
+              0.00018438918002872118,
+              0.00011690127546337692
+            ],
+            "mean_state_cost": 1.891170088845139,
+            "mean_command_cost": 0.5050274409090527,
+            "mean_early_state_cost": 1.8908057133897125,
+            "mean_early_command_cost": 0.5048767956813066,
+            "mean_late_state_cost": 0.00036437545542633565,
+            "mean_late_command_cost": 0.00015064522774604905
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -1.8369525335095374,
+              -2.9228874539531424
+            ],
+            "mean_cost": 2.37991999373134,
+            "state_costs": [
+              1.0889779085991027,
+              2.1044927125331374
+            ],
+            "command_costs": [
+              0.747974624910434,
+              0.8183947414200042
+            ],
+            "early_state_costs": [
+              1.0889731735537658,
+              2.104485754014626
+            ],
+            "early_command_costs": [
+              0.7478659475388019,
+              0.8183159948203111
+            ],
+            "late_state_costs": [
+              4.735045336934363e-06,
+              6.958518511623879e-06
+            ],
+            "late_command_costs": [
+              0.00010867737163211544,
+              7.874659969309139e-05
+            ],
+            "mean_state_cost": 1.5967353105661202,
+            "mean_command_cost": 0.7831846831652192,
+            "mean_early_state_cost": 1.5967294637841958,
+            "mean_early_command_cost": 0.7830909711795565,
+            "mean_late_state_cost": 5.846781924279121e-06,
+            "mean_late_command_cost": 9.371198566260341e-05
+          }
+        },
+        "paired_excess_costs": {
+          "known_local": {
+            "mean_total_cost": 562.4842413162996,
+            "actor_better_paths": 0,
+            "mean_state_cost": 562.9631182946382,
+            "mean_command_cost": -0.4788769783386624,
+            "mean_early_state_cost": 17.686811367242807,
+            "mean_early_command_cost": -0.49976047020840053,
+            "mean_late_state_cost": 545.2763069273954,
+            "mean_late_command_cost": 0.020883491869738126,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 701.0658941598878,
+                "state_cost": 701.6152817442274,
+                "command_cost": -0.5493875843396613,
+                "early_state_cost": 27.16740831235717,
+                "early_command_cost": -0.5610096966444058,
+                "late_state_cost": 674.4478734318702,
+                "late_command_cost": 0.01162211230474456
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 423.90258847271144,
+                "state_cost": 424.3109548450491,
+                "command_cost": -0.4083663723376635,
+                "early_state_cost": 8.206214422128445,
+                "early_command_cost": -0.4385112437723952,
+                "late_state_cost": 416.1047404229206,
+                "late_command_cost": 0.03014487143473169
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 701.0658941598878
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 423.90258847271144
+              }
+            ]
+          },
+          "known_inverse": {
+            "mean_total_cost": 562.5005188523224,
+            "actor_better_paths": 0,
+            "mean_state_cost": 563.2575530729173,
+            "mean_command_cost": -0.7570342205948288,
+            "mean_early_state_cost": 17.980887616848324,
+            "mean_early_command_cost": -0.7779746457066503,
+            "mean_late_state_cost": 545.2766654560689,
+            "mean_late_command_cost": 0.02094042511182157,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 701.1238279027953,
+                "state_cost": 701.8561667302434,
+                "command_cost": -0.732338827448232,
+                "early_state_cost": 27.408024623184982,
+                "early_command_cost": -0.7440366515613731,
+                "late_state_cost": 674.4481421070585,
+                "late_command_cost": 0.011697824113141166
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 423.87720980184963,
+                "state_cost": 424.6589394155911,
+                "command_cost": -0.7817296137414257,
+                "early_state_cost": 8.553750610511669,
+                "early_command_cost": -0.8119126398519276,
+                "late_state_cost": 416.1051888050794,
+                "late_command_cost": 0.030183026110501974
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 701.1238279027953
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 423.87720980184963
+              }
+            ]
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "actor": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -9847.388148657583,
+              -1235.258391223739
+            ],
+            "mean_cost": 5541.323269940661,
+            "state_costs": [
+              9847.365381044412,
+              1235.230718819538
+            ],
+            "command_costs": [
+              0.022767613175268313,
+              0.027672404201028275
+            ],
+            "early_state_costs": [
+              36.283309156664146,
+              15.447959316085514
+            ],
+            "early_command_costs": [
+              0.003784653927345831,
+              0.00674909712472073
+            ],
+            "late_state_costs": [
+              9811.082071887748,
+              1219.7827595034526
+            ],
+            "late_command_costs": [
+              0.018982959247922482,
+              0.020923307076307546
+            ],
+            "mean_state_cost": 5541.298049931975,
+            "mean_command_cost": 0.025220008688148294,
+            "mean_early_state_cost": 25.86563423637483,
+            "mean_early_command_cost": 0.00526687552603328,
+            "mean_late_state_cost": 5515.4324156956,
+            "mean_late_command_cost": 0.019953133162115014
+          },
+          "known_local": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -4.88452469845472,
+              -8.116324351611102
+            ],
+            "mean_cost": 6.50042452503291,
+            "state_costs": [
+              1.328047890361102,
+              2.5059613204895363
+            ],
+            "command_costs": [
+              3.5564768080936164,
+              5.610363031121564
+            ],
+            "early_state_costs": [
+              1.322481160275693,
+              2.439714292644538
+            ],
+            "early_command_costs": [
+              0.9173561308613423,
+              0.4231490784488837
+            ],
+            "late_state_costs": [
+              0.005566730085408977,
+              0.06624702784499847
+            ],
+            "late_command_costs": [
+              2.639120677232274,
+              5.187213952672681
+            ],
+            "mean_state_cost": 1.9170046054253191,
+            "mean_command_cost": 4.58341991960759,
+            "mean_early_state_cost": 1.8810977264601154,
+            "mean_early_command_cost": 0.6702526046551129,
+            "mean_late_state_cost": 0.035906878965203726,
+            "mean_late_command_cost": 3.9131673149524775
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -4.689985198711396,
+              -7.602001752290928
+            ],
+            "mean_cost": 6.145993475501162,
+            "state_costs": [
+              1.09358587969854,
+              2.114294930571829
+            ],
+            "command_costs": [
+              3.5963993190128587,
+              5.4877068217191045
+            ],
+            "early_state_costs": [
+              1.0935224429929835,
+              2.110898446269924
+            ],
+            "early_command_costs": [
+              1.0163407887730722,
+              0.7594734670202719
+            ],
+            "late_state_costs": [
+              6.343670555652992e-05,
+              0.0033964843019052005
+            ],
+            "late_command_costs": [
+              2.5800585302397865,
+              4.728233354698832
+            ],
+            "mean_state_cost": 1.6039404051351847,
+            "mean_command_cost": 4.542053070365982,
+            "mean_early_state_cost": 1.6022104446314538,
+            "mean_early_command_cost": 0.887907127896672,
+            "mean_late_state_cost": 0.0017299605037308652,
+            "mean_late_command_cost": 3.6541459424693095
+          }
+        },
+        "paired_excess_costs": {
+          "known_local": {
+            "mean_total_cost": 5534.82284541563,
+            "actor_better_paths": 0,
+            "mean_state_cost": 5539.38104532655,
+            "mean_command_cost": -4.558199910919442,
+            "mean_early_state_cost": 23.984536509914715,
+            "mean_early_command_cost": -0.6649857291290797,
+            "mean_late_state_cost": 5515.396508816635,
+            "mean_late_command_cost": -3.8932141817903627,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 9842.503623959132,
+                "state_cost": 9846.03733315405,
+                "command_cost": -3.533709194918348,
+                "early_state_cost": 34.96082799638845,
+                "early_command_cost": -0.9135714769339964,
+                "late_state_cost": 9811.076505157662,
+                "late_command_cost": -2.6201377179843517
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1227.1420668721278,
+                "state_cost": 1232.7247574990483,
+                "command_cost": -5.582690626920536,
+                "early_state_cost": 13.008245023440976,
+                "early_command_cost": -0.416399981324163,
+                "late_state_cost": 1219.7165124756075,
+                "late_command_cost": -5.166290645596374
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 9842.503623959132
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1227.1420668721278
+              }
+            ]
+          },
+          "known_inverse": {
+            "mean_total_cost": 5535.177276465161,
+            "actor_better_paths": 0,
+            "mean_state_cost": 5539.69410952684,
+            "mean_command_cost": -4.516833061677834,
+            "mean_early_state_cost": 24.263423791743378,
+            "mean_early_command_cost": -0.8826402523706387,
+            "mean_late_state_cost": 5515.430685735096,
+            "mean_late_command_cost": -3.6341928093071947,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 9842.698163458876,
+                "state_cost": 9846.271795164714,
+                "command_cost": -3.5736317058375904,
+                "early_state_cost": 35.18978671367116,
+                "early_command_cost": -1.0125561348457264,
+                "late_state_cost": 9811.082008451041,
+                "late_command_cost": -2.5610755709918642
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1227.6563894714482,
+                "state_cost": 1233.1164238889662,
+                "command_cost": -5.460034417518076,
+                "early_state_cost": 13.337060869815591,
+                "early_command_cost": -0.7527243698955511,
+                "late_state_cost": 1219.7793630191507,
+                "late_command_cost": -4.707310047622525
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 9842.698163458876
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1227.6563894714482
+              }
+            ]
+          }
+        }
+      }
+    },
+    "1.0": {
+      "1": {
+        "controllers": {
+          "actor": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -3588.905332934134,
+              -574.1156814161541
+            ],
+            "mean_cost": 2081.510507175144,
+            "state_costs": [
+              3588.8827159314224,
+              574.0753181457904
+            ],
+            "command_costs": [
+              0.02261700271191681,
+              0.040363270363267714
+            ],
+            "early_state_costs": [
+              119.66810263296321,
+              38.1319693538302
+            ],
+            "early_command_costs": [
+              0.003488820687347331,
+              0.007532463595288814
+            ],
+            "late_state_costs": [
+              3469.214613298459,
+              535.9433487919603
+            ],
+            "late_command_costs": [
+              0.01912818202456948,
+              0.0328308067679789
+            ],
+            "mean_state_cost": 2081.4790170386063,
+            "mean_command_cost": 0.031490136537592264,
+            "mean_early_state_cost": 78.9000359933967,
+            "mean_early_command_cost": 0.005510642141318073,
+            "mean_late_state_cost": 2002.5789810452097,
+            "mean_late_command_cost": 0.02597949439627419
+          },
+          "known_local": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -7.018395699998112,
+              -11.06328223100267
+            ],
+            "mean_cost": 9.040838965500392,
+            "state_costs": [
+              5.5627322804446,
+              9.710536581472304
+            ],
+            "command_costs": [
+              1.455663419553505,
+              1.3527456495303751
+            ],
+            "early_state_costs": [
+              5.561676243119842,
+              9.708936402866435
+            ],
+            "early_command_costs": [
+              1.4552910222441535,
+              1.3525125242856868
+            ],
+            "late_state_costs": [
+              0.001056037324758563,
+              0.0016001786058694734
+            ],
+            "late_command_costs": [
+              0.00037239730935145765,
+              0.00023312524468832585
+            ],
+            "mean_state_cost": 7.636634430958452,
+            "mean_command_cost": 1.40420453454194,
+            "mean_early_state_cost": 7.635306322993138,
+            "mean_early_command_cost": 1.4039017732649202,
+            "mean_late_state_cost": 0.0013281079653140182,
+            "mean_late_command_cost": 0.00030276127701989175
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -6.859597966141555,
+              -10.858785293727282
+            ],
+            "mean_cost": 8.859191629934418,
+            "state_costs": [
+              5.0207827044867015,
+              8.719646430638624
+            ],
+            "command_costs": [
+              1.8388152616548503,
+              2.1391388630886627
+            ],
+            "early_state_costs": [
+              5.020755775575047,
+              8.719614120149375
+            ],
+            "early_command_costs": [
+              1.838706368099326,
+              2.1390442547216546
+            ],
+            "late_state_costs": [
+              2.6928911654344745e-05,
+              3.231048924945412e-05
+            ],
+            "late_command_costs": [
+              0.00010889355552423652,
+              9.460836700814212e-05
+            ],
+            "mean_state_cost": 6.8702145675626625,
+            "mean_command_cost": 1.9889770623717564,
+            "mean_early_state_cost": 6.870184947862211,
+            "mean_early_command_cost": 1.9888753114104905,
+            "mean_late_state_cost": 2.9619700451899433e-05,
+            "mean_late_command_cost": 0.00010175096126618932
+          }
+        },
+        "paired_excess_costs": {
+          "known_local": {
+            "mean_total_cost": 2072.4696682096437,
+            "actor_better_paths": 0,
+            "mean_state_cost": 2073.8423826076482,
+            "mean_command_cost": -1.372714398004348,
+            "mean_early_state_cost": 71.26472967040357,
+            "mean_early_command_cost": -1.398391131123602,
+            "mean_late_state_cost": 2002.5776529372442,
+            "mean_late_command_cost": 0.025676733119254298,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 3581.8869372341364,
+                "state_cost": 3583.319983650978,
+                "command_cost": -1.4330464168415882,
+                "early_state_cost": 114.10642638984336,
+                "early_command_cost": -1.4518022015568062,
+                "late_state_cost": 3469.213557261134,
+                "late_command_cost": 0.01875578471521802
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 563.052399185151,
+                "state_cost": 564.3647815643182,
+                "command_cost": -1.3123823791671074,
+                "early_state_cost": 28.423032950963766,
+                "early_command_cost": -1.3449800606903979,
+                "late_state_cost": 535.9417486133544,
+                "late_command_cost": 0.032597681523290574
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 3581.8869372341364
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 563.052399185151
+              }
+            ]
+          },
+          "known_inverse": {
+            "mean_total_cost": 2072.6513155452094,
+            "actor_better_paths": 0,
+            "mean_state_cost": 2074.6088024710434,
+            "mean_command_cost": -1.9574869258341643,
+            "mean_early_state_cost": 72.02985104553449,
+            "mean_early_command_cost": -1.9833646692691724,
+            "mean_late_state_cost": 2002.578951425509,
+            "mean_late_command_cost": 0.025877743435008,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 3582.0457349679923,
+                "state_cost": 3583.8619332269354,
+                "command_cost": -1.8161982589429335,
+                "early_state_cost": 114.64734685738816,
+                "early_command_cost": -1.8352175474119787,
+                "late_state_cost": 3469.2145863695473,
+                "late_command_cost": 0.019019288469045242
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 563.2568961224265,
+                "state_cost": 565.3556717151519,
+                "command_cost": -2.098775592725395,
+                "early_state_cost": 29.412355233680827,
+                "early_command_cost": -2.131511791126366,
+                "late_state_cost": 535.943316481471,
+                "late_command_cost": 0.03273619840097076
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 3582.0457349679923
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 563.2568961224265
+              }
+            ]
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "actor": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -16941.971531418993,
+              -1259.2243506828943
+            ],
+            "mean_cost": 9100.597941050943,
+            "state_costs": [
+              16941.935945044694,
+              1259.1938121140722
+            ],
+            "command_costs": [
+              0.03558637430418018,
+              0.030538568822048685
+            ],
+            "early_state_costs": [
+              135.11112546985134,
+              45.631504376829255
+            ],
+            "early_command_costs": [
+              0.003534054339720907,
+              0.00789951079377846
+            ],
+            "late_state_costs": [
+              16806.824819574842,
+              1213.562307737243
+            ],
+            "late_command_costs": [
+              0.03205231996445927,
+              0.022639058028270223
+            ],
+            "mean_state_cost": 9100.564878579384,
+            "mean_command_cost": 0.03306247156311443,
+            "mean_early_state_cost": 90.3713149233403,
+            "mean_early_command_cost": 0.005716782566749684,
+            "mean_late_state_cost": 9010.193563656043,
+            "mean_late_command_cost": 0.027345688996364748
+          },
+          "known_local": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -10.024595740351954,
+              -16.21929838769159
+            ],
+            "mean_cost": 13.121947064021771,
+            "state_costs": [
+              5.579937355879419,
+              9.799244047445965
+            ],
+            "command_costs": [
+              4.44465838447252,
+              6.420054340245612
+            ],
+            "early_state_costs": [
+              5.573808392642974,
+              9.731699488890499
+            ],
+            "early_command_costs": [
+              1.8014219573157924,
+              1.2331963547351805
+            ],
+            "late_state_costs": [
+              0.006128963236445628,
+              0.0675445585554666
+            ],
+            "late_command_costs": [
+              2.6432364271567277,
+              5.186857985510431
+            ],
+            "mean_state_cost": 7.689590701662692,
+            "mean_command_cost": 5.432356362359066,
+            "mean_early_state_cost": 7.652753940766736,
+            "mean_early_command_cost": 1.5173091560254863,
+            "mean_late_state_cost": 0.03683676089595611,
+            "mean_late_command_cost": 3.9150472063335795
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -9.722497726602933,
+              -15.50784264595279
+            ],
+            "mean_cost": 12.615170186277862,
+            "state_costs": [
+              5.057873004058618,
+              8.762572666274965
+            ],
+            "command_costs": [
+              4.664624722544319,
+              6.745269979677837
+            ],
+            "early_state_costs": [
+              5.057784837877788,
+              8.759151236139916
+            ],
+            "early_command_costs": [
+              2.0844161411987856,
+              2.0170539026726573
+            ],
+            "late_state_costs": [
+              8.816618082985173e-05,
+              0.0034214301350488086
+            ],
+            "late_command_costs": [
+              2.5802085813455338,
+              4.72821607700518
+            ],
+            "mean_state_cost": 6.910222835166792,
+            "mean_command_cost": 5.704947351111079,
+            "mean_early_state_cost": 6.908468037008852,
+            "mean_early_command_cost": 2.050735021935721,
+            "mean_late_state_cost": 0.0017547981579393301,
+            "mean_late_command_cost": 3.6542123291753565
+          }
+        },
+        "paired_excess_costs": {
+          "known_local": {
+            "mean_total_cost": 9087.475993986925,
+            "actor_better_paths": 0,
+            "mean_state_cost": 9092.87528787772,
+            "mean_command_cost": -5.399293890795951,
+            "mean_early_state_cost": 82.71856098257356,
+            "mean_early_command_cost": -1.5115923734587366,
+            "mean_late_state_cost": 9010.156726895148,
+            "mean_late_command_cost": -3.8877015173372147,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 16931.946935678647,
+                "state_cost": 16936.356007688813,
+                "command_cost": -4.40907201016834,
+                "early_state_cost": 129.53731707720837,
+                "early_command_cost": -1.7978879029760715,
+                "late_state_cost": 16806.818690611606,
+                "late_command_cost": -2.6111841071922686
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1243.0050522952029,
+                "state_cost": 1249.3945680666263,
+                "command_cost": -6.389515771423563,
+                "early_state_cost": 35.89980488793876,
+                "early_command_cost": -1.225296843941402,
+                "late_state_cost": 1213.4947631786874,
+                "late_command_cost": -5.164218927482161
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 16931.946935678647
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1243.0050522952029
+              }
+            ]
+          },
+          "known_inverse": {
+            "mean_total_cost": 9087.982770864668,
+            "actor_better_paths": 0,
+            "mean_state_cost": 9093.654655744216,
+            "mean_command_cost": -5.671884879547964,
+            "mean_early_state_cost": 83.46284688633145,
+            "mean_early_command_cost": -2.0450182393689715,
+            "mean_late_state_cost": 9010.191808857886,
+            "mean_late_command_cost": -3.626866640178992,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 16932.249033692395,
+                "state_cost": 16936.878072040636,
+                "command_cost": -4.629038348240139,
+                "early_state_cost": 130.05334063197355,
+                "early_command_cost": -2.0808820868590647,
+                "late_state_cost": 16806.824731408662,
+                "late_command_cost": -2.5481562613810746
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1243.7165080369414,
+                "state_cost": 1250.4312394477972,
+                "command_cost": -6.714731410855788,
+                "early_state_cost": 36.87235314068934,
+                "early_command_cost": -2.009154391878879,
+                "late_state_cost": 1213.558886307108,
+                "late_command_cost": -4.70557701897691
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 16932.249033692395
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1243.7165080369414
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "feedback_gains": {
+    "known_local": [
+      [
+        1.8308695554733276,
+        0.0,
+        1.3416049480438232,
+        0.0,
+        0.4000000059604645,
+        0.0
+      ],
+      [
+        0.0,
+        1.8308695554733276,
+        0.0,
+        1.3416049480438232,
+        0.0,
+        0.4000000059604645
+      ]
+    ],
+    "known_inverse_physical": [
+      [
+        1.7443094781511401,
+        0.0,
+        1.0009921811968023,
+        0.0
+      ],
+      [
+        0.0,
+        1.7443094781511401,
+        0.0,
+        1.0009921811968023
+      ]
+    ]
+  },
+  "evaluation_episodes_including_controls": 36,
+  "checkpoint_selection": "last",
+  "environment_steps": 1200,
+  "training_updates": 201,
+  "training_returns": [
+    -5749.425428227991,
+    -13666.469860305746,
+    -20071.01583653687,
+    -10299.235776663741,
+    -1238.3921776547115,
+    -25884.47306310808
+  ],
+  "reset_counts": {
+    "0.2": 2,
+    "0.5": 2,
+    "1.0": 2
+  },
+  "sindy": null,
+  "reference_is_optimal": false,
+  "symbolic_identification_interactions": 0,
+  "symbolic_validation_interactions": 0,
+  "optimizer_updates_during_evaluation": 0,
+  "early_steps": 50,
+  "sample_interval": 10,
+  "runtime": {
+    "torch": "2.5.1+cu121",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "pysindy": "2.1.0",
+    "sklearn": "1.7.2",
+    "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 2080 Ti"
+  }
+}

@@ -1,0 +1,6132 @@
+{
+  "revision": "random_load_equilibrium_v7",
+  "completed_runs": 12,
+  "checkpoint_selection": "last",
+  "training_seeds": [
+    0,
+    1,
+    2
+  ],
+  "evaluation_seeds": [
+    10000,
+    10001,
+    10002,
+    10003,
+    10004,
+    10005,
+    10006,
+    10007,
+    10008,
+    10009,
+    10010,
+    10011,
+    10012,
+    10013,
+    10014,
+    10015,
+    10016,
+    10017,
+    10018,
+    10019
+  ],
+  "severities": [
+    1,
+    2,
+    5,
+    10,
+    20,
+    50
+  ],
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ]
+  },
+  "data_accounting": {
+    "learning_interactions": 100000,
+    "learning_updates": 99001,
+    "symbolic_identification_interactions": 10000,
+    "symbolic_validation_interactions": 1000,
+    "total_non_evaluation_interactions_symbolic": 111000,
+    "total_non_evaluation_interactions_non_symbolic": 100000
+  },
+  "configs": {
+    "csbapr-no-nau-no-target-shift": {
+      "env_name": "RandomLoad-v0",
+      "state_dim": 6,
+      "action_dim": 2,
+      "max_episodes": 500,
+      "max_steps_per_episode": 200,
+      "gamma": 0.99,
+      "tau": 0.005,
+      "alpha": 0.2,
+      "auto_alpha": true,
+      "alpha_cap": null,
+      "lr_actor": 0.0003,
+      "lr_critic": 0.0003,
+      "lr_alpha": 0.0003,
+      "hidden_dim": 64,
+      "num_critics": 3,
+      "buffer_size": 1000000,
+      "batch_size": 256,
+      "warmup_steps": 1000,
+      "max_run_length": 20,
+      "hazard_rate": 0.02,
+      "base_variance": 1.0,
+      "surprise_ema": 0.1,
+      "weight_reg": 0.0,
+      "beta_ood": 0.1,
+      "beta_bc": 0.0,
+      "actor_type": "tanh-mlp",
+      "policy_q_std_cap": 0.0,
+      "critic_q_std_cap": 0.0,
+      "critic_q_std_penalty_weight": 0.0,
+      "use_context": false,
+      "context_ema_alpha": 0.2,
+      "context_clip": 5.0,
+      "enable_min_q_target": true,
+      "enable_reward_ema": true,
+      "enable_entropy_floor": true,
+      "entropy_floor": 0.01,
+      "enable_rollout_surprise": true,
+      "surprise_window": 256,
+      "bapr_warmup_iters": 100,
+      "penalty_scale": 2.0,
+      "weight_sym": 0.01,
+      "jac_weight": 0.01,
+      "action_anchor_weight": 0.0,
+      "grad_clip": 1.0,
+      "jac_curriculum_start": 100,
+      "actor_weight_decay": 0.0001,
+      "sindy_with_control": true,
+      "sindy_threshold": 0.001,
+      "sindy_lib_degree": 1,
+      "sindy_discrete_time": true,
+      "sindy_n_explore_episodes": 50,
+      "sindy_epsilon_threshold": 1.0,
+      "use_nau_actor": false,
+      "nau_reg_weight": 0.0,
+      "nau_l_eff_penalty_weight": 0.0,
+      "nau_l_eff_target": 200.0,
+      "actor_mean_clip": 0.0,
+      "irm_penalty_weight": 0.1,
+      "irm_n_envs": 3,
+      "ood_eval_interval": 50,
+      "log_interval": 10,
+      "save_interval": 100,
+      "log_dir": "logs",
+      "track_L_eff": false,
+      "device": "cuda"
+    },
+    "csbapr-no-nau-no-sindy-no-target-shift": {
+      "env_name": "RandomLoad-v0",
+      "state_dim": 6,
+      "action_dim": 2,
+      "max_episodes": 500,
+      "max_steps_per_episode": 200,
+      "gamma": 0.99,
+      "tau": 0.005,
+      "alpha": 0.2,
+      "auto_alpha": true,
+      "alpha_cap": null,
+      "lr_actor": 0.0003,
+      "lr_critic": 0.0003,
+      "lr_alpha": 0.0003,
+      "hidden_dim": 64,
+      "num_critics": 3,
+      "buffer_size": 1000000,
+      "batch_size": 256,
+      "warmup_steps": 1000,
+      "max_run_length": 20,
+      "hazard_rate": 0.02,
+      "base_variance": 1.0,
+      "surprise_ema": 0.1,
+      "weight_reg": 0.0,
+      "beta_ood": 0.1,
+      "beta_bc": 0.0,
+      "actor_type": "tanh-mlp",
+      "policy_q_std_cap": 0.0,
+      "critic_q_std_cap": 0.0,
+      "critic_q_std_penalty_weight": 0.0,
+      "use_context": false,
+      "context_ema_alpha": 0.2,
+      "context_clip": 5.0,
+      "enable_min_q_target": true,
+      "enable_reward_ema": true,
+      "enable_entropy_floor": true,
+      "entropy_floor": 0.01,
+      "enable_rollout_surprise": true,
+      "surprise_window": 256,
+      "bapr_warmup_iters": 100,
+      "penalty_scale": 2.0,
+      "weight_sym": 0.0,
+      "jac_weight": 0.0,
+      "action_anchor_weight": 0.0,
+      "grad_clip": 1.0,
+      "jac_curriculum_start": 100,
+      "actor_weight_decay": 0.0001,
+      "sindy_with_control": true,
+      "sindy_threshold": 0.001,
+      "sindy_lib_degree": 1,
+      "sindy_discrete_time": true,
+      "sindy_n_explore_episodes": 50,
+      "sindy_epsilon_threshold": 1.0,
+      "use_nau_actor": false,
+      "nau_reg_weight": 0.0,
+      "nau_l_eff_penalty_weight": 0.0,
+      "nau_l_eff_target": 200.0,
+      "actor_mean_clip": 0.0,
+      "irm_penalty_weight": 0.1,
+      "irm_n_envs": 3,
+      "ood_eval_interval": 50,
+      "log_interval": 10,
+      "save_interval": 100,
+      "log_dir": "logs",
+      "track_L_eff": false,
+      "device": "cuda"
+    },
+    "csbapr-centered-mlp-no-target-shift": {
+      "env_name": "RandomLoad-v0",
+      "state_dim": 6,
+      "action_dim": 2,
+      "max_episodes": 500,
+      "max_steps_per_episode": 200,
+      "gamma": 0.99,
+      "tau": 0.005,
+      "alpha": 0.2,
+      "auto_alpha": true,
+      "alpha_cap": null,
+      "lr_actor": 0.0003,
+      "lr_critic": 0.0003,
+      "lr_alpha": 0.0003,
+      "hidden_dim": 64,
+      "num_critics": 3,
+      "buffer_size": 1000000,
+      "batch_size": 256,
+      "warmup_steps": 1000,
+      "max_run_length": 20,
+      "hazard_rate": 0.02,
+      "base_variance": 1.0,
+      "surprise_ema": 0.1,
+      "weight_reg": 0.0,
+      "beta_ood": 0.1,
+      "beta_bc": 0.0,
+      "actor_type": "centered-tanh-mlp",
+      "policy_q_std_cap": 0.0,
+      "critic_q_std_cap": 0.0,
+      "critic_q_std_penalty_weight": 0.0,
+      "use_context": false,
+      "context_ema_alpha": 0.2,
+      "context_clip": 5.0,
+      "enable_min_q_target": true,
+      "enable_reward_ema": true,
+      "enable_entropy_floor": true,
+      "entropy_floor": 0.01,
+      "enable_rollout_surprise": true,
+      "surprise_window": 256,
+      "bapr_warmup_iters": 100,
+      "penalty_scale": 2.0,
+      "weight_sym": 0.01,
+      "jac_weight": 0.01,
+      "action_anchor_weight": 0.0,
+      "grad_clip": 1.0,
+      "jac_curriculum_start": 100,
+      "actor_weight_decay": 0.0001,
+      "sindy_with_control": true,
+      "sindy_threshold": 0.001,
+      "sindy_lib_degree": 1,
+      "sindy_discrete_time": true,
+      "sindy_n_explore_episodes": 50,
+      "sindy_epsilon_threshold": 1.0,
+      "use_nau_actor": false,
+      "nau_reg_weight": 0.0,
+      "nau_l_eff_penalty_weight": 0.0,
+      "nau_l_eff_target": 200.0,
+      "actor_mean_clip": 0.0,
+      "irm_penalty_weight": 0.1,
+      "irm_n_envs": 3,
+      "ood_eval_interval": 50,
+      "log_interval": 10,
+      "save_interval": 100,
+      "log_dir": "logs",
+      "track_L_eff": false,
+      "device": "cuda"
+    },
+    "csbapr-centered-mlp-no-sindy-no-target-shift": {
+      "env_name": "RandomLoad-v0",
+      "state_dim": 6,
+      "action_dim": 2,
+      "max_episodes": 500,
+      "max_steps_per_episode": 200,
+      "gamma": 0.99,
+      "tau": 0.005,
+      "alpha": 0.2,
+      "auto_alpha": true,
+      "alpha_cap": null,
+      "lr_actor": 0.0003,
+      "lr_critic": 0.0003,
+      "lr_alpha": 0.0003,
+      "hidden_dim": 64,
+      "num_critics": 3,
+      "buffer_size": 1000000,
+      "batch_size": 256,
+      "warmup_steps": 1000,
+      "max_run_length": 20,
+      "hazard_rate": 0.02,
+      "base_variance": 1.0,
+      "surprise_ema": 0.1,
+      "weight_reg": 0.0,
+      "beta_ood": 0.1,
+      "beta_bc": 0.0,
+      "actor_type": "centered-tanh-mlp",
+      "policy_q_std_cap": 0.0,
+      "critic_q_std_cap": 0.0,
+      "critic_q_std_penalty_weight": 0.0,
+      "use_context": false,
+      "context_ema_alpha": 0.2,
+      "context_clip": 5.0,
+      "enable_min_q_target": true,
+      "enable_reward_ema": true,
+      "enable_entropy_floor": true,
+      "entropy_floor": 0.01,
+      "enable_rollout_surprise": true,
+      "surprise_window": 256,
+      "bapr_warmup_iters": 100,
+      "penalty_scale": 2.0,
+      "weight_sym": 0.0,
+      "jac_weight": 0.0,
+      "action_anchor_weight": 0.0,
+      "grad_clip": 1.0,
+      "jac_curriculum_start": 100,
+      "actor_weight_decay": 0.0001,
+      "sindy_with_control": true,
+      "sindy_threshold": 0.001,
+      "sindy_lib_degree": 1,
+      "sindy_discrete_time": true,
+      "sindy_n_explore_episodes": 50,
+      "sindy_epsilon_threshold": 1.0,
+      "use_nau_actor": false,
+      "nau_reg_weight": 0.0,
+      "nau_l_eff_penalty_weight": 0.0,
+      "nau_l_eff_target": 200.0,
+      "actor_mean_clip": 0.0,
+      "irm_penalty_weight": 0.1,
+      "irm_n_envs": 3,
+      "ood_eval_interval": 50,
+      "log_interval": 10,
+      "save_interval": 100,
+      "log_dir": "logs",
+      "track_L_eff": false,
+      "device": "cuda"
+    }
+  },
+  "methods": {
+    "csbapr-no-nau-no-target-shift": {
+      "returns": {
+        "1": {
+          "seed_values": [
+            -23.585385982186644,
+            -0.6381221404760664,
+            -2.5507164826152846
+          ],
+          "mean": -8.924741535092664,
+          "sample_sd": 12.732453651298966
+        },
+        "2": {
+          "seed_values": [
+            -23.591863818962246,
+            -0.638345741910143,
+            -2.551043355607756
+          ],
+          "mean": -8.927084305493382,
+          "sample_sd": 12.736028489068058
+        },
+        "5": {
+          "seed_values": [
+            -23.59943955175283,
+            -0.642274859819806,
+            -2.554677534872686
+          ],
+          "mean": -8.932130648815107,
+          "sample_sd": 12.738201750582164
+        },
+        "10": {
+          "seed_values": [
+            -23.61339141329019,
+            -0.667967058265612,
+            -2.5802938917459164
+          ],
+          "mean": -8.953884121100574,
+          "sample_sd": 12.731461582113527
+        },
+        "20": {
+          "seed_values": [
+            -23.7626323032519,
+            -0.7728146478464074,
+            -2.6862182652100315
+          ],
+          "mean": -9.073888405436112,
+          "sample_sd": 12.756750225760886
+        },
+        "50": {
+          "seed_values": [
+            -25.05567732272763,
+            -1.6994587851308747,
+            -3.6255567528137513
+          ],
+          "mean": -10.126897620224085,
+          "sample_sd": 12.964521236809688
+        }
+      },
+      "cost_increase_from_id": {
+        "1": {
+          "seed_values": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "sample_sd": 0.0
+        },
+        "2": {
+          "seed_values": [
+            0.006477836775601986,
+            0.0002236014340766257,
+            0.00032687299247147195
+          ],
+          "mean": 0.0023427704007166947,
+          "sample_sd": 0.003581444777910664
+        },
+        "5": {
+          "seed_values": [
+            0.014053569566186752,
+            0.004152719343739619,
+            0.0039610522574013984
+          ],
+          "mean": 0.00738911372244259,
+          "sample_sd": 0.005772383635718275
+        },
+        "10": {
+          "seed_values": [
+            0.028005431103547807,
+            0.029844917789545566,
+            0.029577409130631782
+          ],
+          "mean": 0.029142586007908384,
+          "sample_sd": 0.0009938466572021814
+        },
+        "20": {
+          "seed_values": [
+            0.17724632106525462,
+            0.134692507370341,
+            0.13550178259474688
+          ],
+          "mean": 0.1491468703434475,
+          "sample_sd": 0.02433820206481283
+        },
+        "50": {
+          "seed_values": [
+            1.4702913405409852,
+            1.0613366446548083,
+            1.0748402701984667
+          ],
+          "mean": 1.2021560851314201,
+          "sample_sd": 0.23231008021795005
+        }
+      },
+      "initial_state_alignment": {
+        "1": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16198261082172394,
+              0.16198261082172394,
+              0.16198261082172394
+            ],
+            "mean": 0.16198261082172394,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19776538014411926,
+              0.19776538014411926,
+              0.19776538014411926
+            ],
+            "mean": 0.19776538014411926,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.35003018379211426,
+              0.06246069818735123,
+              0.13577428460121155
+            ],
+            "mean": 0.18275505552689233,
+            "sample_sd": 0.14943040818496572
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              0.2516455352306366,
+              0.035769760608673096,
+              0.18088561296463013
+            ],
+            "mean": 0.1561003029346466,
+            "sample_sd": 0.11005144802373114
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.521705389022827,
+              2.8614673614501953,
+              2.725377082824707
+            ],
+            "mean": 2.7028499444325766,
+            "sample_sd": 0.17099752468979654
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8019847869873047,
+              2.8019673824310303,
+              2.801985025405884
+            ],
+            "mean": 2.8019790649414062,
+            "sample_sd": 1.0118053042375061e-05
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.32500001788139343,
+              0.15000000596046448,
+              0.30000001192092896
+            ],
+            "mean": 0.25833334525426227,
+            "sample_sd": 0.09464847794029575
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.7072811126708984,
+              0.12436989694833755,
+              0.27215027809143066
+            ],
+            "mean": 0.3679337625702222,
+            "sample_sd": 0.3030300781737065
+          }
+        },
+        "2": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16226480901241302,
+              0.16226480901241302,
+              0.16226480901241302
+            ],
+            "mean": 0.16226480901241302,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19795814156532288,
+              0.19795814156532288,
+              0.19795814156532288
+            ],
+            "mean": 0.19795814156532288,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.3500535488128662,
+              0.06246526911854744,
+              0.1357821226119995
+            ],
+            "mean": 0.1827669801811377,
+            "sample_sd": 0.14944041382764764
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              0.25134405493736267,
+              0.03575063496828079,
+              0.18085943162441254
+            ],
+            "mean": 0.15598470717668533,
+            "sample_sd": 0.1099281338909835
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.522026538848877,
+              2.8615975379943848,
+              2.725565195083618
+            ],
+            "mean": 2.7030630906422934,
+            "sample_sd": 0.17090018839482254
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8021128177642822,
+              2.8020951747894287,
+              2.8021128177642822
+            ],
+            "mean": 2.8021069367726645,
+            "sample_sd": 1.0186176280983045e-05
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.32500001788139343,
+              0.15000000596046448,
+              0.30000001192092896
+            ],
+            "mean": 0.25833334525426227,
+            "sample_sd": 0.09464847794029575
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.7073025703430176,
+              0.12437563389539719,
+              0.27215632796287537
+            ],
+            "mean": 0.3679448440670967,
+            "sample_sd": 0.3030388311291781
+          }
+        },
+        "5": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16413725912570953,
+              0.16413725912570953,
+              0.16413725912570953
+            ],
+            "mean": 0.16413725912570953,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19930219650268555,
+              0.19930219650268555,
+              0.19930219650268555
+            ],
+            "mean": 0.19930219650268555,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.3501228988170624,
+              0.06247887387871742,
+              0.13580536842346191
+            ],
+            "mean": 0.18280238037308058,
+            "sample_sd": 0.14947009941733247
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              0.2504427433013916,
+              0.03569309040904045,
+              0.1807815283536911
+            ],
+            "mean": 0.15563912068804106,
+            "sample_sd": 0.10956029778969036
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.5229804515838623,
+              2.861976385116577,
+              2.726121664047241
+            ],
+            "mean": 2.70369283358256,
+            "sample_sd": 0.17060729780680325
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.802488088607788,
+              2.8024699687957764,
+              2.802488088607788
+            ],
+            "mean": 2.8024820486704507,
+            "sample_sd": 1.0461478342631235e-05
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.32500001788139343,
+              0.15000000596046448,
+              0.30000001192092896
+            ],
+            "mean": 0.25833334525426227,
+            "sample_sd": 0.09464847794029575
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.7073652148246765,
+              0.12439236044883728,
+              0.2721739709377289
+            ],
+            "mean": 0.36797718207041424,
+            "sample_sd": 0.3030643969229622
+          }
+        },
+        "10": {
+          "state_norm_median": {
+            "seed_values": [
+              0.1642186939716339,
+              0.1642186939716339,
+              0.1642186939716339
+            ],
+            "mean": 0.1642186939716339,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.20556794106960297,
+              0.20556794106960297,
+              0.20556794106960297
+            ],
+            "mean": 0.20556794106960297,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.3501754701137543,
+              0.0625028982758522,
+              0.13583748042583466
+            ],
+            "mean": 0.18283861627181372,
+            "sample_sd": 0.1494848060007015
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              0.24979901313781738,
+              0.03555290773510933,
+              0.18064986169338226
+            ],
+            "mean": 0.15533392752210298,
+            "sample_sd": 0.10934359063191808
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.524015188217163,
+              2.8629150390625,
+              2.7271840572357178
+            ],
+            "mean": 2.704704761505127,
+            "sample_sd": 0.1705645516458664
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.803265333175659,
+              2.8032472133636475,
+              2.803265333175659
+            ],
+            "mean": 2.803259293238322,
+            "sample_sd": 1.0461478342631235e-05
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.30000001192092896,
+              0.17499999701976776,
+              0.2750000059604645
+            ],
+            "mean": 0.2500000049670537,
+            "sample_sd": 0.06614379009835718
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.70746248960495,
+              0.12443758547306061,
+              0.2722116708755493
+            ],
+            "mean": 0.36803724865118664,
+            "sample_sd": 0.30309473061491143
+          }
+        },
+        "20": {
+          "state_norm_median": {
+            "seed_values": [
+              0.18454840779304504,
+              0.18454840779304504,
+              0.18454840779304504
+            ],
+            "mean": 0.18454840779304504,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.27315711975097656,
+              0.27315711975097656,
+              0.27315711975097656
+            ],
+            "mean": 0.27315711975097656,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.3505270779132843,
+              0.06242414191365242,
+              0.13576439023017883
+            ],
+            "mean": 0.18290520335237184,
+            "sample_sd": 0.1497248063256992
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              0.24500083923339844,
+              0.03585495427250862,
+              0.18198354542255402
+            ],
+            "mean": 0.15427977964282036,
+            "sample_sd": 0.10728990762323451
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.5271687507629395,
+              2.8659512996673584,
+              2.727898120880127
+            ],
+            "mean": 2.707006057103475,
+            "sample_sd": 0.17035481386558915
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8044238090515137,
+              2.804405689239502,
+              2.8044238090515137
+            ],
+            "mean": 2.8044177691141763,
+            "sample_sd": 1.0461478342631235e-05
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.2750000059604645,
+              0.17499999701976776,
+              0.2750000059604645
+            ],
+            "mean": 0.2416666696468989,
+            "sample_sd": 0.057735032080876235
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.7076464295387268,
+              0.1244869977235794,
+              0.27211591601371765
+            ],
+            "mean": 0.3680831144253413,
+            "sample_sd": 0.3031930212042707
+          }
+        },
+        "50": {
+          "state_norm_median": {
+            "seed_values": [
+              0.30533933639526367,
+              0.30533933639526367,
+              0.30533933639526367
+            ],
+            "mean": 0.30533933639526367,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              1.3022654056549072,
+              1.3022654056549072,
+              1.3022654056549072
+            ],
+            "mean": 1.3022654056549072,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              0.9000000357627869,
+              0.9000000357627869,
+              0.9000000357627869
+            ],
+            "mean": 0.9000000357627869,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.3500784933567047,
+              0.061983004212379456,
+              0.13560695946216583
+            ],
+            "mean": 0.18255615234375,
+            "sample_sd": 0.14967605937657882
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              0.24068467319011688,
+              0.037517230957746506,
+              0.1835564225912094
+            ],
+            "mean": 0.1539194422463576,
+            "sample_sd": 0.10477602468495233
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.518399953842163,
+              2.864438772201538,
+              2.7246882915496826
+            ],
+            "mean": 2.7025090058644614,
+            "sample_sd": 0.17408232675380383
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.801079034805298,
+              2.8010709285736084,
+              2.801079034805298
+            ],
+            "mean": 2.801076332728068,
+            "sample_sd": 4.6801350480192365e-06
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.20000000298023224,
+              0.20000000298023224,
+              0.125
+            ],
+            "mean": 0.1750000019868215,
+            "sample_sd": 0.043301271909859815
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.7067909836769104,
+              0.12376193702220917,
+              0.2715264558792114
+            ],
+            "mean": 0.367359792192777,
+            "sample_sd": 0.30309856247187017
+          }
+        }
+      },
+      "origin_actions": [
+        [
+          -0.508288562297821,
+          -0.01639821194112301
+        ],
+        [
+          -0.06324729323387146,
+          0.06463031470775604
+        ],
+        [
+          -0.07775378227233887,
+          -0.18191587924957275
+        ]
+      ],
+      "runtime": [
+        {
+          "python": "3.11.10 (main, Oct  3 2024, 07:29:13) [GCC 11.2.0]",
+          "torch": "2.8.0+cu128",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU"
+        },
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        },
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        }
+      ],
+      "sindy": [
+        {
+          "sparsity": 0.25925925925925924,
+          "n_coeffs": 54,
+          "n_nonzero": 14,
+          "n_control": 2,
+          "r_squared": 0.9998584292863388,
+          "action_reference": "LQRFeedbackReference"
+        },
+        {
+          "sparsity": 0.2037037037037037,
+          "n_coeffs": 54,
+          "n_nonzero": 11,
+          "n_control": 2,
+          "r_squared": 0.9998686956868167,
+          "action_reference": "LQRFeedbackReference"
+        },
+        {
+          "sparsity": 0.25925925925925924,
+          "n_coeffs": 54,
+          "n_nonzero": 14,
+          "n_control": 2,
+          "r_squared": 0.9999274796052807,
+          "action_reference": "LQRFeedbackReference"
+        }
+      ],
+      "policy_curvature_bounds": [
+        110.99073424345958,
+        137.37090430585025,
+        196.09979368115415
+      ],
+      "final_25_training_return": {
+        "seed_values": [
+          -29.603960135623453,
+          -25.22825577138176,
+          -15.385033239063764
+        ],
+        "mean": -23.405749715356325,
+        "sample_sd": 7.282555647958632
+      }
+    },
+    "csbapr-no-nau-no-sindy-no-target-shift": {
+      "returns": {
+        "1": {
+          "seed_values": [
+            -30.661269233242034,
+            -4.427397734405414,
+            -13.711438068332455
+          ],
+          "mean": -16.266701678659967,
+          "sample_sd": 13.302294258625693
+        },
+        "2": {
+          "seed_values": [
+            -30.63214875691056,
+            -4.50256482906015,
+            -13.642822757211817
+          ],
+          "mean": -16.259178781060843,
+          "sample_sd": 13.259818181004327
+        },
+        "5": {
+          "seed_values": [
+            -30.6604269319239,
+            -4.551636561433503,
+            -13.706195332231541
+          ],
+          "mean": -16.306086275196314,
+          "sample_sd": 13.24714340297695
+        },
+        "10": {
+          "seed_values": [
+            -30.83833760716264,
+            -4.85537439724954,
+            -14.330906349385032
+          ],
+          "mean": -16.67487278459907,
+          "sample_sd": 13.149115113914773
+        },
+        "20": {
+          "seed_values": [
+            -31.49142485669534,
+            -6.423092450093823,
+            -15.845398548985822
+          ],
+          "mean": -17.919971951924996,
+          "sample_sd": 12.662275210842003
+        },
+        "50": {
+          "seed_values": [
+            -35.91829623793211,
+            -17.54556510435919,
+            -27.988791518056452
+          ],
+          "mean": -27.150884286782585,
+          "sample_sd": 9.21498121120199
+        }
+      },
+      "cost_increase_from_id": {
+        "1": {
+          "seed_values": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "sample_sd": 0.0
+        },
+        "2": {
+          "seed_values": [
+            -0.02912047633147452,
+            0.07516709465473603,
+            -0.06861531112063801
+          ],
+          "mean": -0.0075228975991255,
+          "sample_sd": 0.07428449776342026
+        },
+        "5": {
+          "seed_values": [
+            -0.0008423013181335648,
+            0.12423882702808875,
+            -0.0052427361009144136
+          ],
+          "mean": 0.039384596536346926,
+          "sample_sd": 0.07351884983341764
+        },
+        "10": {
+          "seed_values": [
+            0.17706837392060493,
+            0.4279766628441264,
+            0.6194682810525762
+          ],
+          "mean": 0.4081711059391025,
+          "sample_sd": 0.22186395498330236
+        },
+        "20": {
+          "seed_values": [
+            0.8301556234533045,
+            1.9956947156884093,
+            2.133960480653366
+          ],
+          "mean": 1.6532702732650266,
+          "sample_sd": 0.7161826935156571
+        },
+        "50": {
+          "seed_values": [
+            5.257027004690077,
+            13.118167369953778,
+            14.277353449723996
+          ],
+          "mean": 10.884182608122616,
+          "sample_sd": 4.907605142104949
+        }
+      },
+      "initial_state_alignment": {
+        "1": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16198261082172394,
+              0.16198261082172394,
+              0.16198261082172394
+            ],
+            "mean": 0.16198261082172394,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19776538014411926,
+              0.19776538014411926,
+              0.19776538014411926
+            ],
+            "mean": 0.19776538014411926,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.5458737015724182,
+              0.12504252791404724,
+              0.317150354385376
+            ],
+            "mean": 0.32935552795728046,
+            "sample_sd": 0.21068090534528927
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              4.3757829666137695,
+              3.205087423324585,
+              7.873094081878662
+            ],
+            "mean": 5.151321490605672,
+            "sample_sd": 2.428717056950635
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.92389178276062,
+              2.2471182346343994,
+              3.767232656478882
+            ],
+            "mean": 2.979414224624634,
+            "sample_sd": 0.7615766672094172
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8019847869873047,
+              2.8019847869873047,
+              2.8019847869873047
+            ],
+            "mean": 2.8019847869873047,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.42500001192092896,
+              0.2750000059604645,
+              0.375
+            ],
+            "mean": 0.3583333392937978,
+            "sample_sd": 0.07637626353361751
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              1.055901050567627,
+              0.1780339628458023,
+              0.49811938405036926
+            ],
+            "mean": 0.5773514658212662,
+            "sample_sd": 0.44426450230984244
+          }
+        },
+        "2": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16226480901241302,
+              0.16226480901241302,
+              0.16226480901241302
+            ],
+            "mean": 0.16226480901241302,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19795814156532288,
+              0.19795814156532288,
+              0.19795814156532288
+            ],
+            "mean": 0.19795814156532288,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.5458357334136963,
+              0.12491080164909363,
+              0.3167744576931
+            ],
+            "mean": 0.3291736642519633,
+            "sample_sd": 0.21073622087274382
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              4.374770641326904,
+              3.20536732673645,
+              7.876110076904297
+            ],
+            "mean": 5.152082681655884,
+            "sample_sd": 2.43045674011937
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.9231979846954346,
+              2.247215986251831,
+              3.7680001258850098
+            ],
+            "mean": 2.9794713656107583,
+            "sample_sd": 0.7619521769046189
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8021128177642822,
+              2.8021128177642822,
+              2.8021128177642822
+            ],
+            "mean": 2.8021128177642822,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.42500001192092896,
+              0.2750000059604645,
+              0.375
+            ],
+            "mean": 0.3583333392937978,
+            "sample_sd": 0.07637626353361751
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              1.055903434753418,
+              0.17803069949150085,
+              0.4980689287185669
+            ],
+            "mean": 0.5773343543211619,
+            "sample_sd": 0.44427175309829275
+          }
+        },
+        "5": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16413725912570953,
+              0.16413725912570953,
+              0.16413725912570953
+            ],
+            "mean": 0.16413725912570953,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19930219650268555,
+              0.19930219650268555,
+              0.19930219650268555
+            ],
+            "mean": 0.19930219650268555,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.5457280278205872,
+              0.12452436983585358,
+              0.31566935777664185
+            ],
+            "mean": 0.32864058514436084,
+            "sample_sd": 0.2109012089332323
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              4.371774196624756,
+              3.206190586090088,
+              7.884910583496094
+            ],
+            "mean": 5.1542917887369795,
+            "sample_sd": 2.435540092054645
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.9211208820343018,
+              2.2475063800811768,
+              3.770235061645508
+            ],
+            "mean": 2.9796207745869956,
+            "sample_sd": 0.7630480571275764
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.802488088607788,
+              2.802488088607788,
+              2.802488088607788
+            ],
+            "mean": 2.802488088607788,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.42500001192092896,
+              0.25,
+              0.375
+            ],
+            "mean": 0.350000003973643,
+            "sample_sd": 0.09013878684600608
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              1.055907964706421,
+              0.17802086472511292,
+              0.4979088604450226
+            ],
+            "mean": 0.5772792299588522,
+            "sample_sd": 0.44429290085029394
+          }
+        },
+        "10": {
+          "state_norm_median": {
+            "seed_values": [
+              0.1642186939716339,
+              0.1642186939716339,
+              0.1642186939716339
+            ],
+            "mean": 0.1642186939716339,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.20556794106960297,
+              0.20556794106960297,
+              0.20556794106960297
+            ],
+            "mean": 0.20556794106960297,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.5450911521911621,
+              0.12404373288154602,
+              0.31428518891334534
+            ],
+            "mean": 0.3278066913286845,
+            "sample_sd": 0.21084912994247318
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              4.376211643218994,
+              3.2077674865722656,
+              7.880096435546875
+            ],
+            "mean": 5.154691855112712,
+            "sample_sd": 2.4314991326523456
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.921506881713867,
+              2.2480485439300537,
+              3.769730806350708
+            ],
+            "mean": 2.979762077331543,
+            "sample_sd": 0.7625119525645159
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.803265333175659,
+              2.803265333175659,
+              2.803265333175659
+            ],
+            "mean": 2.803265333175659,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.4000000059604645,
+              0.2750000059604645,
+              0.4000000059604645
+            ],
+            "mean": 0.3583333392937978,
+            "sample_sd": 0.07216878364870322
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              1.0557671785354614,
+              0.17798683047294617,
+              0.4976198077201843
+            ],
+            "mean": 0.5771246055761973,
+            "sample_sd": 0.4442581957857184
+          }
+        },
+        "20": {
+          "state_norm_median": {
+            "seed_values": [
+              0.18454840779304504,
+              0.18454840779304504,
+              0.18454840779304504
+            ],
+            "mean": 0.18454840779304504,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.27315711975097656,
+              0.27315711975097656,
+              0.27315711975097656
+            ],
+            "mean": 0.27315711975097656,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.5430675148963928,
+              0.1265300065279007,
+              0.3089524209499359
+            ],
+            "mean": 0.32618331412474316,
+            "sample_sd": 0.2088026621697126
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              4.386609077453613,
+              3.2116973400115967,
+              7.934308052062988
+            ],
+            "mean": 5.177538156509399,
+            "sample_sd": 2.4586458855369275
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.9181344509124756,
+              2.2493999004364014,
+              3.7887675762176514
+            ],
+            "mean": 2.9854339758555093,
+            "sample_sd": 0.7718873815869841
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8044238090515137,
+              2.8044238090515137,
+              2.8044238090515137
+            ],
+            "mean": 2.8044238090515137,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.375,
+              0.32500001788139343,
+              0.42500001192092896
+            ],
+            "mean": 0.3750000099341075,
+            "sample_sd": 0.049999997019768504
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              1.0551749467849731,
+              0.17793263494968414,
+              0.4989418685436249
+            ],
+            "mean": 0.5773498167594274,
+            "sample_sd": 0.4438461142964863
+          }
+        },
+        "50": {
+          "state_norm_median": {
+            "seed_values": [
+              0.30533933639526367,
+              0.30533933639526367,
+              0.30533933639526367
+            ],
+            "mean": 0.30533933639526367,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              1.3022654056549072,
+              1.3022654056549072,
+              1.3022654056549072
+            ],
+            "mean": 1.3022654056549072,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              0.9000000357627869,
+              0.9000000357627869,
+              0.9000000357627869
+            ],
+            "mean": 0.9000000357627869,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.5446279048919678,
+              0.13036495447158813,
+              0.34141653776168823
+            ],
+            "mean": 0.33880313237508136,
+            "sample_sd": 0.2071438399724586
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              4.362215518951416,
+              3.2130610942840576,
+              7.885142803192139
+            ],
+            "mean": 5.153473138809204,
+            "sample_sd": 2.4344718810073824
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.932697057723999,
+              2.241464376449585,
+              3.756932020187378
+            ],
+            "mean": 2.977031151453654,
+            "sample_sd": 0.758705923730774
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.801079034805298,
+              2.801079034805298,
+              2.801079034805298
+            ],
+            "mean": 2.801079034805298,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.4000000059604645,
+              0.3499999940395355,
+              0.45000001788139343
+            ],
+            "mean": 0.4000000059604645,
+            "sample_sd": 0.050000011920928955
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              1.0557996034622192,
+              0.17784889042377472,
+              0.48911252617836
+            ],
+            "mean": 0.5742536733547846,
+            "sample_sd": 0.4451248418568284
+          }
+        }
+      },
+      "origin_actions": [
+        [
+          0.6052603721618652,
+          -0.49842485785484314
+        ],
+        [
+          0.024816736578941345,
+          0.11951319128274918
+        ],
+        [
+          0.24612043797969818,
+          0.30358779430389404
+        ]
+      ],
+      "runtime": [
+        {
+          "python": "3.11.10 (main, Oct  3 2024, 07:29:13) [GCC 11.2.0]",
+          "torch": "2.8.0+cu128",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU"
+        },
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        },
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        }
+      ],
+      "sindy": [
+        null,
+        null,
+        null
+      ],
+      "policy_curvature_bounds": [
+        165.78916814332672,
+        69.8368316820353,
+        171.62409871010462
+      ],
+      "final_25_training_return": {
+        "seed_values": [
+          -65.05659192673836,
+          -44.52677636403127,
+          -33.34103101725181
+        ],
+        "mean": -47.64146643600715,
+        "sample_sd": 16.085557858967363
+      }
+    },
+    "csbapr-centered-mlp-no-target-shift": {
+      "returns": {
+        "1": {
+          "seed_values": [
+            -0.14059626304410938,
+            -0.1403849350658662,
+            -0.14082145342236002
+          ],
+          "mean": -0.14060088384411187,
+          "sample_sd": 0.00021829586055057505
+        },
+        "2": {
+          "seed_values": [
+            -0.14073646155027963,
+            -0.1405296207993239,
+            -0.1409742244635
+          ],
+          "mean": -0.1407467689377012,
+          "sample_sd": 0.00022248097947081885
+        },
+        "5": {
+          "seed_values": [
+            -0.14458046154862472,
+            -0.1443582365524543,
+            -0.14481296674436278
+          ],
+          "mean": -0.14458388828181393,
+          "sample_sd": 0.00022738446238373966
+        },
+        "10": {
+          "seed_values": [
+            -0.17044591897385172,
+            -0.17016382311142794,
+            -0.1706713023721349
+          ],
+          "mean": -0.1704270148191382,
+          "sample_sd": 0.00025426723208269656
+        },
+        "20": {
+          "seed_values": [
+            -0.2756073888839208,
+            -0.2750837744121301,
+            -0.2758470410078048
+          ],
+          "mean": -0.2755127347679519,
+          "sample_sd": 0.000390337706698449
+        },
+        "50": {
+          "seed_values": [
+            -1.1993482991772404,
+            -1.1975160887373082,
+            -1.2005356501852653
+          ],
+          "mean": -1.1991333460332714,
+          "sample_sd": 0.001521213816356489
+        }
+      },
+      "cost_increase_from_id": {
+        "1": {
+          "seed_values": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "sample_sd": 0.0
+        },
+        "2": {
+          "seed_values": [
+            0.00014019850617025265,
+            0.00014468573345771674,
+            0.0001527710411399763
+          ],
+          "mean": 0.00014588509358931523,
+          "sample_sd": 6.371499622159765e-06
+        },
+        "5": {
+          "seed_values": [
+            0.0039841985045153405,
+            0.0039733014865881155,
+            0.00399151332200276
+          ],
+          "mean": 0.003983004437702072,
+          "sample_sd": 9.164446734988168e-06
+        },
+        "10": {
+          "seed_values": [
+            0.02984965592974234,
+            0.029778888045561752,
+            0.029849848949774882
+          ],
+          "mean": 0.029826130975026326,
+          "sample_sd": 4.0913690892893134e-05
+        },
+        "20": {
+          "seed_values": [
+            0.1350111258398114,
+            0.13469883934626392,
+            0.1350255875854448
+          ],
+          "mean": 0.13491185092384003,
+          "sample_sd": 0.00018461509867232414
+        },
+        "50": {
+          "seed_values": [
+            1.058752036133131,
+            1.057131153671442,
+            1.0597141967629053
+          ],
+          "mean": 1.0585324621891594,
+          "sample_sd": 0.0013054453036196042
+        }
+      },
+      "initial_state_alignment": {
+        "1": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16198261082172394,
+              0.16198261082172394,
+              0.16198261082172394
+            ],
+            "mean": 0.16198261082172394,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19776538014411926,
+              0.19776538014411926,
+              0.19776538014411926
+            ],
+            "mean": 0.19776538014411926,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.011554993689060211,
+              0.010012604296207428,
+              0.012861253693699837
+            ],
+            "mean": 0.011476283892989159,
+            "sample_sd": 0.001425954863050239
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              0.061933185905218124,
+              0.026667168363928795,
+              0.05671226605772972
+            ],
+            "mean": 0.04843754010895888,
+            "sample_sd": 0.019033557614147645
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.7324059009552,
+              2.799304246902466,
+              2.852463722229004
+            ],
+            "mean": 2.794724623362223,
+            "sample_sd": 0.06015978578818999
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8019847869873047,
+              2.8019673824310303,
+              2.801985025405884
+            ],
+            "mean": 2.8019790649414062,
+            "sample_sd": 1.0118053042375061e-05
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.02500000037252903,
+              0.02500000037252903,
+              0.02500000037252903
+            ],
+            "mean": 0.02500000037252903,
+            "sample_sd": 0.0
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.013180014677345753,
+              0.007273373659700155,
+              0.004735301248729229
+            ],
+            "mean": 0.008396229861925045,
+            "sample_sd": 0.004332885962152736
+          }
+        },
+        "2": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16226480901241302,
+              0.16226480901241302,
+              0.16226480901241302
+            ],
+            "mean": 0.16226480901241302,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19795814156532288,
+              0.19795814156532288,
+              0.19795814156532288
+            ],
+            "mean": 0.19795814156532288,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.01155590359121561,
+              0.010012154467403889,
+              0.012858910486102104
+            ],
+            "mean": 0.011475656181573868,
+            "sample_sd": 0.0014250735744389782
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              0.061935365200042725,
+              0.026660794392228127,
+              0.05669879913330078
+            ],
+            "mean": 0.04843165290852388,
+            "sample_sd": 0.019035049683288556
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.7325236797332764,
+              2.79944109916687,
+              2.852654218673706
+            ],
+            "mean": 2.794872999191284,
+            "sample_sd": 0.06019540887451247
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8021128177642822,
+              2.8020951747894287,
+              2.8021128177642822
+            ],
+            "mean": 2.8021069367726645,
+            "sample_sd": 1.0186176280983045e-05
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.02500000037252903,
+              0.02500000037252903,
+              0.02500000037252903
+            ],
+            "mean": 0.02500000037252903,
+            "sample_sd": 0.0
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.013175048865377903,
+              0.0072707729414105415,
+              0.004735641647130251
+            ],
+            "mean": 0.008393821151306232,
+            "sample_sd": 0.004330337921013218
+          }
+        },
+        "5": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16413725912570953,
+              0.16413725912570953,
+              0.16413725912570953
+            ],
+            "mean": 0.16413725912570953,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19930219650268555,
+              0.19930219650268555,
+              0.19930219650268555
+            ],
+            "mean": 0.19930219650268555,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.011558766476809978,
+              0.010010935366153717,
+              0.012851910665631294
+            ],
+            "mean": 0.01147387083619833,
+            "sample_sd": 0.0014223890520552293
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              0.061941809952259064,
+              0.02664162777364254,
+              0.05665866658091545
+            ],
+            "mean": 0.04841403476893902,
+            "sample_sd": 0.01903959507834054
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.73286771774292,
+              2.7998430728912354,
+              2.853215217590332
+            ],
+            "mean": 2.7953086694081626,
+            "sample_sd": 0.06030174782782993
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.802488088607788,
+              2.8024699687957764,
+              2.802488088607788
+            ],
+            "mean": 2.8024820486704507,
+            "sample_sd": 1.0461478342631235e-05
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.02500000037252903,
+              0.02500000037252903,
+              0.02500000037252903
+            ],
+            "mean": 0.02500000037252903,
+            "sample_sd": 0.0
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.013160256668925285,
+              0.007262973114848137,
+              0.004736941307783127
+            ],
+            "mean": 0.008386723697185516,
+            "sample_sd": 0.004322634838474222
+          }
+        },
+        "10": {
+          "state_norm_median": {
+            "seed_values": [
+              0.1642186939716339,
+              0.1642186939716339,
+              0.1642186939716339
+            ],
+            "mean": 0.1642186939716339,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.20556794106960297,
+              0.20556794106960297,
+              0.20556794106960297
+            ],
+            "mean": 0.20556794106960297,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.011572135612368584,
+              0.00999925285577774,
+              0.012832604348659515
+            ],
+            "mean": 0.011467997605601946,
+            "sample_sd": 0.0014195434878487667
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              0.06194661185145378,
+              0.026563454419374466,
+              0.05642057582736015
+            ],
+            "mean": 0.04831021403272947,
+            "sample_sd": 0.01903484787949936
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.7337067127227783,
+              2.8007774353027344,
+              2.8543953895568848
+            ],
+            "mean": 2.7962931791941323,
+            "sample_sd": 0.06046917060475938
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.803265333175659,
+              2.8032472133636475,
+              2.803265333175659
+            ],
+            "mean": 2.803259293238322,
+            "sample_sd": 1.0461478342631235e-05
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.02500000037252903,
+              0.0,
+              0.0
+            ],
+            "mean": 0.008333333457509676,
+            "sample_sd": 0.01443375694482038
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.01313797291368246,
+              0.007244505453854799,
+              0.004762272350490093
+            ],
+            "mean": 0.008381583572675785,
+            "sample_sd": 0.0043020692657477445
+          }
+        },
+        "20": {
+          "state_norm_median": {
+            "seed_values": [
+              0.18454840779304504,
+              0.18454840779304504,
+              0.18454840779304504
+            ],
+            "mean": 0.18454840779304504,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.27315711975097656,
+              0.27315711975097656,
+              0.27315711975097656
+            ],
+            "mean": 0.27315711975097656,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.01155203115195036,
+              0.010022279806435108,
+              0.01278257928788662
+            ],
+            "mean": 0.011452296748757362,
+            "sample_sd": 0.0013828497822289188
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              0.062026362866163254,
+              0.026676541194319725,
+              0.056146252900362015
+            ],
+            "mean": 0.04828305232028166,
+            "sample_sd": 0.01894135463951078
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.7346174716949463,
+              2.8016490936279297,
+              2.855713367462158
+            ],
+            "mean": 2.797326644261678,
+            "sample_sd": 0.060663553055427935
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8044238090515137,
+              2.804405689239502,
+              2.8044238090515137
+            ],
+            "mean": 2.8044177691141763,
+            "sample_sd": 1.0461478342631235e-05
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.01308676041662693,
+              0.007254613097757101,
+              0.004762559663504362
+            ],
+            "mean": 0.008367977725962797,
+            "sample_sd": 0.004272325495684556
+          }
+        },
+        "50": {
+          "state_norm_median": {
+            "seed_values": [
+              0.30533933639526367,
+              0.30533933639526367,
+              0.30533933639526367
+            ],
+            "mean": 0.30533933639526367,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              1.3022654056549072,
+              1.3022654056549072,
+              1.3022654056549072
+            ],
+            "mean": 1.3022654056549072,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              0.9000000357627869,
+              0.9000000357627869,
+              0.9000000357627869
+            ],
+            "mean": 0.9000000357627869,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.0116366446018219,
+              0.010158567689359188,
+              0.012973100878298283
+            ],
+            "mean": 0.01158943772315979,
+            "sample_sd": 0.0014078603037782837
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              0.06182771548628807,
+              0.026623785495758057,
+              0.05523890256881714
+            ],
+            "mean": 0.047896801183621086,
+            "sample_sd": 0.018715208020682217
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.7337558269500732,
+              2.799729585647583,
+              2.8552474975585938
+            ],
+            "mean": 2.7962443033854165,
+            "sample_sd": 0.06082077688707651
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.801079034805298,
+              2.8010709285736084,
+              2.801079034805298
+            ],
+            "mean": 2.801076332728068,
+            "sample_sd": 4.6801350480192365e-06
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.02500000037252903
+            ],
+            "mean": 0.008333333457509676,
+            "sample_sd": 0.01443375694482038
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.012826445512473583,
+              0.0073954337276518345,
+              0.004823446273803711
+            ],
+            "mean": 0.008348441837976376,
+            "sample_sd": 0.004085727297225783
+          }
+        }
+      },
+      "origin_actions": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "runtime": [
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        },
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        },
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        }
+      ],
+      "sindy": [
+        {
+          "sparsity": 0.25925925925925924,
+          "n_coeffs": 54,
+          "n_nonzero": 14,
+          "n_control": 2,
+          "r_squared": 0.9998584292863388,
+          "action_reference": "LQRFeedbackReference"
+        },
+        {
+          "sparsity": 0.2037037037037037,
+          "n_coeffs": 54,
+          "n_nonzero": 11,
+          "n_control": 2,
+          "r_squared": 0.9998686956868167,
+          "action_reference": "LQRFeedbackReference"
+        },
+        {
+          "sparsity": 0.25925925925925924,
+          "n_coeffs": 54,
+          "n_nonzero": 14,
+          "n_control": 2,
+          "r_squared": 0.9999274796052807,
+          "action_reference": "LQRFeedbackReference"
+        }
+      ],
+      "policy_curvature_bounds": [
+        69.85697811638461,
+        94.05619079313391,
+        155.3713666922209
+      ],
+      "final_25_training_return": {
+        "seed_values": [
+          -28.62150023527815,
+          -22.509151234341285,
+          -16.68977246179817
+        ],
+        "mean": -22.6068079771392,
+        "sample_sd": 5.966463319644963
+      }
+    },
+    "csbapr-centered-mlp-no-sindy-no-target-shift": {
+      "returns": {
+        "1": {
+          "seed_values": [
+            -0.3373483336234345,
+            -0.22912328869174484,
+            -5.298750451694723
+          ],
+          "mean": -1.9550740246699674,
+          "sample_sd": 2.896214287922838
+        },
+        "2": {
+          "seed_values": [
+            -0.3392308454247087,
+            -0.22983960997467498,
+            -5.308074124102056
+          ],
+          "mean": -1.9590481931671466,
+          "sample_sd": 2.9008572224696185
+        },
+        "5": {
+          "seed_values": [
+            -0.3595280032629448,
+            -0.24537858533125192,
+            -5.315992464659631
+          ],
+          "mean": -1.973633017751276,
+          "sample_sd": 2.8951308306632155
+        },
+        "10": {
+          "seed_values": [
+            -0.4952579004685548,
+            -0.33817024247627137,
+            -5.384264815101156
+          ],
+          "mean": -2.0725643193486607,
+          "sample_sd": 2.869092062525856
+        },
+        "20": {
+          "seed_values": [
+            -0.9975756747548894,
+            -0.7435090628278413,
+            -5.603720522428201
+          ],
+          "mean": -2.448268420003644,
+          "sample_sd": 2.7356527445649403
+        },
+        "50": {
+          "seed_values": [
+            -5.281889147908634,
+            -5.685187582230354,
+            -8.585131107222667
+          ],
+          "mean": -6.517402612453885,
+          "sample_sd": 1.8020233774401115
+        }
+      },
+      "cost_increase_from_id": {
+        "1": {
+          "seed_values": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "sample_sd": 0.0
+        },
+        "2": {
+          "seed_values": [
+            0.0018825118012741893,
+            0.0007163212829301435,
+            0.00932367240733356
+          ],
+          "mean": 0.003974168497179298,
+          "sample_sd": 0.004669356930545758
+        },
+        "5": {
+          "seed_values": [
+            0.02217966963951029,
+            0.01625529663950709,
+            0.017242012964908682
+          ],
+          "mean": 0.01855899308130869,
+          "sample_sd": 0.003174173330339171
+        },
+        "10": {
+          "seed_values": [
+            0.15790956684512025,
+            0.10904695378452653,
+            0.0855143634064337
+          ],
+          "mean": 0.1174902946786935,
+          "sample_sd": 0.03692876757114347
+        },
+        "20": {
+          "seed_values": [
+            0.6602273411314549,
+            0.5143857741360965,
+            0.3049700707334786
+          ],
+          "mean": 0.49319439533367665,
+          "sample_sd": 0.17857418050859408
+        },
+        "50": {
+          "seed_values": [
+            4.9445408142852,
+            5.456064293538609,
+            3.2863806555279442
+          ],
+          "mean": 4.5623285877839175,
+          "sample_sd": 1.134216210353255
+        }
+      },
+      "initial_state_alignment": {
+        "1": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16198261082172394,
+              0.16198261082172394,
+              0.16198261082172394
+            ],
+            "mean": 0.16198261082172394,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19776538014411926,
+              0.19776538014411926,
+              0.19776538014411926
+            ],
+            "mean": 0.19776538014411926,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.11962270736694336,
+              0.08950045704841614,
+              0.1831028312444687
+            ],
+            "mean": 0.13074199855327606,
+            "sample_sd": 0.047781587365315764
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              3.5724151134490967,
+              3.314329147338867,
+              7.68545389175415
+            ],
+            "mean": 4.857399384180705,
+            "sample_sd": 2.452564232559593
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.2252349853515625,
+              3.2891318798065186,
+              3.217167377471924
+            ],
+            "mean": 2.9105114142100015,
+            "sample_sd": 0.5945566082054744
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8019847869873047,
+              2.8019847869873047,
+              2.8019847869873047
+            ],
+            "mean": 2.8019847869873047,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.22500000894069672,
+              0.17499999701976776,
+              0.32500001788139343
+            ],
+            "mean": 0.24166667461395264,
+            "sample_sd": 0.07637627166286726
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.02775183878839016,
+              0.021366016939282417,
+              0.028890473768115044
+            ],
+            "mean": 0.026002776498595875,
+            "sample_sd": 0.004055709162702229
+          }
+        },
+        "2": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16226480901241302,
+              0.16226480901241302,
+              0.16226480901241302
+            ],
+            "mean": 0.16226480901241302,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19795814156532288,
+              0.19795814156532288,
+              0.19795814156532288
+            ],
+            "mean": 0.19795814156532288,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.11946004629135132,
+              0.08966788649559021,
+              0.18297845125198364
+            ],
+            "mean": 0.13070212801297507,
+            "sample_sd": 0.04766029453188496
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              3.572678327560425,
+              3.314849853515625,
+              7.685573101043701
+            ],
+            "mean": 4.85770042737325,
+            "sample_sd": 2.452400206812933
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.225245714187622,
+              3.2893402576446533,
+              3.2171599864959717
+            ],
+            "mean": 2.9105819861094155,
+            "sample_sd": 0.5946148771217562
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8021128177642822,
+              2.8021128177642822,
+              2.8021128177642822
+            ],
+            "mean": 2.8021128177642822,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.22500000894069672,
+              0.17499999701976776,
+              0.32500001788139343
+            ],
+            "mean": 0.24166667461395264,
+            "sample_sd": 0.07637627166286726
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.027751268818974495,
+              0.021355148404836655,
+              0.02888951264321804
+            ],
+            "mean": 0.02599864328900973,
+            "sample_sd": 0.00406145704216643
+          }
+        },
+        "5": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16413725912570953,
+              0.16413725912570953,
+              0.16413725912570953
+            ],
+            "mean": 0.16413725912570953,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19930219650268555,
+              0.19930219650268555,
+              0.19930219650268555
+            ],
+            "mean": 0.19930219650268555,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.11898048967123032,
+              0.09020736813545227,
+              0.18261049687862396
+            ],
+            "mean": 0.13059945156176886,
+            "sample_sd": 0.04728461437869755
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              3.573451280593872,
+              3.3163833618164062,
+              7.685911655426025
+            ],
+            "mean": 4.858582099278768,
+            "sample_sd": 2.451910539357835
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.225276231765747,
+              3.2899415493011475,
+              3.2171382904052734
+            ],
+            "mean": 2.910785357157389,
+            "sample_sd": 0.5947832793319561
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.802488088607788,
+              2.802488088607788,
+              2.802488088607788
+            ],
+            "mean": 2.802488088607788,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.22500000894069672,
+              0.17499999701976776,
+              0.32500001788139343
+            ],
+            "mean": 0.24166667461395264,
+            "sample_sd": 0.07637627166286726
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.02774970605969429,
+              0.02132263034582138,
+              0.02888662740588188
+            ],
+            "mean": 0.02598632127046585,
+            "sample_sd": 0.004078683282299895
+          }
+        },
+        "10": {
+          "state_norm_median": {
+            "seed_values": [
+              0.1642186939716339,
+              0.1642186939716339,
+              0.1642186939716339
+            ],
+            "mean": 0.1642186939716339,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.20556794106960297,
+              0.20556794106960297,
+              0.20556794106960297
+            ],
+            "mean": 0.20556794106960297,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.11702171713113785,
+              0.09201698005199432,
+              0.1814509630203247
+            ],
+            "mean": 0.13016322006781897,
+            "sample_sd": 0.046142536254209096
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              3.5752689838409424,
+              3.318804979324341,
+              7.687863349914551
+            ],
+            "mean": 4.860645771026611,
+            "sample_sd": 2.451797886283229
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.225275754928589,
+              3.291163682937622,
+              3.217336416244507
+            ],
+            "mean": 2.9112586180369058,
+            "sample_sd": 0.5952243129153556
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.803265333175659,
+              2.803265333175659,
+              2.803265333175659
+            ],
+            "mean": 2.803265333175659,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.25,
+              0.15000000596046448,
+              0.30000001192092896
+            ],
+            "mean": 0.23333333929379782,
+            "sample_sd": 0.07637626353361751
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.027759816497564316,
+              0.02126467227935791,
+              0.02885894849896431
+            ],
+            "mean": 0.025961145758628845,
+            "sample_sd": 0.004104225888672165
+          }
+        },
+        "20": {
+          "state_norm_median": {
+            "seed_values": [
+              0.18454840779304504,
+              0.18454840779304504,
+              0.18454840779304504
+            ],
+            "mean": 0.18454840779304504,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.27315711975097656,
+              0.27315711975097656,
+              0.27315711975097656
+            ],
+            "mean": 0.27315711975097656,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.11609279364347458,
+              0.10343436151742935,
+              0.18314339220523834
+            ],
+            "mean": 0.13422351578871408,
+            "sample_sd": 0.04283602114375736
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              3.576528549194336,
+              3.322742223739624,
+              7.696821689605713
+            ],
+            "mean": 4.865364154179891,
+            "sample_sd": 2.455395223978556
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.2257869243621826,
+              3.292865037918091,
+              3.2195427417755127
+            ],
+            "mean": 2.9127315680185952,
+            "sample_sd": 0.5960400551675046
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8044238090515137,
+              2.8044238090515137,
+              2.8044238090515137
+            ],
+            "mean": 2.8044238090515137,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.25,
+              0.17499999701976776,
+              0.375
+            ],
+            "mean": 0.2666666656732559,
+            "sample_sd": 0.10103629846011428
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.027715953066945076,
+              0.0211649052798748,
+              0.028788147494196892
+            ],
+            "mean": 0.025889668613672256,
+            "sample_sd": 0.00412673498576721
+          }
+        },
+        "50": {
+          "state_norm_median": {
+            "seed_values": [
+              0.30533933639526367,
+              0.30533933639526367,
+              0.30533933639526367
+            ],
+            "mean": 0.30533933639526367,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              1.3022654056549072,
+              1.3022654056549072,
+              1.3022654056549072
+            ],
+            "mean": 1.3022654056549072,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              0.9000000357627869,
+              0.9000000357627869,
+              0.9000000357627869
+            ],
+            "mean": 0.9000000357627869,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.1192493662238121,
+              0.15450872480869293,
+              0.18024080991744995
+            ],
+            "mean": 0.15133296698331833,
+            "sample_sd": 0.030619489370050247
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              3.5666985511779785,
+              3.300226926803589,
+              7.713332653045654
+            ],
+            "mean": 4.86008604367574,
+            "sample_sd": 2.47457348689827
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.225975513458252,
+              3.260266065597534,
+              3.225959062576294
+            ],
+            "mean": 2.904066880544027,
+            "sample_sd": 0.5874948248293478
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.801079034805298,
+              2.801079034805298,
+              2.801079034805298
+            ],
+            "mean": 2.801079034805298,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.20000000298023224,
+              0.32500001788139343,
+              0.32500001788139343
+            ],
+            "mean": 0.28333334624767303,
+            "sample_sd": 0.07216879225189264
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.027692249044775963,
+              0.020696502178907394,
+              0.028413871303200722
+            ],
+            "mean": 0.025600874175628025,
+            "sample_sd": 0.004262608729713138
+          }
+        }
+      },
+      "origin_actions": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "runtime": [
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        },
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        },
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        }
+      ],
+      "sindy": [
+        null,
+        null,
+        null
+      ],
+      "policy_curvature_bounds": [
+        153.26436623357404,
+        181.199377276627,
+        180.20062197155076
+      ],
+      "final_25_training_return": {
+        "seed_values": [
+          -35.96510885384613,
+          -25.16699262256489,
+          -30.237136717340633
+        ],
+        "mean": -30.456412731250552,
+        "sample_sd": 5.402396691633448
+      }
+    }
+  },
+  "contrasts": {
+    "centering_with_symbolic": {
+      "1": {
+        "seed_values": [
+          23.444789719142534,
+          0.4977372054102002,
+          2.4098950291929246
+        ],
+        "mean": 8.784140651248553,
+        "sample_sd": 12.732441250786074,
+        "matched_training_seed_wins": 3,
+        "relative_mean_cost_reduction": 0.9842459433372652
+      },
+      "2": {
+        "seed_values": [
+          23.451127357411966,
+          0.49781612111081913,
+          2.410069131144256
+        ],
+        "mean": 8.786337536555681,
+        "sample_sd": 12.73602069961466,
+        "matched_training_seed_wins": 3,
+        "relative_mean_cost_reduction": 0.9842337358849528
+      },
+      "5": {
+        "seed_values": [
+          23.454859090204206,
+          0.49791662326735175,
+          2.4098645681283233
+        ],
+        "mean": 8.787546760533294,
+        "sample_sd": 12.738187644561208,
+        "matched_training_seed_wins": 3,
+        "relative_mean_cost_reduction": 0.9838130571566378
+      },
+      "10": {
+        "seed_values": [
+          23.44294549431634,
+          0.497803235154184,
+          2.4096225893737815
+        ],
+        "mean": 8.783457106281436,
+        "sample_sd": 12.731426202903972,
+        "matched_training_seed_wins": 3,
+        "relative_mean_cost_reduction": 0.980966135755821
+      },
+      "20": {
+        "seed_values": [
+          23.48702491436798,
+          0.4977308734342773,
+          2.4103712242022266
+        ],
+        "mean": 8.798375670668161,
+        "sample_sd": 12.756639868365763,
+        "matched_training_seed_wins": 3,
+        "relative_mean_cost_reduction": 0.969636750810943
+      },
+      "50": {
+        "seed_values": [
+          23.856329023550387,
+          0.5019426963935665,
+          2.4250211026284862
+        ],
+        "mean": 8.927764274190814,
+        "sample_sd": 12.964223530393085,
+        "matched_training_seed_wins": 3,
+        "relative_mean_cost_reduction": 0.8815892693890257
+      }
+    },
+    "centering_without_symbolic": {
+      "1": {
+        "seed_values": [
+          30.3239208996186,
+          4.198274445713669,
+          8.412687616637733
+        ],
+        "mean": 14.311627653990001,
+        "sample_sd": 14.026242220631191,
+        "matched_training_seed_wins": 3,
+        "relative_mean_cost_reduction": 0.8798112817649568
+      },
+      "2": {
+        "seed_values": [
+          30.29291791148585,
+          4.2727252190854745,
+          8.334748633109761
+        ],
+        "mean": 14.300130587893696,
+        "sample_sd": 13.998283585399241,
+        "matched_training_seed_wins": 3,
+        "relative_mean_cost_reduction": 0.879511245952403
+      },
+      "5": {
+        "seed_values": [
+          30.300898928660956,
+          4.306257976102251,
+          8.39020286757191
+        ],
+        "mean": 14.332453257445039,
+        "sample_sd": 13.979023368428535,
+        "matched_training_seed_wins": 3,
+        "relative_mean_cost_reduction": 0.8789634137559158
+      },
+      "10": {
+        "seed_values": [
+          30.343079706694084,
+          4.517204154773269,
+          8.946641534283875
+        ],
+        "mean": 14.60230846525041,
+        "sample_sd": 13.810644023047825,
+        "matched_training_seed_wins": 3,
+        "relative_mean_cost_reduction": 0.8757073384534074
+      },
+      "20": {
+        "seed_values": [
+          30.49384918194045,
+          5.679583387265982,
+          10.24167802655762
+        ],
+        "mean": 15.471703531921351,
+        "sample_sd": 13.20802111681588,
+        "matched_training_seed_wins": 3,
+        "relative_mean_cost_reduction": 0.8633776645090872
+      },
+      "50": {
+        "seed_values": [
+          30.636407090023475,
+          11.860377522128838,
+          19.403660410833787
+        ],
+        "mean": 20.6334816743287,
+        "sample_sd": 9.448236176065963,
+        "matched_training_seed_wins": 3,
+        "relative_mean_cost_reduction": 0.7599561567272177
+      }
+    },
+    "remove_symbolic_without_centering": {
+      "1": {
+        "seed_values": [
+          -7.075883251055391,
+          -3.7892755939293474,
+          -11.160721585717171
+        ],
+        "mean": -7.341960143567303,
+        "sample_sd": 3.6929191281434517,
+        "matched_training_seed_wins": 0,
+        "relative_mean_cost_reduction": -0.8226524112433102
+      },
+      "2": {
+        "seed_values": [
+          -7.040284937948314,
+          -3.8642190871500066,
+          -11.091779401604061
+        ],
+        "mean": -7.332094475567461,
+        "sample_sd": 3.622605640896056,
+        "matched_training_seed_wins": 0,
+        "relative_mean_cost_reduction": -0.8213313803988131
+      },
+      "5": {
+        "seed_values": [
+          -7.0609873801710705,
+          -3.9093617016136966,
+          -11.151517797358855
+        ],
+        "mean": -7.373955626381207,
+        "sample_sd": 3.631207522455385,
+        "matched_training_seed_wins": 0,
+        "relative_mean_cost_reduction": -0.8255539373866414
+      },
+      "10": {
+        "seed_values": [
+          -7.224946193872448,
+          -4.187407338983928,
+          -11.750612457639114
+        ],
+        "mean": -7.720988663498497,
+        "sample_sd": 3.805924528346238,
+        "matched_training_seed_wins": 0,
+        "relative_mean_cost_reduction": -0.8623060739979138
+      },
+      "20": {
+        "seed_values": [
+          -7.728792553443441,
+          -5.650277802247416,
+          -13.15918028377579
+        ],
+        "mean": -8.846083546488883,
+        "sample_sd": 3.877132766830547,
+        "matched_training_seed_wins": 0,
+        "relative_mean_cost_reduction": -0.9748944610327419
+      },
+      "50": {
+        "seed_values": [
+          -10.862618915204482,
+          -15.846106319228317,
+          -24.3632347652427
+        ],
+        "mean": -17.0239866665585,
+        "sample_sd": 6.826947243610851,
+        "matched_training_seed_wins": 0,
+        "relative_mean_cost_reduction": -1.6810663349218098
+      }
+    },
+    "remove_symbolic_with_centering": {
+      "1": {
+        "seed_values": [
+          -0.19675207057932514,
+          -0.08873835362587865,
+          -5.157928998272363
+        ],
+        "mean": -1.8144731408258554,
+        "sample_sd": 2.8960213299944018,
+        "matched_training_seed_wins": 0,
+        "relative_mean_cost_reduction": -12.905133248220634
+      },
+      "2": {
+        "seed_values": [
+          -0.19849438387442908,
+          -0.08930998917535107,
+          -5.167099899638556
+        ],
+        "mean": -1.8183014242294453,
+        "sample_sd": 2.900658326947219,
+        "matched_training_seed_wins": 0,
+        "relative_mean_cost_reduction": -12.918956775727343
+      },
+      "5": {
+        "seed_values": [
+          -0.2149475417143201,
+          -0.10102034877879762,
+          -5.1711794979152685
+        ],
+        "mean": -1.8290491294694622,
+        "sample_sd": 2.8949302929584193,
+        "matched_training_seed_wins": 0,
+        "relative_mean_cost_reduction": -12.650435336919376
+      },
+      "10": {
+        "seed_values": [
+          -0.32481198149470303,
+          -0.16800641936484342,
+          -5.213593512729021
+        ],
+        "mean": -1.9021373045295227,
+        "sample_sd": 2.8688767244683007,
+        "matched_training_seed_wins": 0,
+        "relative_mean_cost_reduction": -11.161008168500297
+      },
+      "20": {
+        "seed_values": [
+          -0.7219682858709686,
+          -0.46842528841571124,
+          -5.327873481420396
+        ],
+        "mean": -2.172755685235692,
+        "sample_sd": 2.7353513931012077,
+        "matched_training_seed_wins": 0,
+        "relative_mean_cost_reduction": -7.886225974511399
+      },
+      "50": {
+        "seed_values": [
+          -4.082540848731394,
+          -4.487671493493045,
+          -7.384595457037402
+        ],
+        "mean": -5.3182692664206135,
+        "sample_sd": 1.800919391408986,
+        "matched_training_seed_wins": 0,
+        "relative_mean_cost_reduction": -4.435094131952404
+      }
+    }
+  },
+  "gates": {
+    "centering_with_symbolic": {
+      "criterion": "lower mean cost and 3/3 matched-training-seed wins at both 1x and 50x",
+      "passed": true
+    },
+    "centering_without_symbolic": {
+      "criterion": "lower mean cost and 3/3 matched-training-seed wins at both 1x and 50x",
+      "passed": true
+    },
+    "remove_symbolic_without_centering": {
+      "criterion": "lower mean cost and 3/3 matched-training-seed wins at both 1x and 50x",
+      "passed": false
+    },
+    "remove_symbolic_with_centering": {
+      "criterion": "lower mean cost and 3/3 matched-training-seed wins at both 1x and 50x",
+      "passed": false
+    }
+  },
+  "centering_by_symbolic_interaction": {
+    "1": {
+      "seed_values": [
+        -6.879131180476065,
+        -3.700537240303469,
+        -6.002792587444809
+      ],
+      "mean": -5.527487002741448,
+      "sample_sd": 1.6417373140253408
+    },
+    "2": {
+      "seed_values": [
+        -6.841790554073885,
+        -3.7749090979746556,
+        -5.924679501965505
+      ],
+      "mean": -5.513793051338015,
+      "sample_sd": 1.5741858921116256
+    },
+    "5": {
+      "seed_values": [
+        -6.8460398384567505,
+        -3.8083413528348995,
+        -5.980338299443586
+      ],
+      "mean": -5.544906496911746,
+      "sample_sd": 1.5649612338263903
+    },
+    "10": {
+      "seed_values": [
+        -6.900134212377743,
+        -4.019400919619085,
+        -6.537018944910094
+      ],
+      "mean": -5.818851358968974,
+      "sample_sd": 1.568910318381649
+    },
+    "20": {
+      "seed_values": [
+        -7.006824267572473,
+        -5.181852513831704,
+        -7.831306802355394
+      ],
+      "mean": -6.67332786125319,
+      "sample_sd": 1.3558454545098604
+    },
+    "50": {
+      "seed_values": [
+        -6.780078066473088,
+        -11.358434825735271,
+        -16.978639308205302
+      ],
+      "mean": -11.705717400137887,
+      "sample_sd": 5.108142200468133
+    }
+  },
+  "contrast_runtime_differences": {
+    "centering_with_symbolic": [
+      0
+    ],
+    "centering_without_symbolic": [
+      0
+    ],
+    "remove_symbolic_without_centering": [],
+    "remove_symbolic_with_centering": []
+  },
+  "historical_baselines": {
+    "bapr-no-target-shift": {
+      "source": "results/random_load_v6",
+      "contemporaneous": false,
+      "returns": {
+        "1": {
+          "seed_values": [
+            -110.39271629719602,
+            -19.6311928214108,
+            -28.962442897131684
+          ],
+          "mean": -52.995450671912835,
+          "sample_sd": 49.925971527236165
+        },
+        "2": {
+          "seed_values": [
+            -110.920796598377,
+            -19.389321674150374,
+            -28.719770637981338
+          ],
+          "mean": -53.00996297016957,
+          "sample_sd": 50.368768181305605
+        },
+        "5": {
+          "seed_values": [
+            -126.06862534682757,
+            -19.37249294710763,
+            -31.291111968110926
+          ],
+          "mean": -58.910743420682046,
+          "sample_sd": 58.464939908004126
+        },
+        "10": {
+          "seed_values": [
+            -156.3253580972233,
+            -22.69394435067282,
+            -53.593252081553416
+          ],
+          "mean": -77.53751817648318,
+          "sample_sd": 69.95952111109712
+        },
+        "20": {
+          "seed_values": [
+            -199.22588490920717,
+            -41.81017676244342,
+            -125.08881982556561
+          ],
+          "mean": -122.04162716573873,
+          "sample_sd": 78.75208143386658
+        },
+        "50": {
+          "seed_values": [
+            -951.2544819412053,
+            -449.64290942689274,
+            -1321.8075597314569
+          ],
+          "mean": -907.5683170331849,
+          "sample_sd": 437.7204074103682
+        }
+      },
+      "cost_increase_from_id": {
+        "1": {
+          "seed_values": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "sample_sd": 0.0
+        },
+        "2": {
+          "seed_values": [
+            0.528080301180978,
+            -0.2418711472604258,
+            -0.2426722591503463
+          ],
+          "mean": 0.014512298256735315,
+          "sample_sd": 0.444763117474641
+        },
+        "5": {
+          "seed_values": [
+            15.675909049631557,
+            -0.25869987430316854,
+            2.3286690709792417
+          ],
+          "mean": 5.91529274876921,
+          "sample_sd": 8.55136494626722
+        },
+        "10": {
+          "seed_values": [
+            45.932641800027284,
+            3.0627515292620195,
+            24.630809184421732
+          ],
+          "mean": 24.542067504570344,
+          "sample_sd": 21.435082907961206
+        },
+        "20": {
+          "seed_values": [
+            88.83316861201115,
+            22.17898394103262,
+            96.12637692843393
+          ],
+          "mean": 69.0461764938259,
+          "sample_sd": 40.75166285223384
+        },
+        "50": {
+          "seed_values": [
+            840.8617656440093,
+            430.0117166054819,
+            1292.8451168343252
+          ],
+          "mean": 854.5728663612722,
+          "sample_sd": 431.58007930136904
+        }
+      },
+      "initial_state_alignment": {
+        "1": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16198261082172394,
+              0.16198261082172394,
+              0.16198261082172394
+            ],
+            "mean": 0.16198261082172394,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19776538014411926,
+              0.19776538014411926,
+              0.19776538014411926
+            ],
+            "mean": 0.19776538014411926,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.4939155876636505,
+              0.21011324226856232,
+              0.4566896855831146
+            ],
+            "mean": 0.3869061718384425,
+            "sample_sd": 0.15423438950458768
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              30.5657901763916,
+              15.720550537109375,
+              138.71788024902344
+            ],
+            "mean": 61.668073654174805,
+            "sample_sd": 67.13866104722833
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              4.999684810638428,
+              4.516860485076904,
+              12.128592491149902
+            ],
+            "mean": 7.215045928955078,
+            "sample_sd": 4.262098625850992
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8019847869873047,
+              2.8019847869873047,
+              2.8019847869873047
+            ],
+            "mean": 2.8019847869873047,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.42500001192092896,
+              0.375,
+              0.375
+            ],
+            "mean": 0.39166667064030963,
+            "sample_sd": 0.02886752034203283
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.9608518481254578,
+              0.33491015434265137,
+              0.8466193675994873
+            ],
+            "mean": 0.7141271233558655,
+            "sample_sd": 0.3333412622110497
+          }
+        },
+        "2": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16226480901241302,
+              0.16226480901241302,
+              0.16226480901241302
+            ],
+            "mean": 0.16226480901241302,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19795814156532288,
+              0.19795814156532288,
+              0.19795814156532288
+            ],
+            "mean": 0.19795814156532288,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.4957735240459442,
+              0.2084207981824875,
+              0.4585568606853485
+            ],
+            "mean": 0.38758372763792676,
+            "sample_sd": 0.1562715152425899
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              29.57390785217285,
+              15.595463752746582,
+              136.1817169189453
+            ],
+            "mean": 60.450362841288246,
+            "sample_sd": 65.95663513011253
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              4.878243446350098,
+              4.501438617706299,
+              12.019429206848145
+            ],
+            "mean": 7.133037090301514,
+            "sample_sd": 4.235931586700748
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8021128177642822,
+              2.8021128177642822,
+              2.8021128177642822
+            ],
+            "mean": 2.8021128177642822,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.42500001192092896,
+              0.375,
+              0.4000000059604645
+            ],
+            "mean": 0.4000000059604645,
+            "sample_sd": 0.025000005960464478
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.9591706395149231,
+              0.3338436186313629,
+              0.8473507165908813
+            ],
+            "mean": 0.7134549915790558,
+            "sample_sd": 0.33347341669780656
+          }
+        },
+        "5": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16413725912570953,
+              0.16413725912570953,
+              0.16413725912570953
+            ],
+            "mean": 0.16413725912570953,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19930219650268555,
+              0.19930219650268555,
+              0.19930219650268555
+            ],
+            "mean": 0.19930219650268555,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.5010144114494324,
+              0.20485128462314606,
+              0.4688486158847809
+            ],
+            "mean": 0.39157143731911975,
+            "sample_sd": 0.16250221896387304
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              27.30987548828125,
+              15.812860488891602,
+              127.9118423461914
+            ],
+            "mean": 57.011526107788086,
+            "sample_sd": 61.66998030243926
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              4.727094650268555,
+              4.507204532623291,
+              11.662890434265137
+            ],
+            "mean": 6.965729872385661,
+            "sample_sd": 4.0693458840477605
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.802488088607788,
+              2.802488088607788,
+              2.802488088607788
+            ],
+            "mean": 2.802488088607788,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.42500001192092896,
+              0.4000000059604645,
+              0.42500001192092896
+            ],
+            "mean": 0.4166666766007741,
+            "sample_sd": 0.014433760171016415
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.9521912336349487,
+              0.3304332196712494,
+              0.8476581573486328
+            ],
+            "mean": 0.7100942035516103,
+            "sample_sd": 0.3329243728239537
+          }
+        },
+        "10": {
+          "state_norm_median": {
+            "seed_values": [
+              0.1642186939716339,
+              0.1642186939716339,
+              0.1642186939716339
+            ],
+            "mean": 0.1642186939716339,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.20556794106960297,
+              0.20556794106960297,
+              0.20556794106960297
+            ],
+            "mean": 0.20556794106960297,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.4980470836162567,
+              0.20960558950901031,
+              0.48850828409194946
+            ],
+            "mean": 0.3987203190724055,
+            "sample_sd": 0.1638475903926216
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              28.9182071685791,
+              16.329265594482422,
+              116.7626953125
+            ],
+            "mean": 54.00338935852051,
+            "sample_sd": 54.714424289742
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              4.781740665435791,
+              4.547082424163818,
+              11.070979118347168
+            ],
+            "mean": 6.799934069315593,
+            "sample_sd": 3.7006939188065884
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.803265333175659,
+              2.803265333175659,
+              2.803265333175659
+            ],
+            "mean": 2.803265333175659,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.3499999940395355,
+              0.3499999940395355,
+              0.45000001788139343
+            ],
+            "mean": 0.38333333532015484,
+            "sample_sd": 0.05773504068406566
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.9263352155685425,
+              0.3245614767074585,
+              0.8361284732818604
+            ],
+            "mean": 0.6956750551859537,
+            "sample_sd": 0.32454318693639167
+          }
+        },
+        "20": {
+          "state_norm_median": {
+            "seed_values": [
+              0.18454840779304504,
+              0.18454840779304504,
+              0.18454840779304504
+            ],
+            "mean": 0.18454840779304504,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.27315711975097656,
+              0.27315711975097656,
+              0.27315711975097656
+            ],
+            "mean": 0.27315711975097656,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.5255568623542786,
+              0.2810268998146057,
+              0.5688921809196472
+            ],
+            "mean": 0.4584919810295105,
+            "sample_sd": 0.15520914517756373
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              27.644363403320312,
+              13.98486614227295,
+              85.13990783691406
+            ],
+            "mean": 42.25637912750244,
+            "sample_sd": 37.76100160594708
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              4.60739278793335,
+              4.098031520843506,
+              9.07565975189209
+            ],
+            "mean": 5.9270280202229815,
+            "sample_sd": 2.738662732312624
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8044238090515137,
+              2.8044238090515137,
+              2.8044238090515137
+            ],
+            "mean": 2.8044238090515137,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.02500000037252903
+            ],
+            "mean": 0.008333333457509676,
+            "sample_sd": 0.01443375694482038
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.3499999940395355,
+              0.375,
+              0.574999988079071
+            ],
+            "mean": 0.43333332737286884,
+            "sample_sd": 0.12332206672465587
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.8325389623641968,
+              0.32112690806388855,
+              0.7747972011566162
+            ],
+            "mean": 0.6428210238615671,
+            "sample_sd": 0.2800872290037088
+          }
+        },
+        "50": {
+          "state_norm_median": {
+            "seed_values": [
+              0.30533933639526367,
+              0.30533933639526367,
+              0.30533933639526367
+            ],
+            "mean": 0.30533933639526367,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              1.3022654056549072,
+              1.3022654056549072,
+              1.3022654056549072
+            ],
+            "mean": 1.3022654056549072,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              0.9000000357627869,
+              0.9000000357627869,
+              0.9000000357627869
+            ],
+            "mean": 0.9000000357627869,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.6750769019126892,
+              0.44589963555336,
+              0.7216753363609314
+            ],
+            "mean": 0.6142172912756602,
+            "sample_sd": 0.1476176765978413
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              28.783252716064453,
+              11.98062801361084,
+              51.08127975463867
+            ],
+            "mean": 30.61505349477132,
+            "sample_sd": 19.61458289673627
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              3.712324619293213,
+              3.344249725341797,
+              6.197310447692871
+            ],
+            "mean": 4.417961597442627,
+            "sample_sd": 1.551912217251506
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.801079034805298,
+              2.801079034805298,
+              2.801079034805298
+            ],
+            "mean": 2.801079034805298,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.125,
+              0.05000000074505806,
+              0.125
+            ],
+            "mean": 0.10000000024835269,
+            "sample_sd": 0.04330126975906246
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.42500001192092896,
+              0.375,
+              0.5
+            ],
+            "mean": 0.4333333373069763,
+            "sample_sd": 0.06291528617110714
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.5390220284461975,
+              0.4779924750328064,
+              0.5192723274230957
+            ],
+            "mean": 0.5120956103006998,
+            "sample_sd": 0.03114129973123564
+          }
+        }
+      },
+      "origin_actions": [
+        [
+          0.589389443397522,
+          -0.36518731713294983
+        ],
+        [
+          0.19623488187789917,
+          -0.15873189270496368
+        ],
+        [
+          0.20963719487190247,
+          0.6042068600654602
+        ]
+      ],
+      "runtime": [
+        {
+          "python": "3.11.10 (main, Oct  3 2024, 07:29:13) [GCC 11.2.0]",
+          "torch": "2.8.0+cu128",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU"
+        },
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        },
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        }
+      ],
+      "sindy": [
+        null,
+        null,
+        null
+      ],
+      "policy_curvature_bounds": [
+        null,
+        null,
+        null
+      ],
+      "final_25_training_return": {
+        "seed_values": [
+          -137.72491937933302,
+          -36.10978975690284,
+          -35.88826639902537
+        ],
+        "mean": -69.90765851175374,
+        "sample_sd": 58.731575169030634
+      }
+    },
+    "resac-no-target-shift": {
+      "source": "results/random_load_v6",
+      "contemporaneous": false,
+      "returns": {
+        "1": {
+          "seed_values": [
+            -1.735307657250031,
+            -26.199418105563222,
+            -103.33628195667488
+          ],
+          "mean": -43.75700257316271,
+          "sample_sd": 53.02726726789497
+        },
+        "2": {
+          "seed_values": [
+            -1.7649266284446679,
+            -26.634371498434454,
+            -106.16675689991307
+          ],
+          "mean": -44.8553516755974,
+          "sample_sd": 54.53383014212873
+        },
+        "5": {
+          "seed_values": [
+            -4.378726665353781,
+            -28.42771104883152,
+            -102.01315087746703
+          ],
+          "mean": -44.93986286388411,
+          "sample_sd": 50.868542007612426
+        },
+        "10": {
+          "seed_values": [
+            -22.665567834099615,
+            -37.789269281053876,
+            -110.23616576668243
+          ],
+          "mean": -56.897000960611976,
+          "sample_sd": 46.80792094315887
+        },
+        "20": {
+          "seed_values": [
+            -83.4144197482095,
+            -67.52838884525012,
+            -154.79989026538848
+          ],
+          "mean": -101.91423295294936,
+          "sample_sd": 46.48398709759097
+        },
+        "50": {
+          "seed_values": [
+            -521.0038949156722,
+            -303.93204067403747,
+            -763.8159620747076
+          ],
+          "mean": -529.5839658881391,
+          "sample_sd": 230.06198839472344
+        }
+      },
+      "cost_increase_from_id": {
+        "1": {
+          "seed_values": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "sample_sd": 0.0
+        },
+        "2": {
+          "seed_values": [
+            0.029618971194636856,
+            0.4349533928712326,
+            2.830474943238187
+          ],
+          "mean": 1.0983491024346854,
+          "sample_sd": 1.5136938080845157
+        },
+        "5": {
+          "seed_values": [
+            2.6434190081037503,
+            2.228292943268297,
+            -1.3231310792078546
+          ],
+          "mean": 1.1828602907213976,
+          "sample_sd": 2.180155263288915
+        },
+        "10": {
+          "seed_values": [
+            20.930260176849586,
+            11.589851175490654,
+            6.899883810007552
+          ],
+          "mean": 13.139998387449264,
+          "sample_sd": 7.142484339000482
+        },
+        "20": {
+          "seed_values": [
+            81.67911209095946,
+            41.328970739686895,
+            51.4636083087136
+          ],
+          "mean": 58.157230379786654,
+          "sample_sd": 20.99135319815486
+        },
+        "50": {
+          "seed_values": [
+            519.2685872584221,
+            277.73262256847426,
+            660.4796801180328
+          ],
+          "mean": 485.8269633149764,
+          "sample_sd": 193.5525359552088
+        }
+      },
+      "initial_state_alignment": {
+        "1": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16198261082172394,
+              0.16198261082172394,
+              0.16198261082172394
+            ],
+            "mean": 0.16198261082172394,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19776538014411926,
+              0.19776538014411926,
+              0.19776538014411926
+            ],
+            "mean": 0.19776538014411926,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.16880398988723755,
+              0.3988063633441925,
+              0.2339927703142166
+            ],
+            "mean": 0.2672010411818822,
+            "sample_sd": 0.11854267117571347
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              51.01344680786133,
+              72.92545318603516,
+              48.76496124267578
+            ],
+            "mean": 57.567953745524086,
+            "sample_sd": 13.347415990864496
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              7.610689640045166,
+              8.82121753692627,
+              6.992901802062988
+            ],
+            "mean": 7.808269659678142,
+            "sample_sd": 0.9300338728808699
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8019847869873047,
+              2.8019847869873047,
+              2.8019847869873047
+            ],
+            "mean": 2.8019847869873047,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.2750000059604645,
+              0.4749999940395355,
+              0.3499999940395355
+            ],
+            "mean": 0.36666666467984516,
+            "sample_sd": 0.10103629170046553
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.17101512849330902,
+              0.7475579977035522,
+              0.39617839455604553
+            ],
+            "mean": 0.4382505069176356,
+            "sample_sd": 0.29056491011169877
+          }
+        },
+        "2": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16226480901241302,
+              0.16226480901241302,
+              0.16226480901241302
+            ],
+            "mean": 0.16226480901241302,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19795814156532288,
+              0.19795814156532288,
+              0.19795814156532288
+            ],
+            "mean": 0.19795814156532288,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.16630204021930695,
+              0.4032595455646515,
+              0.23422683775424957
+            ],
+            "mean": 0.267929474512736,
+            "sample_sd": 0.12202096388829302
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              50.88335418701172,
+              72.02713775634766,
+              48.40980911254883
+            ],
+            "mean": 57.10676701863607,
+            "sample_sd": 12.980473932870098
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              7.607199192047119,
+              8.769610404968262,
+              6.976161479949951
+            ],
+            "mean": 7.784323692321777,
+            "sample_sd": 0.9097497337787431
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8021128177642822,
+              2.8021128177642822,
+              2.8021128177642822
+            ],
+            "mean": 2.8021128177642822,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.20000000298023224,
+              0.5,
+              0.3499999940395355
+            ],
+            "mean": 0.34999999900658924,
+            "sample_sd": 0.14999999850988394
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.17078229784965515,
+              0.749687910079956,
+              0.3971591889858246
+            ],
+            "mean": 0.43920979897181195,
+            "sample_sd": 0.2917346693796952
+          }
+        },
+        "5": {
+          "state_norm_median": {
+            "seed_values": [
+              0.16413725912570953,
+              0.16413725912570953,
+              0.16413725912570953
+            ],
+            "mean": 0.16413725912570953,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.19930219650268555,
+              0.19930219650268555,
+              0.19930219650268555
+            ],
+            "mean": 0.19930219650268555,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.16340456902980804,
+              0.4185241162776947,
+              0.23700645565986633
+            ],
+            "mean": 0.27297838032245636,
+            "sample_sd": 0.13130872160652526
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              50.39187240600586,
+              72.792236328125,
+              48.64173126220703
+            ],
+            "mean": 57.2752799987793,
+            "sample_sd": 13.466539971385398
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              7.571046352386475,
+              8.831085205078125,
+              6.988311290740967
+            ],
+            "mean": 7.7968142827351885,
+            "sample_sd": 0.9419035479393999
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.802488088607788,
+              2.802488088607788,
+              2.802488088607788
+            ],
+            "mean": 2.802488088607788,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.25,
+              0.4749999940395355,
+              0.4000000059604645
+            ],
+            "mean": 0.375,
+            "sample_sd": 0.11456439042287617
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.17028595507144928,
+              0.7510290145874023,
+              0.3994803726673126
+            ],
+            "mean": 0.44026511410872143,
+            "sample_sd": 0.2925118316321912
+          }
+        },
+        "10": {
+          "state_norm_median": {
+            "seed_values": [
+              0.1642186939716339,
+              0.1642186939716339,
+              0.1642186939716339
+            ],
+            "mean": 0.1642186939716339,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.20556794106960297,
+              0.20556794106960297,
+              0.20556794106960297
+            ],
+            "mean": 0.20556794106960297,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.17597435414791107,
+              0.4529414474964142,
+              0.25145694613456726
+            ],
+            "mean": 0.2934575825929642,
+            "sample_sd": 0.14318076964684337
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              50.97675323486328,
+              60.31756591796875,
+              49.20695495605469
+            ],
+            "mean": 53.50042470296224,
+            "sample_sd": 5.969766096416492
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              7.58626651763916,
+              7.97161865234375,
+              7.013838291168213
+            ],
+            "mean": 7.523907820383708,
+            "sample_sd": 0.48192557558811244
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.803265333175659,
+              2.803265333175659,
+              2.803265333175659
+            ],
+            "mean": 2.803265333175659,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.22500000894069672,
+              0.5250000357627869,
+              0.4749999940395355
+            ],
+            "mean": 0.40833334624767303,
+            "sample_sd": 0.16072751932748444
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.1698911488056183,
+              0.7448316216468811,
+              0.40808701515197754
+            ],
+            "mean": 0.4409365952014923,
+            "sample_sd": 0.2888744675629984
+          }
+        },
+        "20": {
+          "state_norm_median": {
+            "seed_values": [
+              0.18454840779304504,
+              0.18454840779304504,
+              0.18454840779304504
+            ],
+            "mean": 0.18454840779304504,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              0.27315711975097656,
+              0.27315711975097656,
+              0.27315711975097656
+            ],
+            "mean": 0.27315711975097656,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "mean": 1.0,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.28224706649780273,
+              0.5199697613716125,
+              0.3290657103061676
+            ],
+            "mean": 0.37709417939186096,
+            "sample_sd": 0.12592883028343102
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              42.114471435546875,
+              49.1651725769043,
+              53.176918029785156
+            ],
+            "mean": 48.15218734741211,
+            "sample_sd": 5.60036029813891
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              6.728750705718994,
+              6.792706489562988,
+              7.29694128036499
+            ],
+            "mean": 6.939466158548991,
+            "sample_sd": 0.31122971035843866
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.8044238090515137,
+              2.8044238090515137,
+              2.8044238090515137
+            ],
+            "mean": 2.8044238090515137,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.3499999940395355,
+              0.5,
+              0.5
+            ],
+            "mean": 0.4499999980131785,
+            "sample_sd": 0.08660254381971963
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.17606261372566223,
+              0.6766276955604553,
+              0.45245087146759033
+            ],
+            "mean": 0.43504706025123596,
+            "sample_sd": 0.2507359562801258
+          }
+        },
+        "50": {
+          "state_norm_median": {
+            "seed_values": [
+              0.30533933639526367,
+              0.30533933639526367,
+              0.30533933639526367
+            ],
+            "mean": 0.30533933639526367,
+            "sample_sd": 0.0
+          },
+          "state_norm_p95": {
+            "seed_values": [
+              1.3022654056549072,
+              1.3022654056549072,
+              1.3022654056549072
+            ],
+            "mean": 1.3022654056549072,
+            "sample_sd": 0.0
+          },
+          "unit_ball_state_fraction": {
+            "seed_values": [
+              0.9000000357627869,
+              0.9000000357627869,
+              0.9000000357627869
+            ],
+            "mean": 0.9000000357627869,
+            "sample_sd": 0.0
+          },
+          "action_component_rmse": {
+            "seed_values": [
+              0.5910899639129639,
+              0.6434099078178406,
+              0.5819233655929565
+            ],
+            "mean": 0.6054744124412537,
+            "sample_sd": 0.033171267511061066
+          },
+          "jacobian_squared_frobenius_mean": {
+            "seed_values": [
+              27.3187255859375,
+              23.939041137695312,
+              22.270498275756836
+            ],
+            "mean": 24.509421666463215,
+            "sample_sd": 2.5719934301066245
+          },
+          "actor_jacobian_frobenius_mean": {
+            "seed_values": [
+              4.688473224639893,
+              3.8900935649871826,
+              4.3708882331848145
+            ],
+            "mean": 4.316485007603963,
+            "sample_sd": 0.4019605744995335
+          },
+          "reference_jacobian_frobenius_mean": {
+            "seed_values": [
+              2.801079034805298,
+              2.801079034805298,
+              2.801079034805298
+            ],
+            "mean": 2.801079034805298,
+            "sample_sd": 0.0
+          },
+          "actor_saturated_component_fraction": {
+            "seed_values": [
+              0.07500000298023224,
+              0.15000000596046448,
+              0.125
+            ],
+            "mean": 0.11666666964689891,
+            "sample_sd": 0.038188131766808756
+          },
+          "reference_saturated_component_fraction": {
+            "seed_values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "mean": 0.0,
+            "sample_sd": 0.0
+          },
+          "opposed_action_component_fraction": {
+            "seed_values": [
+              0.42500001192092896,
+              0.5,
+              0.5
+            ],
+            "mean": 0.475000003973643,
+            "sample_sd": 0.04330126330667039
+          },
+          "oddness_component_rmse": {
+            "seed_values": [
+              0.267056405544281,
+              0.5387037992477417,
+              0.39647698402404785
+            ],
+            "mean": 0.40074572960535687,
+            "sample_sd": 0.13587399776299808
+          }
+        }
+      },
+      "origin_actions": [
+        [
+          -0.05898920074105263,
+          0.10605737566947937
+        ],
+        [
+          -0.44310852885246277,
+          0.43263640999794006
+        ],
+        [
+          -0.25220003724098206,
+          0.15225648880004883
+        ]
+      ],
+      "runtime": [
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        },
+        {
+          "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+          "torch": "2.5.1+cu121",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 2080 Ti"
+        },
+        {
+          "python": "3.11.10 (main, Oct  3 2024, 07:29:13) [GCC 11.2.0]",
+          "torch": "2.8.0+cu128",
+          "numpy": "2.2.6",
+          "scipy": "1.15.3",
+          "pysindy": "2.1.0",
+          "sklearn": "1.7.2",
+          "device": "cuda",
+          "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU"
+        }
+      ],
+      "sindy": [
+        null,
+        null,
+        null
+      ],
+      "policy_curvature_bounds": [
+        null,
+        null,
+        null
+      ],
+      "final_25_training_return": {
+        "seed_values": [
+          -30.8762907294978,
+          -42.621170851729865,
+          -35.093385421788994
+        ],
+        "mean": -36.19694900100555,
+        "sample_sd": 5.949700975799575
+      }
+    }
+  },
+  "historical_baseline_comparisons": {
+    "csbapr-centered-mlp-no-target-shift": {
+      "bapr-no-target-shift": {
+        "1": {
+          "seed_values": [
+            110.25212003415191,
+            19.490807886344932,
+            28.821621443709322
+          ],
+          "mean": 52.85484978806872,
+          "sample_sd": 49.92595511542071,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9973469254047003
+        },
+        "2": {
+          "seed_values": [
+            110.78006013682672,
+            19.24879205335105,
+            28.57879641351784
+          ],
+          "mean": 52.86921620123187,
+          "sample_sd": 50.36875647998271,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9973448996933482
+        },
+        "5": {
+          "seed_values": [
+            125.92404488527895,
+            19.228134710555178,
+            31.14629900136656
+          ],
+          "mean": 58.76615953240023,
+          "sample_sd": 58.46491968538479,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9975457127191667
+        },
+        "10": {
+          "seed_values": [
+            156.15491217824945,
+            22.523780527561392,
+            53.42258077918128
+          ],
+          "mean": 77.36709116166404,
+          "sample_sd": 69.95944910913393,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9978020058053544
+        },
+        "20": {
+          "seed_values": [
+            198.95027752032325,
+            41.53509298803129,
+            124.8129727845578
+          ],
+          "mean": 121.76611443097079,
+          "sample_sd": 78.75181007255642,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9977424691790303
+        },
+        "50": {
+          "seed_values": [
+            950.0551336420281,
+            448.44539333815544,
+            1320.6070240812717
+          ],
+          "mean": 906.3691836871517,
+          "sample_sd": 437.7188871898469,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9986787404060631
+        }
+      },
+      "resac-no-target-shift": {
+        "1": {
+          "seed_values": [
+            1.5947113942059217,
+            26.059033170497354,
+            103.19546050325252
+          ],
+          "mean": 43.6164016893186,
+          "sample_sd": 53.02710577486885,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.99678677981635
+        },
+        "2": {
+          "seed_values": [
+            1.624190166894388,
+            26.49384187763513,
+            106.02578267544956
+          ],
+          "mean": 44.714604906659694,
+          "sample_sd": 54.53366193096244,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9968622078820024
+        },
+        "5": {
+          "seed_values": [
+            4.234146203805157,
+            28.283352812279066,
+            101.86833791072266
+          ],
+          "mean": 44.795278975602294,
+          "sample_sd": 50.86837550760844,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.99678272520057
+        },
+        "10": {
+          "seed_values": [
+            22.495121915125765,
+            37.619105457942446,
+            110.06549446431029
+          ],
+          "mean": 56.726573945792836,
+          "sample_sd": 46.80773494959342,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9970046397535589
+        },
+        "20": {
+          "seed_values": [
+            83.13881235932557,
+            67.253305070838,
+            154.52404322438068
+          ],
+          "mean": 101.63872021818142,
+          "sample_sd": 46.48365710177793,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9972966216122615
+        },
+        "50": {
+          "seed_values": [
+            519.8045466164949,
+            302.73452458530016,
+            762.6154264245223
+          ],
+          "mean": 528.3848325421058,
+          "sample_sd": 230.0604854142449,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9977357068505232
+        }
+      }
+    },
+    "csbapr-centered-mlp-no-sindy-no-target-shift": {
+      "bapr-no-target-shift": {
+        "1": {
+          "seed_values": [
+            110.05536796357258,
+            19.402069532719054,
+            23.66369244543696
+          ],
+          "mean": 51.040376647242866,
+          "sample_sd": 51.15288122395848,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9631086442348883
+        },
+        "2": {
+          "seed_values": [
+            110.58156575295229,
+            19.159482064175698,
+            23.41169651387928
+          ],
+          "mean": 51.05091477700242,
+          "sample_sd": 51.598877276030315,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9630437735964923
+        },
+        "5": {
+          "seed_values": [
+            125.70909734356462,
+            19.12711436177638,
+            25.975119503451296
+          ],
+          "mean": 56.93711040293076,
+          "sample_sd": 59.65662942563162,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9664979101747614
+        },
+        "10": {
+          "seed_values": [
+            155.83010019675476,
+            22.35577410819655,
+            48.20898726645226
+          ],
+          "mean": 75.46495385713452,
+          "sample_sd": 70.7885210842336,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9732701746445985
+        },
+        "20": {
+          "seed_values": [
+            198.22830923445227,
+            41.06666769961558,
+            119.4850993031374
+          ],
+          "mean": 119.59335874573509,
+          "sample_sd": 78.5808766975866,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9799390709804388
+        },
+        "50": {
+          "seed_values": [
+            945.9725927932967,
+            443.9577218446624,
+            1313.2224286242342
+          ],
+          "mean": 901.0509144207311,
+          "sample_sd": 436.36996975502325,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9928188297342077
+        }
+      },
+      "resac-no-target-shift": {
+        "1": {
+          "seed_values": [
+            1.3979593236265964,
+            25.970294816871476,
+            98.03753150498017
+          ],
+          "mean": 41.80192854849275,
+          "sample_sd": 50.227305301080186,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9553197451904746
+        },
+        "2": {
+          "seed_values": [
+            1.4256957830199593,
+            26.40453188845978,
+            100.85868277581102
+          ],
+          "mean": 42.896303482430255,
+          "sample_sd": 51.72730056080549,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9563252071383731
+        },
+        "5": {
+          "seed_values": [
+            4.019198662090837,
+            28.182332463500266,
+            96.6971584128074
+          ],
+          "mean": 42.96622984613283,
+          "sample_sd": 48.07518873862085,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9560827983892807
+        },
+        "10": {
+          "seed_values": [
+            22.17030993363106,
+            37.4510990385776,
+            104.85190095158127
+          ],
+          "mean": 54.82443664126331,
+          "sample_sd": 43.99359064576982,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9635733995754288
+        },
+        "20": {
+          "seed_values": [
+            82.41684407345461,
+            66.78487978242228,
+            149.19616974296028
+          ],
+          "mean": 99.46596453294572,
+          "sample_sd": 43.771104162125575,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9759771687519453
+        },
+        "50": {
+          "seed_values": [
+            515.7220057677636,
+            298.2468530918071,
+            755.230830967485
+          ],
+          "mean": 523.0665632756852,
+          "sample_sd": 228.58050201736341,
+          "matched_training_seed_wins": 3,
+          "relative_mean_cost_reduction": 0.9876933535902586
+        }
+      }
+    }
+  },
+  "statistics_unit": "three training-seed means, each averaging 20 paired evaluation episodes",
+  "repeated_v6_arm": {
+    "method": "csbapr-no-nau-no-target-shift",
+    "source": "results/random_load_v6",
+    "pooled_with_v6": false
+  },
+  "known_model_feedback_reference": {
+    "source": "results/random_load_v6/summary.json",
+    "frozen_environment_files_identical": true,
+    "reference_is_optimal": false,
+    "controls": {
+      "1": {
+        "evaluation_seeds": [
+          10000,
+          10001,
+          10002,
+          10003,
+          10004,
+          10005,
+          10006,
+          10007,
+          10008,
+          10009,
+          10010,
+          10011,
+          10012,
+          10013,
+          10014,
+          10015,
+          10016,
+          10017,
+          10018,
+          10019
+        ],
+        "returns": [
+          -0.06251991172845711,
+          -0.05002756341484013,
+          -0.0252259808479337,
+          -0.16895413504595594,
+          -0.16263354199156843,
+          -0.21625337756705193,
+          -0.04859176995343015,
+          -0.20075359058926673,
+          -0.27625793300134804,
+          -0.06132721849055585,
+          -0.1680816372219773,
+          -0.25695527132338297,
+          -0.08202953463464721,
+          -0.08960639831363781,
+          -0.11897895048882849,
+          -0.03645311578887713,
+          -0.09128165631391613,
+          -0.06111351481053268,
+          -0.4556629336977634,
+          -0.16391217762325633
+        ],
+        "mean_cost": 0.13983101064236136,
+        "mean_saturated_component_fraction": 0.0,
+        "maximum_state_norm": 0.2938799560070038,
+        "mean_storm_fraction": 0.06225,
+        "mean_force_rms": 0.0035587853177636466
+      },
+      "2": {
+        "evaluation_seeds": [
+          10000,
+          10001,
+          10002,
+          10003,
+          10004,
+          10005,
+          10006,
+          10007,
+          10008,
+          10009,
+          10010,
+          10011,
+          10012,
+          10013,
+          10014,
+          10015,
+          10016,
+          10017,
+          10018,
+          10019
+        ],
+        "returns": [
+          -0.06263309742464095,
+          -0.050352608524442795,
+          -0.02544716049351903,
+          -0.1690132730041395,
+          -0.16262529021088915,
+          -0.21625105391460506,
+          -0.04867600212186247,
+          -0.200640239162428,
+          -0.27622903853491876,
+          -0.06149196012476687,
+          -0.16611203954777826,
+          -0.2569133389917001,
+          -0.0820952319227595,
+          -0.09009016120673993,
+          -0.11903516383957255,
+          -0.03670410669158724,
+          -0.09148056890292688,
+          -0.06102601765728514,
+          -0.45825005916069655,
+          -0.16419952446168176
+        ],
+        "mean_cost": 0.139963296794947,
+        "mean_saturated_component_fraction": 0.0,
+        "maximum_state_norm": 0.2938807010650635,
+        "mean_storm_fraction": 0.0905,
+        "mean_force_rms": 0.008833805404880922
+      },
+      "5": {
+        "evaluation_seeds": [
+          10000,
+          10001,
+          10002,
+          10003,
+          10004,
+          10005,
+          10006,
+          10007,
+          10008,
+          10009,
+          10010,
+          10011,
+          10012,
+          10013,
+          10014,
+          10015,
+          10016,
+          10017,
+          10018,
+          10019
+        ],
+        "returns": [
+          -0.06332450934629677,
+          -0.05224442294910065,
+          -0.026574490802034223,
+          -0.16964913331563283,
+          -0.1630514801226145,
+          -0.2191639043266087,
+          -0.05775721777621688,
+          -0.20074849675182652,
+          -0.2766333066657959,
+          -0.06291916615533154,
+          -0.16472682715708226,
+          -0.25717719929269517,
+          -0.0834973453756713,
+          -0.09462502591059976,
+          -0.11965328339991033,
+          -0.04014391700610106,
+          -0.10725960921919055,
+          -0.06415710913271698,
+          -0.47363393717236485,
+          -0.1786054905305366
+        ],
+        "mean_cost": 0.14377729362041636,
+        "mean_saturated_component_fraction": 0.0,
+        "maximum_state_norm": 0.29388272762298584,
+        "mean_storm_fraction": 0.131,
+        "mean_force_rms": 0.028743217268424423
+      },
+      "10": {
+        "evaluation_seeds": [
+          10000,
+          10001,
+          10002,
+          10003,
+          10004,
+          10005,
+          10006,
+          10007,
+          10008,
+          10009,
+          10010,
+          10011,
+          10012,
+          10013,
+          10014,
+          10015,
+          10016,
+          10017,
+          10018,
+          10019
+        ],
+        "returns": [
+          -0.0656496817693521,
+          -0.05876326106074492,
+          -0.029999284322098703,
+          -0.1722370124492207,
+          -0.16662978040702822,
+          -0.22891090101030934,
+          -0.3170914651312305,
+          -0.2024232886244107,
+          -0.2790136067074069,
+          -0.0691406285660283,
+          -0.16711984410677488,
+          -0.25785466243199295,
+          -0.09066818348241276,
+          -0.11570792315900802,
+          -0.13555151448013214,
+          -0.05120807894644665,
+          -0.15465587526108798,
+          -0.07722408354609031,
+          -0.5273279626564024,
+          -0.22340247966942883
+        ],
+        "mean_cost": 0.16952897588938037,
+        "mean_saturated_component_fraction": 0.0,
+        "maximum_state_norm": 0.29388555884361267,
+        "mean_storm_fraction": 0.18075,
+        "mean_force_rms": 0.06911652245938646
+      },
+      "20": {
+        "evaluation_seeds": [
+          10000,
+          10001,
+          10002,
+          10003,
+          10004,
+          10005,
+          10006,
+          10007,
+          10008,
+          10009,
+          10010,
+          10011,
+          10012,
+          10013,
+          10014,
+          10015,
+          10016,
+          10017,
+          10018,
+          10019
+        ],
+        "returns": [
+          -0.08881703931703856,
+          -0.11940366610926052,
+          -0.10589285893576741,
+          -0.18314245904574986,
+          -0.18947966677920114,
+          -0.2649478525778814,
+          -1.1274026096054444,
+          -0.2113765022698519,
+          -0.2981157790034113,
+          -0.09722606115329611,
+          -0.19687130998629315,
+          -0.27084865429280464,
+          -0.12350110106031946,
+          -0.20498069445172115,
+          -0.1956557698107706,
+          -0.11052542861378929,
+          -0.3376533376580987,
+          -0.1329179381082916,
+          -0.7484222928578987,
+          -0.48036664656678446
+        ],
+        "mean_cost": 0.2743773834101837,
+        "mean_saturated_component_fraction": 0.0,
+        "maximum_state_norm": 0.29388922452926636,
+        "mean_storm_fraction": 0.23725,
+        "mean_force_rms": 0.1519840763171854
+      },
+      "50": {
+        "evaluation_seeds": [
+          10000,
+          10001,
+          10002,
+          10003,
+          10004,
+          10005,
+          10006,
+          10007,
+          10008,
+          10009,
+          10010,
+          10011,
+          10012,
+          10013,
+          10014,
+          10015,
+          10016,
+          10017,
+          10018,
+          10019
+        ],
+        "returns": [
+          -0.3715707654110029,
+          -0.8202692673448706,
+          -0.5208326375288822,
+          -0.7147182732449617,
+          -0.4209207550058912,
+          -0.5124261717785923,
+          -6.8986730818417525,
+          -0.4545093091038734,
+          -0.5240559828922616,
+          -1.049665339447252,
+          -0.5373731875898213,
+          -0.41016974390119626,
+          -0.34683785962970287,
+          -0.8387248547040893,
+          -0.694562992955912,
+          -0.6145952395541203,
+          -1.6781117408932131,
+          -1.7509247057727373,
+          -2.5031974258382044,
+          -2.2747989679922895
+        ],
+        "mean_cost": 1.1968469151215313,
+        "mean_saturated_component_fraction": 0.0,
+        "maximum_state_norm": 0.29388391971588135,
+        "mean_storm_fraction": 0.3675,
+        "mean_force_rms": 0.45221270117379375
+      }
+    },
+    "best_cost_excess": {
+      "1": {
+        "seed_values": [
+          0.0007652524017480178,
+          0.0005539244235048257,
+          0.000990442779998657
+        ],
+        "mean": 0.0007698732017505002,
+        "sample_sd": 0.00021829586055057505,
+        "relative_mean_cost_excess": 0.0055057400945170976
+      },
+      "2": {
+        "seed_values": [
+          0.0007731647553326226,
+          0.0005663240043768947,
+          0.0010109276685529855
+        ],
+        "mean": 0.0007834721427541677,
+        "sample_sd": 0.00022248097947081885,
+        "relative_mean_cost_excess": 0.005597697115566014
+      },
+      "5": {
+        "seed_values": [
+          0.0008031679282083648,
+          0.0005809429320379478,
+          0.0010356731239464234
+        ],
+        "mean": 0.0008065946613975786,
+        "sample_sd": 0.00022738446238373966,
+        "relative_mean_cost_excess": 0.005610028128134381
+      },
+      "10": {
+        "seed_values": [
+          0.00091694308447135,
+          0.0006348472220475687,
+          0.0011423264827545299
+        ],
+        "mean": 0.0008980389297578162,
+        "sample_sd": 0.00025426723208269656,
+        "relative_mean_cost_excess": 0.00529725921510793
+      },
+      "20": {
+        "seed_values": [
+          0.0012300054737370836,
+          0.0007063910019464159,
+          0.0014696575976211323
+        ],
+        "mean": 0.0011353513577682106,
+        "sample_sd": 0.000390337706698449,
+        "relative_mean_cost_excess": 0.004137918889877579
+      },
+      "50": {
+        "seed_values": [
+          0.0025013840557090994,
+          0.0006691736157768968,
+          0.0036887350637340166
+        ],
+        "mean": 0.002286430911740004,
+        "sample_sd": 0.001521213816356489,
+        "relative_mean_cost_excess": 0.0019103787484031631
+      }
+    }
+  },
+  "decision": {
+    "accuracy_first_candidate": "csbapr-centered-mlp-no-target-shift",
+    "lightweight_alternative": "csbapr-centered-mlp-no-sindy-no-target-shift",
+    "remove_symbolic_gate_passed": false
+  }
+}

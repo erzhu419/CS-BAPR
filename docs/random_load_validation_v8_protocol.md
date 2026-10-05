@@ -1,0 +1,17 @@
+# RandomLoad validation v8
+
+Frozen before new training: validate v7's selected centered/no-NAU symbolic candidate on independent training seeds 3/4. Four methods: `csbapr-centered-mlp-no-target-shift`, `csbapr-centered-mlp-no-sindy-no-target-shift`, `bapr-no-target-shift`, `resac-no-target-shift`; eight training tasks. Retain the v7 algorithm, environment, weights and 500-episode budget (100,000 learner interactions, 99,001 updates). Symbolic identification/validation remains an additional 11,000 interactions; other methods use 100,000 total. No tuning or alternative checkpoint selection.
+
+Evaluate the final checkpoint at severities 1/2/5/10/20/50 on disjoint paired seeds 20000--20019. At the same paths, evaluate known-model feedback in all tasks and the saved fitted feedback in each symbolic task; neither controller receives additional fitting data. Save raw per-episode returns and the feedback gain matrices. Preserve the original normalized tanh actions; direct controllers are feasible references, not asserted optima. Recompute alignment on these same new reset observations.
+
+Primary replication criterion: the selected candidate has lower mean cost and wins both matched training seeds at ID and 50x versus each of the three learners. Report all severities, both seed results and any failed comparison. The v7 removal gate stays failed and is not retuned. Report learner-minus-fitted-feedback return gaps on paired paths at ID and 50x separately; no claim of added RL value without a positive gap on both new seeds at both severities. Report known-model feedback as a distinct privileged comparator. New seeds are a validation set; do not silently pool them with development seeds or count the repeated v7/v6 runs twice.
+
+Use Torch 2.5.1+cu121 and the existing pinned numerical dependencies on any idle compatible machine/GPU. Python 3.10/3.11 use the corresponding existing wheels; record actual runtime versions and GPU models. No preferred node, hard pin, allowlist or efficiency changes. Full-state episode-boundary checkpoint/resume every 20 episodes; checkpoints stay on workers. Only final evaluation JSONs and small logs return locally. Before dispatch, test the new control/evaluation interface and run a disjoint seed-998 six-episode CUDA preflight on evaluation paths 30000--30019. V7 evidence and manuscript tables remain unchanged.
+
+## Dispatch
+
+23 interface/checkpoint tests passed. CUDA preflight exited 0 with 1,200 learner interactions and 201 updates, including both direct feedback controls. All 29 algorithm Python files match v7. Eight effective tasks `t118773`--`t118780` are running, each with thousands of confirmed optimizer updates: five on jtl311linux and three on jtl110gpu2, selected without placement preferences. Exact method/seed/GPU mappings are in `experiments/random_load_validation_v8_20261001/dispatch_manifest.json`; the small startup snapshot is `results/random_load_validation_v8/startup_observations.json`.
+
+## Completion
+
+All eight effective tasks completed with exit code 0. Frozen configurations, budgets, runtime requirements and paired learner/control evaluations match. The independent learner-comparison gate passes for all three comparators; the added-value gate versus the candidate's own fitted controller fails. V7 symbolic-removal gates are preserved. Results and the nonlinear controllability-pilot next step are in `docs/random_load_validation_v8_results.md`; machine-readable evidence is in `results/random_load_validation_v8/summary.json` and `completion.json`.

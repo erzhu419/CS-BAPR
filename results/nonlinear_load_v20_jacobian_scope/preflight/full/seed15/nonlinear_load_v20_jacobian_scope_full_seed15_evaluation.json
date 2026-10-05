@@ -1,0 +1,3480 @@
+{
+  "revision": "nonlinear_load_v20_jacobian_scope",
+  "method": "csbapr-centered-mlp-jacobian-only-no-target-shift",
+  "training_seed": 15,
+  "reference": "cubic-local",
+  "jacobian_scope": "full",
+  "jacobian_input_columns": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "jacobian_reduction": "mean_of_per_state_sum_squared_retained_entries",
+  "sampling": "reset-balanced",
+  "training_episodes": 6,
+  "config": {
+    "env_name": "NonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 6,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.01,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "environment": "nonlinear_load",
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "NonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "training_load_severity": 1,
+  "reset_cycle": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "reset_index": "absolute_episode",
+  "identification_reset_radius": 0.2,
+  "reset_sample_fraction": 0.5,
+  "sampler_seed": 100015,
+  "radii": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "severities": [
+    1,
+    50
+  ],
+  "evaluation_seed_start": 60000,
+  "evaluation_episodes_per_severity": 2,
+  "preflight_only": true,
+  "radius_results": {
+    "0.2": {
+      "1": {
+        "controllers": {
+          "actor": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -164.91934344296547,
+              -4.41197043381754
+            ],
+            "mean_cost": 84.6656569383915,
+            "state_costs": [
+              164.91902509083283,
+              4.411940688533294
+            ],
+            "command_costs": [
+              0.00031835213257079813,
+              2.974528424370583e-05
+            ],
+            "early_state_costs": [
+              4.799719221339777,
+              1.40636664599887
+            ],
+            "early_command_costs": [
+              8.682303412327801e-05,
+              1.0622574472085446e-05
+            ],
+            "late_state_costs": [
+              160.11930586949305,
+              3.005574042534424
+            ],
+            "late_command_costs": [
+              0.0002315290984475201,
+              1.9122709771620385e-05
+            ],
+            "mean_state_cost": 84.66548288968306,
+            "mean_command_cost": 0.000174048708407252,
+            "mean_early_state_cost": 3.1030429336693235,
+            "mean_early_command_cost": 4.8722804297681725e-05,
+            "mean_late_state_cost": 81.56243995601373,
+            "mean_late_command_cost": 0.00012532590410957025
+          },
+          "known_local": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -0.35156633732812204,
+              -0.4812936518151359
+            ],
+            "mean_cost": 0.416429994571629,
+            "state_costs": [
+              0.22459930696434055,
+              0.3988951331327644
+            ],
+            "command_costs": [
+              0.12696703036378168,
+              0.08239851868237129
+            ],
+            "early_state_costs": [
+              0.22455110836892986,
+              0.39881766375561684
+            ],
+            "early_command_costs": [
+              0.12683169279563997,
+              0.08231745193564591
+            ],
+            "late_state_costs": [
+              4.819859541069227e-05,
+              7.746937714758761e-05
+            ],
+            "late_command_costs": [
+              0.0001353375681417135,
+              8.106674672538061e-05
+            ],
+            "mean_state_cost": 0.3117472200485525,
+            "mean_command_cost": 0.10468277452307648,
+            "mean_early_state_cost": 0.31168438606227333,
+            "mean_early_command_cost": 0.10457457236564294,
+            "mean_late_state_cost": 6.283398627913994e-05,
+            "mean_late_command_cost": 0.00010820215743354705
+          },
+          "fitted": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -0.3515661501236226,
+              -0.4812936919908882
+            ],
+            "mean_cost": 0.4164299210572554,
+            "state_costs": [
+              0.224599679172985,
+              0.3988957707649485
+            ],
+            "command_costs": [
+              0.12696647095063718,
+              0.08239792122594028
+            ],
+            "early_state_costs": [
+              0.2245514494941845,
+              0.3988183184246769
+            ],
+            "early_command_costs": [
+              0.1268311710989684,
+              0.08231686754761235
+            ],
+            "late_state_costs": [
+              4.8229678800498776e-05,
+              7.745234027156656e-05
+            ],
+            "late_command_costs": [
+              0.00013529985166876868,
+              8.105367832793309e-05
+            ],
+            "mean_state_cost": 0.31174772496896674,
+            "mean_command_cost": 0.10468219608828873,
+            "mean_early_state_cost": 0.3116848839594307,
+            "mean_early_command_cost": 0.10457401932329038,
+            "mean_late_state_cost": 6.284100953603267e-05,
+            "mean_late_command_cost": 0.00010817676499835088
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -0.3648753021246958,
+              -0.5212949821137554
+            ],
+            "mean_cost": 0.44308514211922556,
+            "state_costs": [
+              0.16589927840991472,
+              0.332761416493756
+            ],
+            "command_costs": [
+              0.19897602371478082,
+              0.18853356561999945
+            ],
+            "early_state_costs": [
+              0.1658986035844827,
+              0.3327603534655412
+            ],
+            "early_command_costs": [
+              0.19886422841150025,
+              0.18845893849296164
+            ],
+            "late_state_costs": [
+              6.748254320343428e-07,
+              1.0630282147872094e-06
+            ],
+            "late_command_costs": [
+              0.0001117953032805652,
+              7.462712703781849e-05
+            ],
+            "mean_state_cost": 0.24933034745183535,
+            "mean_command_cost": 0.19375479466739015,
+            "mean_early_state_cost": 0.24932947852501197,
+            "mean_early_command_cost": 0.19366158345223095,
+            "mean_late_state_cost": 8.689268234107761e-07,
+            "mean_late_command_cost": 9.321121515919184e-05
+          }
+        },
+        "paired_excess_costs": {
+          "known_local": {
+            "mean_total_cost": 84.24922694381983,
+            "actor_better_paths": 0,
+            "mean_state_cost": 84.35373566963452,
+            "mean_command_cost": -0.10450872581466922,
+            "mean_early_state_cost": 2.79135854760705,
+            "mean_early_command_cost": -0.10452584956134525,
+            "mean_late_state_cost": 81.56237712202746,
+            "mean_late_command_cost": 1.7123746676023195e-05,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 164.56777710563728,
+                "state_cost": 164.6944257838685,
+                "command_cost": -0.12664867823121087,
+                "early_state_cost": 4.5751681129708475,
+                "early_command_cost": -0.1267448697615167,
+                "late_state_cost": 160.11925767089764,
+                "late_command_cost": 9.619153030580662e-05
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 3.9306767820024016,
+                "state_cost": 4.013045555400529,
+                "command_cost": -0.08236877339812758,
+                "early_state_cost": 1.007548982243253,
+                "early_command_cost": -0.08230682936117382,
+                "late_state_cost": 3.0054965731572767,
+                "late_command_cost": -6.194403695376023e-05
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 164.56777710563728
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 3.9306767820024016
+              }
+            ]
+          },
+          "fitted": {
+            "mean_total_cost": 84.24922701733422,
+            "actor_better_paths": 0,
+            "mean_state_cost": 84.3537351647141,
+            "mean_command_cost": -0.10450814737988147,
+            "mean_early_state_cost": 2.791358049709893,
+            "mean_early_command_cost": -0.1045252965189927,
+            "mean_late_state_cost": 81.5623771150042,
+            "mean_late_command_cost": 1.7149139111219365e-05,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 164.56777729284178,
+                "state_cost": 164.69442541165984,
+                "command_cost": -0.12664811881806637,
+                "early_state_cost": 4.575167771845592,
+                "early_command_cost": -0.12674434806484514,
+                "late_state_cost": 160.11925763981424,
+                "late_command_cost": 9.622924677875144e-05
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 3.930676741826649,
+                "state_cost": 4.013044917768346,
+                "command_cost": -0.08236817594169657,
+                "early_state_cost": 1.007548327574193,
+                "early_command_cost": -0.08230624497314026,
+                "late_state_cost": 3.0054965901941526,
+                "late_command_cost": -6.19309685563127e-05
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 164.56777729284178
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 3.930676741826649
+              }
+            ]
+          },
+          "known_inverse": {
+            "mean_total_cost": 84.22257179627225,
+            "actor_better_paths": 0,
+            "mean_state_cost": 84.41615254223123,
+            "mean_command_cost": -0.1935807459589829,
+            "mean_early_state_cost": 2.853713455144312,
+            "mean_early_command_cost": -0.19361286064793326,
+            "mean_late_state_cost": 81.56243908708691,
+            "mean_late_command_cost": 3.211468895037841e-05,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 164.55446814084073,
+                "state_cost": 164.75312581242292,
+                "command_cost": -0.19865767158221,
+                "early_state_cost": 4.633820617755295,
+                "early_command_cost": -0.19877740537737698,
+                "late_state_cost": 160.11930519466762,
+                "late_command_cost": 0.00011973379516695492
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 3.890675451703782,
+                "state_cost": 4.0791792720395375,
+                "command_cost": -0.18850382033575575,
+                "early_state_cost": 1.0736062925333287,
+                "early_command_cost": -0.18844831591848954,
+                "late_state_cost": 3.0055729795062094,
+                "late_command_cost": -5.5504417266198105e-05
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 164.55446814084073
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 3.890675451703782
+              }
+            ]
+          }
+        },
+        "alignment": {
+          "initial_states": {
+            "sampled_states": 2,
+            "controls": {
+              "actor": {
+                "action_component_rmse_from_actor": 0.0,
+                "output_force_component_rmse_from_actor": 0.0,
+                "physical_input_action_jacobian_error_sq": 0.0,
+                "physical_input_output_force_jacobian_error_sq": 0.0,
+                "load_input_action_jacobian_error_sq": 0.0,
+                "load_input_output_force_jacobian_error_sq": 0.0,
+                "load_cancellation_jacobian_residual_sq": 1.8568021472129512,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.02515718713402748,
+                    0.0047790599055588245
+                  ],
+                  [
+                    0.02192976139485836,
+                    -0.0481703095138073
+                  ]
+                ]
+              },
+              "fitted": {
+                "action_component_rmse_from_actor": 0.24305963516235352,
+                "output_force_component_rmse_from_actor": 0.6731219192903964,
+                "physical_input_action_jacobian_error_sq": 9.060455322265625,
+                "physical_input_output_force_jacobian_error_sq": 77.73580932617188,
+                "load_input_action_jacobian_error_sq": 0.26178592443466187,
+                "load_input_output_force_jacobian_error_sq": 2.275914430618286,
+                "load_cancellation_jacobian_residual_sq": 0.03355150835872102,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -1.1733593940734863,
+                    4.1929538951990253e-07
+                  ],
+                  [
+                    -2.9681643809453817e-07,
+                    -1.0249855518341064
+                  ]
+                ]
+              },
+              "known_local": {
+                "action_component_rmse_from_actor": 0.2430599480867386,
+                "output_force_component_rmse_from_actor": 0.6731227270717186,
+                "physical_input_action_jacobian_error_sq": 9.060447692871094,
+                "physical_input_output_force_jacobian_error_sq": 77.73577880859375,
+                "load_input_action_jacobian_error_sq": 0.26212644577026367,
+                "load_input_output_force_jacobian_error_sq": 2.2788543701171875,
+                "load_cancellation_jacobian_residual_sq": 0.03384210826975931,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -1.1740920543670654,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -1.0256270170211792
+                  ]
+                ]
+              },
+              "known_inverse": {
+                "action_component_rmse_from_actor": 0.36459988218133965,
+                "output_force_component_rmse_from_actor": 1.1025733452602369,
+                "physical_input_action_jacobian_error_sq": 17.825123897009245,
+                "physical_input_output_force_jacobian_error_sq": 182.46313439019707,
+                "load_input_action_jacobian_error_sq": 0.15968577090991815,
+                "load_input_output_force_jacobian_error_sq": 1.6750873523831835,
+                "load_cancellation_jacobian_residual_sq": 0.007922010133079567,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.9146690469792229,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.9877779085456218
+                  ]
+                ]
+              }
+            }
+          },
+          "actor_trajectory": {
+            "sampled_states": 40,
+            "controls": {
+              "actor": {
+                "action_component_rmse_from_actor": 0.0,
+                "output_force_component_rmse_from_actor": 0.0,
+                "physical_input_action_jacobian_error_sq": 0.0,
+                "physical_input_output_force_jacobian_error_sq": 0.0,
+                "load_input_action_jacobian_error_sq": 0.0,
+                "load_input_output_force_jacobian_error_sq": 0.0,
+                "load_cancellation_jacobian_residual_sq": 1.858959164767007,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.02503838762640953,
+                    0.004695582203567028
+                  ],
+                  [
+                    0.02191203087568283,
+                    -0.04715987667441368
+                  ]
+                ]
+              },
+              "fitted": {
+                "action_component_rmse_from_actor": 0.5331294536590576,
+                "output_force_component_rmse_from_actor": 2.2741173088292133,
+                "physical_input_action_jacobian_error_sq": 6.382585048675537,
+                "physical_input_output_force_jacobian_error_sq": 67.34999084472656,
+                "load_input_action_jacobian_error_sq": 0.18322709202766418,
+                "load_input_output_force_jacobian_error_sq": 1.9622137546539307,
+                "load_cancellation_jacobian_residual_sq": 0.16881170209704505,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.8733574151992798,
+                    3.1209097528517304e-07
+                  ],
+                  [
+                    -3.1719434900878696e-07,
+                    -1.0953558683395386
+                  ]
+                ]
+              },
+              "known_local": {
+                "action_component_rmse_from_actor": 0.5331294536590576,
+                "output_force_component_rmse_from_actor": 2.274116989273284,
+                "physical_input_action_jacobian_error_sq": 6.38258171081543,
+                "physical_input_output_force_jacobian_error_sq": 67.34998321533203,
+                "load_input_action_jacobian_error_sq": 0.18346630036830902,
+                "load_input_output_force_jacobian_error_sq": 1.9647560119628906,
+                "load_cancellation_jacobian_residual_sq": 0.16898461986658778,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.8739027976989746,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -1.0960414409637451
+                  ]
+                ]
+              },
+              "known_inverse": {
+                "action_component_rmse_from_actor": 0.603269881557023,
+                "output_force_component_rmse_from_actor": 2.5812601168005624,
+                "physical_input_action_jacobian_error_sq": 11.748135017533723,
+                "physical_input_output_force_jacobian_error_sq": 129.53004364242216,
+                "load_input_action_jacobian_error_sq": 0.10527474891415085,
+                "load_input_output_force_jacobian_error_sq": 1.1803116980271429,
+                "load_cancellation_jacobian_residual_sq": 0.35411158297177303,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.64761438568939,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.8190640008956225
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "actor": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -7116.981404795662,
+              -1997.0565669111936
+            ],
+            "mean_cost": 4557.018985853428,
+            "state_costs": [
+              7116.953639766637,
+              1997.030047084627
+            ],
+            "command_costs": [
+              0.027765029028326452,
+              0.02651982656609807
+            ],
+            "early_state_costs": [
+              8.256282804187538,
+              4.0950031440343375
+            ],
+            "early_command_costs": [
+              0.0012152897518313709,
+              0.0001937368967883934
+            ],
+            "late_state_costs": [
+              7108.69735696245,
+              1992.9350439405928
+            ],
+            "late_command_costs": [
+              0.026549739276495083,
+              0.026326089669309678
+            ],
+            "mean_state_cost": 4556.991843425632,
+            "mean_command_cost": 0.02714242779721226,
+            "mean_early_state_cost": 6.1756429741109375,
+            "mean_early_command_cost": 0.0007045133243098822,
+            "mean_late_state_cost": 4550.816200451522,
+            "mean_late_command_cost": 0.02643791447290238
+          },
+          "known_local": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -3.3436224393470124,
+              -5.781530153154851
+            ],
+            "mean_cost": 4.562576296250931,
+            "state_costs": [
+              0.2289694334677021,
+              0.4614476510819497
+            ],
+            "command_costs": [
+              3.1146530058793105,
+              5.320082502072905
+            ],
+            "early_state_costs": [
+              0.22352780398633015,
+              0.3956356121109857
+            ],
+            "early_command_costs": [
+              0.4776429912258187,
+              0.13244213801264854
+            ],
+            "late_state_costs": [
+              0.005441629481371946,
+              0.06581203897096399
+            ],
+            "late_command_costs": [
+              2.637010014653492,
+              5.187640364060257
+            ],
+            "mean_state_cost": 0.3452085422748259,
+            "mean_command_cost": 4.217367753976108,
+            "mean_early_state_cost": 0.3095817080486579,
+            "mean_early_command_cost": 0.3050425646192336,
+            "mean_late_state_cost": 0.03562683422616797,
+            "mean_late_command_cost": 3.9123251893568742
+          },
+          "fitted": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -3.342779674542261,
+              -5.778955487361712
+            ],
+            "mean_cost": 4.560867580951986,
+            "state_costs": [
+              0.2288542503303459,
+              0.46086182596258835
+            ],
+            "command_costs": [
+              3.1139254242119154,
+              5.318093661399126
+            ],
+            "early_state_costs": [
+              0.22353394193969758,
+              0.3956438844206105
+            ],
+            "early_command_costs": [
+              0.47738648416912904,
+              0.13240643755107454
+            ],
+            "late_state_costs": [
+              0.005320308390648315,
+              0.06521794154197785
+            ],
+            "late_command_costs": [
+              2.6365389400427865,
+              5.185687223848051
+            ],
+            "mean_state_cost": 0.3448580381464671,
+            "mean_command_cost": 4.216009542805521,
+            "mean_early_state_cost": 0.309588913180154,
+            "mean_early_command_cost": 0.3048964608601018,
+            "mean_late_state_cost": 0.035269124966313084,
+            "mean_late_command_cost": 3.9111130819454187
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -3.2306112928788826,
+              -5.275225344470721
+            ],
+            "mean_cost": 4.252918318674801,
+            "state_costs": [
+              0.16630050667713847,
+              0.3367237788197291
+            ],
+            "command_costs": [
+              3.0643107862017467,
+              4.93850156565099
+            ],
+            "early_state_costs": [
+              0.16624211047183007,
+              0.3333329232103537
+            ],
+            "early_command_costs": [
+              0.48419654220283864,
+              0.21027075772768164
+            ],
+            "late_state_costs": [
+              5.839620530839751e-05,
+              0.0033908556093754094
+            ],
+            "late_command_costs": [
+              2.580114243998908,
+              4.728230807923308
+            ],
+            "mean_state_cost": 0.2515121427484338,
+            "mean_command_cost": 4.001406175926368,
+            "mean_early_state_cost": 0.24978751684109188,
+            "mean_early_command_cost": 0.3472336499652601,
+            "mean_late_state_cost": 0.0017246259073419035,
+            "mean_late_command_cost": 3.654172525961108
+          }
+        },
+        "paired_excess_costs": {
+          "known_local": {
+            "mean_total_cost": 4552.456409557179,
+            "actor_better_paths": 0,
+            "mean_state_cost": 4556.646634883357,
+            "mean_command_cost": -4.190225326178895,
+            "mean_early_state_cost": 5.86606126606228,
+            "mean_early_command_cost": -0.30433805129492375,
+            "mean_late_state_cost": 4550.780573617295,
+            "mean_late_command_cost": -3.885887274883972,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 7113.637782356318,
+                "state_cost": 7116.724670333169,
+                "command_cost": -3.086887976850984,
+                "early_state_cost": 8.032755000201208,
+                "early_command_cost": -0.47642770147398733,
+                "late_state_cost": 7108.691915332968,
+                "late_command_cost": -2.6104602753769965
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1991.2750367580384,
+                "state_cost": 1996.5685994335452,
+                "command_cost": -5.2935626755068075,
+                "early_state_cost": 3.6993675319233517,
+                "early_command_cost": -0.13224840111586014,
+                "late_state_cost": 1992.8692319016218,
+                "late_command_cost": -5.161314274390947
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 7113.637782356318
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1991.2750367580384
+              }
+            ]
+          },
+          "fitted": {
+            "mean_total_cost": 4552.458118272478,
+            "actor_better_paths": 0,
+            "mean_state_cost": 4556.646985387486,
+            "mean_command_cost": -4.188867115008309,
+            "mean_early_state_cost": 5.866054060930784,
+            "mean_early_command_cost": -0.30419194753579193,
+            "mean_late_state_cost": 4550.780931326555,
+            "mean_late_command_cost": -3.8846751674725164,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 7113.638625121123,
+                "state_cost": 7116.724785516307,
+                "command_cost": -3.086160395183589,
+                "early_state_cost": 8.032748862247841,
+                "early_command_cost": -0.47617119441729766,
+                "late_state_cost": 7108.692036654059,
+                "late_command_cost": -2.6099892007662913
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1991.2776114238313,
+                "state_cost": 1996.5691852586644,
+                "command_cost": -5.291573834833028,
+                "early_state_cost": 3.6993592596137272,
+                "early_command_cost": -0.13221270065428614,
+                "late_state_cost": 1992.8698259990508,
+                "late_command_cost": -5.1593611341787415
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 7113.638625121123
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1991.2776114238313
+              }
+            ]
+          },
+          "known_inverse": {
+            "mean_total_cost": 4552.766067534754,
+            "actor_better_paths": 0,
+            "mean_state_cost": 4556.740331282884,
+            "mean_command_cost": -3.974263748129156,
+            "mean_early_state_cost": 5.925855457269846,
+            "mean_early_command_cost": -0.34652913664095025,
+            "mean_late_state_cost": 4550.814475825614,
+            "mean_late_command_cost": -3.6277346114882056,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 7113.750793502786,
+                "state_cost": 7116.7873392599595,
+                "command_cost": -3.0365457571734202,
+                "early_state_cost": 8.090040693715709,
+                "early_command_cost": -0.48298125245100726,
+                "late_state_cost": 7108.697298566244,
+                "late_command_cost": -2.553564504722413
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1991.7813415667224,
+                "state_cost": 1996.6933233058073,
+                "command_cost": -4.911981739084892,
+                "early_state_cost": 3.7616702208239836,
+                "early_command_cost": -0.21007702083089325,
+                "late_state_cost": 1992.9316530849835,
+                "late_command_cost": -4.701904718253998
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 7113.750793502786
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1991.7813415667224
+              }
+            ]
+          }
+        },
+        "alignment": {
+          "initial_states": {
+            "sampled_states": 2,
+            "controls": {
+              "actor": {
+                "action_component_rmse_from_actor": 0.0,
+                "output_force_component_rmse_from_actor": 0.0,
+                "physical_input_action_jacobian_error_sq": 0.0,
+                "physical_input_output_force_jacobian_error_sq": 0.0,
+                "load_input_action_jacobian_error_sq": 0.0,
+                "load_input_output_force_jacobian_error_sq": 0.0,
+                "load_cancellation_jacobian_residual_sq": 1.8566614881049357,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.024912750348448753,
+                    0.005272352136671543
+                  ],
+                  [
+                    0.02191365510225296,
+                    -0.04849718511104584
+                  ]
+                ]
+              },
+              "fitted": {
+                "action_component_rmse_from_actor": 0.2692854702472687,
+                "output_force_component_rmse_from_actor": 0.7735623452873925,
+                "physical_input_action_jacobian_error_sq": 8.819578170776367,
+                "physical_input_output_force_jacobian_error_sq": 80.19741821289062,
+                "load_input_action_jacobian_error_sq": 0.25435569882392883,
+                "load_input_output_force_jacobian_error_sq": 2.352062225341797,
+                "load_cancellation_jacobian_residual_sq": 0.052054071174111156,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -1.2276288270950317,
+                    4.386884029372595e-07
+                  ],
+                  [
+                    -2.894968531563791e-07,
+                    -0.9997091889381409
+                  ]
+                ]
+              },
+              "known_local": {
+                "action_component_rmse_from_actor": 0.2693127989768982,
+                "output_force_component_rmse_from_actor": 0.7736570077646187,
+                "physical_input_action_jacobian_error_sq": 8.81930160522461,
+                "physical_input_output_force_jacobian_error_sq": 80.20018005371094,
+                "load_input_action_jacobian_error_sq": 0.25467875599861145,
+                "load_input_output_force_jacobian_error_sq": 2.3551828861236572,
+                "load_cancellation_jacobian_residual_sq": 0.05241829093663597,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -1.2284281253814697,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -1.0003386735916138
+                  ]
+                ]
+              },
+              "known_inverse": {
+                "action_component_rmse_from_actor": 0.36664384500562996,
+                "output_force_component_rmse_from_actor": 1.1507096535416836,
+                "physical_input_action_jacobian_error_sq": 19.299054198928545,
+                "physical_input_output_force_jacobian_error_sq": 180.9783834284815,
+                "load_input_action_jacobian_error_sq": 0.1733400612474915,
+                "load_input_output_force_jacobian_error_sq": 1.6601219193730183,
+                "load_cancellation_jacobian_residual_sq": 0.010935322387766122,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.8958421650589274,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.9977096257502702
+                  ]
+                ]
+              }
+            }
+          },
+          "actor_trajectory": {
+            "sampled_states": 40,
+            "controls": {
+              "actor": {
+                "action_component_rmse_from_actor": 0.0,
+                "output_force_component_rmse_from_actor": 0.0,
+                "physical_input_action_jacobian_error_sq": 0.0,
+                "physical_input_output_force_jacobian_error_sq": 0.0,
+                "load_input_action_jacobian_error_sq": 0.0,
+                "load_input_output_force_jacobian_error_sq": 0.0,
+                "load_cancellation_jacobian_residual_sq": 1.8985473166115945,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.018527228385210037,
+                    0.004531768150627613
+                  ],
+                  [
+                    0.016360241919755936,
+                    -0.03320056572556496
+                  ]
+                ]
+              },
+              "fitted": {
+                "action_component_rmse_from_actor": 0.8111660480499268,
+                "output_force_component_rmse_from_actor": 3.8877855087620348,
+                "physical_input_action_jacobian_error_sq": 2.5879478454589844,
+                "physical_input_output_force_jacobian_error_sq": 39.08742141723633,
+                "load_input_action_jacobian_error_sq": 0.07392042130231857,
+                "load_input_output_force_jacobian_error_sq": 1.1506249904632568,
+                "load_cancellation_jacobian_residual_sq": 1.065262819378439,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.6013287901878357,
+                    2.148825331005355e-07
+                  ],
+                  [
+                    -1.3802750231661776e-07,
+                    -0.4766455292701721
+                  ]
+                ]
+              },
+              "known_local": {
+                "action_component_rmse_from_actor": 0.8111699223518372,
+                "output_force_component_rmse_from_actor": 3.887810537891563,
+                "physical_input_action_jacobian_error_sq": 2.5878777503967285,
+                "physical_input_output_force_jacobian_error_sq": 39.086788177490234,
+                "load_input_action_jacobian_error_sq": 0.07401518523693085,
+                "load_input_output_force_jacobian_error_sq": 1.1520888805389404,
+                "load_cancellation_jacobian_residual_sq": 1.0654626328997299,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.6016993522644043,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.4769291281700134
+                  ]
+                ]
+              },
+              "known_inverse": {
+                "action_component_rmse_from_actor": 0.8388979224332349,
+                "output_force_component_rmse_from_actor": 4.007757891486754,
+                "physical_input_action_jacobian_error_sq": 4.609561862427992,
+                "physical_input_output_force_jacobian_error_sq": 55.611220330950424,
+                "load_input_action_jacobian_error_sq": 0.04086510343993331,
+                "load_input_output_force_jacobian_error_sq": 0.5045543348263948,
+                "load_cancellation_jacobian_residual_sq": 1.1545466033411054,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.31825783851633316,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.38088756081035974
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "0.5": {
+      "1": {
+        "controllers": {
+          "actor": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -1026.858760206375,
+              -23.596137590797444
+            ],
+            "mean_cost": 525.2274488985863,
+            "state_costs": [
+              1026.8572748095153,
+              23.59595954857441
+            ],
+            "command_costs": [
+              0.001485396860287996,
+              0.00017804222303776924
+            ],
+            "early_state_costs": [
+              29.78681093843412,
+              8.665243799489389
+            ],
+            "early_command_costs": [
+              0.0005121481894712385,
+              7.801700862784035e-05
+            ],
+            "late_state_costs": [
+              997.0704638710812,
+              14.93071574908502
+            ],
+            "late_command_costs": [
+              0.0009732486708167574,
+              0.00010002521440992889
+            ],
+            "mean_state_cost": 525.2266171790449,
+            "mean_command_cost": 0.0008317195416628826,
+            "mean_early_state_cost": 19.226027368961752,
+            "mean_early_command_cost": 0.00029508259904953947,
+            "mean_late_state_cost": 506.0005898100831,
+            "mean_late_command_cost": 0.0005366369426133431
+          },
+          "known_local": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -1.894886276416995,
+              -2.8975087830913866
+            ],
+            "mean_cost": 2.3961975297541906,
+            "state_costs": [
+              1.32986289461513,
+              2.452477283075148
+            ],
+            "command_costs": [
+              0.5650233818018633,
+              0.4450315000162421
+            ],
+            "early_state_costs": [
+              1.3295894843815768,
+              2.4520219423978484
+            ],
+            "early_command_costs": [
+              0.5648389926218346,
+              0.4449145987407787
+            ],
+            "late_state_costs": [
+              0.0002734102335533173,
+              0.000455340677299354
+            ],
+            "late_command_costs": [
+              0.00018438918002872118,
+              0.00011690127546337692
+            ],
+            "mean_state_cost": 1.891170088845139,
+            "mean_command_cost": 0.5050274409090527,
+            "mean_early_state_cost": 1.8908057133897125,
+            "mean_early_command_cost": 0.5048767956813066,
+            "mean_late_state_cost": 0.00036437545542633565,
+            "mean_late_command_cost": 0.00015064522774604905
+          },
+          "fitted": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -1.894885962479031,
+              -2.897509541488207
+            ],
+            "mean_cost": 2.3961977519836193,
+            "state_costs": [
+              1.3298639543195678,
+              2.452479804887703
+            ],
+            "command_costs": [
+              0.5650220081594614,
+              0.4450297366005005
+            ],
+            "early_state_costs": [
+              1.3295904789679487,
+              2.4520245130809224
+            ],
+            "early_command_costs": [
+              0.5648376563894005,
+              0.4449128497050731
+            ],
+            "late_state_costs": [
+              0.0002734753516191457,
+              0.0004552918067806111
+            ],
+            "late_command_costs": [
+              0.00018435177006081993,
+              0.00011688689542738162
+            ],
+            "mean_state_cost": 1.8911718796036354,
+            "mean_command_cost": 0.505025872379981,
+            "mean_early_state_cost": 1.8908074960244354,
+            "mean_early_command_cost": 0.5048752530472368,
+            "mean_late_state_cost": 0.0003643835791998784,
+            "mean_late_command_cost": 0.00015061933274410078
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -1.8369525335095374,
+              -2.9228874539531424
+            ],
+            "mean_cost": 2.37991999373134,
+            "state_costs": [
+              1.0889779085991027,
+              2.1044927125331374
+            ],
+            "command_costs": [
+              0.747974624910434,
+              0.8183947414200042
+            ],
+            "early_state_costs": [
+              1.0889731735537658,
+              2.104485754014626
+            ],
+            "early_command_costs": [
+              0.7478659475388019,
+              0.8183159948203111
+            ],
+            "late_state_costs": [
+              4.735045336934363e-06,
+              6.958518511623879e-06
+            ],
+            "late_command_costs": [
+              0.00010867737163211544,
+              7.874659969309139e-05
+            ],
+            "mean_state_cost": 1.5967353105661202,
+            "mean_command_cost": 0.7831846831652192,
+            "mean_early_state_cost": 1.5967294637841958,
+            "mean_early_command_cost": 0.7830909711795565,
+            "mean_late_state_cost": 5.846781924279121e-06,
+            "mean_late_command_cost": 9.371198566260341e-05
+          }
+        },
+        "paired_excess_costs": {
+          "known_local": {
+            "mean_total_cost": 522.8312513688322,
+            "actor_better_paths": 0,
+            "mean_state_cost": 523.3354470901996,
+            "mean_command_cost": -0.5041957213673898,
+            "mean_early_state_cost": 17.33522165557204,
+            "mean_early_command_cost": -0.5045817130822571,
+            "mean_late_state_cost": 506.0002254346277,
+            "mean_late_command_cost": 0.0003859917148672941,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 1024.9638739299585,
+                "state_cost": 1025.5274119149,
+                "command_cost": -0.5635379849415753,
+                "early_state_cost": 28.457221454052544,
+                "early_command_cost": -0.5643268444323634,
+                "late_state_cost": 997.0701904608476,
+                "late_command_cost": 0.0007888594907880362
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 20.698628807706058,
+                "state_cost": 21.143482265499262,
+                "command_cost": -0.44485345779320434,
+                "early_state_cost": 6.21322185709154,
+                "early_command_cost": -0.44483658173215085,
+                "late_state_cost": 14.930260408407722,
+                "late_command_cost": -1.687606105344803e-05
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 1024.9638739299585
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 20.698628807706058
+              }
+            ]
+          },
+          "fitted": {
+            "mean_total_cost": 522.8312511466029,
+            "actor_better_paths": 0,
+            "mean_state_cost": 523.3354452994412,
+            "mean_command_cost": -0.504194152838318,
+            "mean_early_state_cost": 17.33521987293732,
+            "mean_early_command_cost": -0.5045801704481873,
+            "mean_late_state_cost": 506.0002254265039,
+            "mean_late_command_cost": 0.00038601760986924235,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 1024.9638742438965,
+                "state_cost": 1025.5274108551957,
+                "command_cost": -0.5635366112991733,
+                "early_state_cost": 28.45722045946617,
+                "early_command_cost": -0.5643255081999293,
+                "late_state_cost": 997.0701903957296,
+                "late_command_cost": 0.0007888969007559375
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 20.698628049309246,
+                "state_cost": 21.143479743686708,
+                "command_cost": -0.44485169437746275,
+                "early_state_cost": 6.213219286408466,
+                "early_command_cost": -0.44483483269644525,
+                "late_state_cost": 14.93026045727824,
+                "late_command_cost": -1.686168101745273e-05
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 1024.9638742438965
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 20.698628049309246
+              }
+            ]
+          },
+          "known_inverse": {
+            "mean_total_cost": 522.847528904855,
+            "actor_better_paths": 0,
+            "mean_state_cost": 523.6298818684787,
+            "mean_command_cost": -0.7823529636235562,
+            "mean_early_state_cost": 17.62929790517756,
+            "mean_early_command_cost": -0.782795888580507,
+            "mean_late_state_cost": 506.0005839633012,
+            "mean_late_command_cost": 0.0004429249569507397,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 1025.0218076728659,
+                "state_cost": 1025.768296900916,
+                "command_cost": -0.746489228050146,
+                "early_state_cost": 28.697837764880354,
+                "early_command_cost": -0.7473537993493307,
+                "late_state_cost": 997.0704591360359,
+                "late_command_cost": 0.000864571299184642
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 20.673250136844306,
+                "state_cost": 21.491466836041273,
+                "command_cost": -0.8182166991969665,
+                "early_state_cost": 6.560758045474763,
+                "early_command_cost": -0.8182379778116833,
+                "late_state_cost": 14.93070879056651,
+                "late_command_cost": 2.12786147168375e-05
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 1025.0218076728659
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 20.673250136844306
+              }
+            ]
+          }
+        },
+        "alignment": {
+          "initial_states": {
+            "sampled_states": 2,
+            "controls": {
+              "actor": {
+                "action_component_rmse_from_actor": 0.0,
+                "output_force_component_rmse_from_actor": 0.0,
+                "physical_input_action_jacobian_error_sq": 0.0,
+                "physical_input_output_force_jacobian_error_sq": 0.0,
+                "load_input_action_jacobian_error_sq": 0.0,
+                "load_input_output_force_jacobian_error_sq": 0.0,
+                "load_cancellation_jacobian_residual_sq": 1.857843053401767,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.02484998293220997,
+                    0.004682464525103569
+                  ],
+                  [
+                    0.021830635145306587,
+                    -0.04793572798371315
+                  ]
+                ]
+              },
+              "fitted": {
+                "action_component_rmse_from_actor": 0.5155907273292542,
+                "output_force_component_rmse_from_actor": 1.8651929689826667,
+                "physical_input_action_jacobian_error_sq": 5.93355131149292,
+                "physical_input_output_force_jacobian_error_sq": 90.48478698730469,
+                "load_input_action_jacobian_error_sq": 0.16809594631195068,
+                "load_input_output_force_jacobian_error_sq": 2.6612558364868164,
+                "load_cancellation_jacobian_residual_sq": 0.09547089842428154,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -1.2487068176269531,
+                    4.4622049699682975e-07
+                  ],
+                  [
+                    -3.2344814826501533e-07,
+                    -1.1169520616531372
+                  ]
+                ]
+              },
+              "known_local": {
+                "action_component_rmse_from_actor": 0.5155909061431885,
+                "output_force_component_rmse_from_actor": 1.86519287525981,
+                "physical_input_action_jacobian_error_sq": 5.933548450469971,
+                "physical_input_output_force_jacobian_error_sq": 90.48477172851562,
+                "load_input_action_jacobian_error_sq": 0.16831699013710022,
+                "load_input_output_force_jacobian_error_sq": 2.6646852493286133,
+                "load_cancellation_jacobian_residual_sq": 0.09604830579572621,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -1.2494866847991943,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -1.1176509857177734
+                  ]
+                ]
+              },
+              "known_inverse": {
+                "action_component_rmse_from_actor": 0.6201957618042809,
+                "output_force_component_rmse_from_actor": 2.4216467771636903,
+                "physical_input_action_jacobian_error_sq": 10.32580646538021,
+                "physical_input_output_force_jacobian_error_sq": 124.05735059248829,
+                "load_input_action_jacobian_error_sq": 0.09052014115444212,
+                "load_input_output_force_jacobian_error_sq": 1.1178342601132782,
+                "load_cancellation_jacobian_residual_sq": 0.17464967585971963,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.5993396012786805,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.930057298595667
+                  ]
+                ]
+              }
+            }
+          },
+          "actor_trajectory": {
+            "sampled_states": 40,
+            "controls": {
+              "actor": {
+                "action_component_rmse_from_actor": 0.0,
+                "output_force_component_rmse_from_actor": 0.0,
+                "physical_input_action_jacobian_error_sq": 0.0,
+                "physical_input_output_force_jacobian_error_sq": 0.0,
+                "load_input_action_jacobian_error_sq": 0.0,
+                "load_input_output_force_jacobian_error_sq": 0.0,
+                "load_cancellation_jacobian_residual_sq": 1.8706749097569262,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.023240502923727036,
+                    0.004536305088549852
+                  ],
+                  [
+                    0.021095305681228638,
+                    -0.04287425056099892
+                  ]
+                ]
+              },
+              "fitted": {
+                "action_component_rmse_from_actor": 0.6952688694000244,
+                "output_force_component_rmse_from_actor": 3.167858850872609,
+                "physical_input_action_jacobian_error_sq": 4.266561031341553,
+                "physical_input_output_force_jacobian_error_sq": 60.136558532714844,
+                "load_input_action_jacobian_error_sq": 0.12193868309259415,
+                "load_input_output_force_jacobian_error_sq": 1.7605774402618408,
+                "load_cancellation_jacobian_residual_sq": 0.6414474139856252,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.6664900183677673,
+                    2.3816760119643732e-07
+                  ],
+                  [
+                    -2.7576822958508274e-07,
+                    -0.9523006677627563
+                  ]
+                ]
+              },
+              "known_local": {
+                "action_component_rmse_from_actor": 0.6952689290046692,
+                "output_force_component_rmse_from_actor": 3.1678589341178482,
+                "physical_input_action_jacobian_error_sq": 4.266557216644287,
+                "physical_input_output_force_jacobian_error_sq": 60.13654708862305,
+                "load_input_action_jacobian_error_sq": 0.12209818512201309,
+                "load_input_output_force_jacobian_error_sq": 1.762851357460022,
+                "load_cancellation_jacobian_residual_sq": 0.6417733260780464,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.6669062376022339,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.9528962969779968
+                  ]
+                ]
+              },
+              "known_inverse": {
+                "action_component_rmse_from_actor": 0.7600030539600454,
+                "output_force_component_rmse_from_actor": 3.415058907587976,
+                "physical_input_action_jacobian_error_sq": 5.153593276154226,
+                "physical_input_output_force_jacobian_error_sq": 87.66314749530736,
+                "load_input_action_jacobian_error_sq": 0.04501987316244099,
+                "load_input_output_force_jacobian_error_sq": 0.7951751619659853,
+                "load_cancellation_jacobian_residual_sq": 0.7381162736690106,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.4707976284675916,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.5959216204255117
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "actor": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -10357.171354311546,
+              -1938.2251753086168
+            ],
+            "mean_cost": 6147.698264810081,
+            "state_costs": [
+              10357.147815421069,
+              1938.198022595827
+            ],
+            "command_costs": [
+              0.02353889047692423,
+              0.027152712789550698
+            ],
+            "early_state_costs": [
+              37.45921740756806,
+              12.886853440875916
+            ],
+            "early_command_costs": [
+              0.0016840397434684333,
+              0.00018844930949108577
+            ],
+            "late_state_costs": [
+              10319.688598013501,
+              1925.3111691549511
+            ],
+            "late_command_costs": [
+              0.021854850733455795,
+              0.026964263480059612
+            ],
+            "mean_state_cost": 6147.672919008448,
+            "mean_command_cost": 0.025345801633237464,
+            "mean_early_state_cost": 25.17303542422199,
+            "mean_early_command_cost": 0.0009362445264797596,
+            "mean_late_state_cost": 6122.499883584226,
+            "mean_late_command_cost": 0.024409557106757705
+          },
+          "known_local": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -4.88452469845472,
+              -8.116324351611102
+            ],
+            "mean_cost": 6.50042452503291,
+            "state_costs": [
+              1.328047890361102,
+              2.5059613204895363
+            ],
+            "command_costs": [
+              3.5564768080936164,
+              5.610363031121564
+            ],
+            "early_state_costs": [
+              1.322481160275693,
+              2.439714292644538
+            ],
+            "early_command_costs": [
+              0.9173561308613423,
+              0.4231490784488837
+            ],
+            "late_state_costs": [
+              0.005566730085408977,
+              0.06624702784499847
+            ],
+            "late_command_costs": [
+              2.639120677232274,
+              5.187213952672681
+            ],
+            "mean_state_cost": 1.9170046054253191,
+            "mean_command_cost": 4.58341991960759,
+            "mean_early_state_cost": 1.8810977264601154,
+            "mean_early_command_cost": 0.6702526046551129,
+            "mean_late_state_cost": 0.035906878965203726,
+            "mean_late_command_cost": 3.9131673149524775
+          },
+          "fitted": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -4.883699497756523,
+              -8.113774913497105
+            ],
+            "mean_cost": 6.498737205626814,
+            "state_costs": [
+              1.3279561099063875,
+              2.5053868423978694
+            ],
+            "command_costs": [
+              3.5557433878501365,
+              5.608388071099235
+            ],
+            "early_state_costs": [
+              1.3225085934848393,
+              2.4397352596787547
+            ],
+            "early_command_costs": [
+              0.9170937962520108,
+              0.42312741226329725
+            ],
+            "late_state_costs": [
+              0.005447516421548171,
+              0.06565158271911464
+            ],
+            "late_command_costs": [
+              2.6386495915981256,
+              5.185260658835937
+            ],
+            "mean_state_cost": 1.9166714761521284,
+            "mean_command_cost": 4.582065729474685,
+            "mean_early_state_cost": 1.8811219265817969,
+            "mean_early_command_cost": 0.670110604257654,
+            "mean_late_state_cost": 0.03554954957033141,
+            "mean_late_command_cost": 3.9119551252170313
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -4.689985198711396,
+              -7.602001752290928
+            ],
+            "mean_cost": 6.145993475501162,
+            "state_costs": [
+              1.09358587969854,
+              2.114294930571829
+            ],
+            "command_costs": [
+              3.5963993190128587,
+              5.4877068217191045
+            ],
+            "early_state_costs": [
+              1.0935224429929835,
+              2.110898446269924
+            ],
+            "early_command_costs": [
+              1.0163407887730722,
+              0.7594734670202719
+            ],
+            "late_state_costs": [
+              6.343670555652992e-05,
+              0.0033964843019052005
+            ],
+            "late_command_costs": [
+              2.5800585302397865,
+              4.728233354698832
+            ],
+            "mean_state_cost": 1.6039404051351847,
+            "mean_command_cost": 4.542053070365982,
+            "mean_early_state_cost": 1.6022104446314538,
+            "mean_early_command_cost": 0.887907127896672,
+            "mean_late_state_cost": 0.0017299605037308652,
+            "mean_late_command_cost": 3.6541459424693095
+          }
+        },
+        "paired_excess_costs": {
+          "known_local": {
+            "mean_total_cost": 6141.197840285048,
+            "actor_better_paths": 0,
+            "mean_state_cost": 6145.755914403022,
+            "mean_command_cost": -4.558074117974353,
+            "mean_early_state_cost": 23.291937697761874,
+            "mean_early_command_cost": -0.6693163601286333,
+            "mean_late_state_cost": 6122.46397670526,
+            "mean_late_command_cost": -3.8887577578457195,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 10352.286829613091,
+                "state_cost": 10355.819767530707,
+                "command_cost": -3.5329379176166924,
+                "early_state_cost": 36.13673624729237,
+                "early_command_cost": -0.9156720911178738,
+                "late_state_cost": 10319.683031283415,
+                "late_command_cost": -2.617265826498818
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1930.1088509570054,
+                "state_cost": 1935.6920612753374,
+                "command_cost": -5.583210318332013,
+                "early_state_cost": 10.447139148231377,
+                "early_command_cost": -0.42296062913939264,
+                "late_state_cost": 1925.244922127106,
+                "late_command_cost": -5.1602496891926215
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 10352.286829613091
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1930.1088509570054
+              }
+            ]
+          },
+          "fitted": {
+            "mean_total_cost": 6141.1995276044545,
+            "actor_better_paths": 0,
+            "mean_state_cost": 6145.756247532296,
+            "mean_command_cost": -4.556719927841448,
+            "mean_early_state_cost": 23.29191349764019,
+            "mean_early_command_cost": -0.6691743597311743,
+            "mean_late_state_cost": 6122.464334034656,
+            "mean_late_command_cost": -3.8875455681102737,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 10352.28765481379,
+                "state_cost": 10355.819859311163,
+                "command_cost": -3.5322044973732125,
+                "early_state_cost": 36.13670881408322,
+                "early_command_cost": -0.9154097565085424,
+                "late_state_cost": 10319.68315049708,
+                "late_command_cost": -2.6167947408646697
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1930.1114003951195,
+                "state_cost": 1935.6926357534292,
+                "command_cost": -5.581235358309684,
+                "early_state_cost": 10.447118181197162,
+                "early_command_cost": -0.4229389629538062,
+                "late_state_cost": 1925.245517572232,
+                "late_command_cost": -5.158296395355878
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 10352.28765481379
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1930.1114003951195
+              }
+            ]
+          },
+          "known_inverse": {
+            "mean_total_cost": 6141.55227133458,
+            "actor_better_paths": 0,
+            "mean_state_cost": 6146.068978603313,
+            "mean_command_cost": -4.516707268732744,
+            "mean_early_state_cost": 23.570824979590533,
+            "mean_early_command_cost": -0.8869708833701921,
+            "mean_late_state_cost": 6122.498153623722,
+            "mean_late_command_cost": -3.629736385362552,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 10352.481369112835,
+                "state_cost": 10356.05422954137,
+                "command_cost": -3.5728604285359347,
+                "early_state_cost": 36.36569496457508,
+                "early_command_cost": -1.0146567490296037,
+                "late_state_cost": 10319.688534576795,
+                "late_command_cost": -2.5582036795063305
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1930.6231735563258,
+                "state_cost": 1936.0837276652553,
+                "command_cost": -5.4605541089295535,
+                "early_state_cost": 10.775954994605993,
+                "early_command_cost": -0.7592850177107807,
+                "late_state_cost": 1925.3077726706492,
+                "late_command_cost": -4.701269091218773
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 10352.481369112835
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1930.6231735563258
+              }
+            ]
+          }
+        },
+        "alignment": {
+          "initial_states": {
+            "sampled_states": 2,
+            "controls": {
+              "actor": {
+                "action_component_rmse_from_actor": 0.0,
+                "output_force_component_rmse_from_actor": 0.0,
+                "physical_input_action_jacobian_error_sq": 0.0,
+                "physical_input_output_force_jacobian_error_sq": 0.0,
+                "load_input_action_jacobian_error_sq": 0.0,
+                "load_input_output_force_jacobian_error_sq": 0.0,
+                "load_cancellation_jacobian_residual_sq": 1.8579843238375924,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.024570971727371216,
+                    0.005200611427426338
+                  ],
+                  [
+                    0.02190651372075081,
+                    -0.048151999711990356
+                  ]
+                ]
+              },
+              "fitted": {
+                "action_component_rmse_from_actor": 0.5156775712966919,
+                "output_force_component_rmse_from_actor": 1.9431274700046859,
+                "physical_input_action_jacobian_error_sq": 6.1011552810668945,
+                "physical_input_output_force_jacobian_error_sq": 82.86311340332031,
+                "load_input_action_jacobian_error_sq": 0.17291299998760223,
+                "load_input_output_force_jacobian_error_sq": 2.4323441982269287,
+                "load_cancellation_jacobian_residual_sq": 0.05923100918054856,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -1.2195873260498047,
+                    4.358147975835891e-07
+                  ],
+                  [
+                    -3.027570585345529e-07,
+                    -1.0455002784729004
+                  ]
+                ]
+              },
+              "known_local": {
+                "action_component_rmse_from_actor": 0.5156806707382202,
+                "output_force_component_rmse_from_actor": 1.9431919423778659,
+                "physical_input_action_jacobian_error_sq": 6.101217746734619,
+                "physical_input_output_force_jacobian_error_sq": 82.85822296142578,
+                "load_input_action_jacobian_error_sq": 0.1731421947479248,
+                "load_input_output_force_jacobian_error_sq": 2.435335636138916,
+                "load_cancellation_jacobian_residual_sq": 0.05961777570199445,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -1.2203243970870972,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -1.046113133430481
+                  ]
+                ]
+              },
+              "known_inverse": {
+                "action_component_rmse_from_actor": 0.6117244633700758,
+                "output_force_component_rmse_from_actor": 2.4212981700407177,
+                "physical_input_action_jacobian_error_sq": 10.989366015929548,
+                "physical_input_output_force_jacobian_error_sq": 125.5337403420329,
+                "load_input_action_jacobian_error_sq": 0.09645449007793036,
+                "load_input_output_force_jacobian_error_sq": 1.1311704950697679,
+                "load_cancellation_jacobian_residual_sq": 0.18883448783865192,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.5726881932298611,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.9569018643644054
+                  ]
+                ]
+              }
+            }
+          },
+          "actor_trajectory": {
+            "sampled_states": 40,
+            "controls": {
+              "actor": {
+                "action_component_rmse_from_actor": 0.0,
+                "output_force_component_rmse_from_actor": 0.0,
+                "physical_input_action_jacobian_error_sq": 0.0,
+                "physical_input_output_force_jacobian_error_sq": 0.0,
+                "load_input_action_jacobian_error_sq": 0.0,
+                "load_input_output_force_jacobian_error_sq": 0.0,
+                "load_cancellation_jacobian_residual_sq": 1.903154046038749,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.017582621425390244,
+                    0.004634656943380833
+                  ],
+                  [
+                    0.01610742136836052,
+                    -0.03177708387374878
+                  ]
+                ]
+              },
+              "fitted": {
+                "action_component_rmse_from_actor": 0.8605111241340637,
+                "output_force_component_rmse_from_actor": 4.150130163119981,
+                "physical_input_action_jacobian_error_sq": 1.7944682836532593,
+                "physical_input_output_force_jacobian_error_sq": 30.9089412689209,
+                "load_input_action_jacobian_error_sq": 0.050725243985652924,
+                "load_input_output_force_jacobian_error_sq": 0.905653178691864,
+                "load_cancellation_jacobian_residual_sq": 1.1842513319963892,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.4119969308376312,
+                    1.472255206635964e-07
+                  ],
+                  [
+                    -1.3863869696706388e-07,
+                    -0.4787561893463135
+                  ]
+                ]
+              },
+              "known_local": {
+                "action_component_rmse_from_actor": 0.8605127930641174,
+                "output_force_component_rmse_from_actor": 4.150150622069193,
+                "physical_input_action_jacobian_error_sq": 1.7944724559783936,
+                "physical_input_output_force_jacobian_error_sq": 30.906763076782227,
+                "load_input_action_jacobian_error_sq": 0.050792206078767776,
+                "load_input_output_force_jacobian_error_sq": 0.9067569971084595,
+                "load_cancellation_jacobian_residual_sq": 1.1843467056166639,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.4122471213340759,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.4790283739566803
+                  ]
+                ]
+              },
+              "known_inverse": {
+                "action_component_rmse_from_actor": 0.8853887990108935,
+                "output_force_component_rmse_from_actor": 4.265262717701648,
+                "physical_input_action_jacobian_error_sq": 2.566524579219229,
+                "physical_input_output_force_jacobian_error_sq": 38.63710799817399,
+                "load_input_action_jacobian_error_sq": 0.022276160673521707,
+                "load_input_output_force_jacobian_error_sq": 0.3466352085208998,
+                "load_cancellation_jacobian_residual_sq": 1.3251921421332142,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.19070764066555546,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.3387979206599193
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "1.0": {
+      "1": {
+        "controllers": {
+          "actor": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -4341.923331600156,
+              -90.67958646415669
+            ],
+            "mean_cost": 2216.3014590321563,
+            "state_costs": [
+              4341.918251984159,
+              90.67884130975125
+            ],
+            "command_costs": [
+              0.005079615995952808,
+              0.0007451544053424144
+            ],
+            "early_state_costs": [
+              119.25677204256161,
+              34.50920866016094
+            ],
+            "early_command_costs": [
+              0.0016282235652450173,
+              0.00035059995434917255
+            ],
+            "late_state_costs": [
+              4222.6614799415975,
+              56.16963264959031
+            ],
+            "late_command_costs": [
+              0.003451392430707791,
+              0.00039455445099324186
+            ],
+            "mean_state_cost": 2216.298546646955,
+            "mean_command_cost": 0.0029123852006476113,
+            "mean_early_state_cost": 76.88299035136127,
+            "mean_early_command_cost": 0.000989411759797095,
+            "mean_late_state_cost": 2139.415556295594,
+            "mean_late_command_cost": 0.0019229734408505164
+          },
+          "known_local": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -7.018395699998112,
+              -11.06328223100267
+            ],
+            "mean_cost": 9.040838965500392,
+            "state_costs": [
+              5.5627322804446,
+              9.710536581472304
+            ],
+            "command_costs": [
+              1.455663419553505,
+              1.3527456495303751
+            ],
+            "early_state_costs": [
+              5.561676243119842,
+              9.708936402866435
+            ],
+            "early_command_costs": [
+              1.4552910222441535,
+              1.3525125242856868
+            ],
+            "late_state_costs": [
+              0.001056037324758563,
+              0.0016001786058694734
+            ],
+            "late_command_costs": [
+              0.00037239730935145765,
+              0.00023312524468832585
+            ],
+            "mean_state_cost": 7.636634430958452,
+            "mean_command_cost": 1.40420453454194,
+            "mean_early_state_cost": 7.635306322993138,
+            "mean_early_command_cost": 1.4039017732649202,
+            "mean_late_state_cost": 0.0013281079653140182,
+            "mean_late_command_cost": 0.00030276127701989175
+          },
+          "fitted": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -7.01839615357927,
+              -11.063286061048391
+            ],
+            "mean_cost": 9.040841107313831,
+            "state_costs": [
+              5.562736107285772,
+              9.710544300856943
+            ],
+            "command_costs": [
+              1.4556600462935043,
+              1.3527417601914478
+            ],
+            "early_state_costs": [
+              5.561679965192633,
+              9.708944233679308
+            ],
+            "early_command_costs": [
+              1.4552876799399461,
+              1.352508651459364
+            ],
+            "late_state_costs": [
+              0.0010561420931392007,
+              0.0016000671776357223
+            ],
+            "late_command_costs": [
+              0.0003723663535581956,
+              0.00023310873208370886
+            ],
+            "mean_state_cost": 7.636640204071358,
+            "mean_command_cost": 1.404200903242476,
+            "mean_early_state_cost": 7.6353120994359704,
+            "mean_early_command_cost": 1.4038981656996552,
+            "mean_late_state_cost": 0.0013281046353874615,
+            "mean_late_command_cost": 0.0003027375428209522
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -6.859597966141555,
+              -10.858785293727282
+            ],
+            "mean_cost": 8.859191629934418,
+            "state_costs": [
+              5.0207827044867015,
+              8.719646430638624
+            ],
+            "command_costs": [
+              1.8388152616548503,
+              2.1391388630886627
+            ],
+            "early_state_costs": [
+              5.020755775575047,
+              8.719614120149375
+            ],
+            "early_command_costs": [
+              1.838706368099326,
+              2.1390442547216546
+            ],
+            "late_state_costs": [
+              2.6928911654344745e-05,
+              3.231048924945412e-05
+            ],
+            "late_command_costs": [
+              0.00010889355552423652,
+              9.460836700814212e-05
+            ],
+            "mean_state_cost": 6.8702145675626625,
+            "mean_command_cost": 1.9889770623717564,
+            "mean_early_state_cost": 6.870184947862211,
+            "mean_early_command_cost": 1.9888753114104905,
+            "mean_late_state_cost": 2.9619700451899433e-05,
+            "mean_late_command_cost": 0.00010175096126618932
+          }
+        },
+        "paired_excess_costs": {
+          "known_local": {
+            "mean_total_cost": 2207.260620066655,
+            "actor_better_paths": 0,
+            "mean_state_cost": 2208.6619122159964,
+            "mean_command_cost": -1.4012921493412924,
+            "mean_early_state_cost": 69.24768402836813,
+            "mean_early_command_cost": -1.402912361505123,
+            "mean_late_state_cost": 2139.4142281876284,
+            "mean_late_command_cost": 0.0016202121638306246,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 4334.9049359001565,
+                "state_cost": 4336.355519703714,
+                "command_cost": -1.4505838035575522,
+                "early_state_cost": 113.69509579944176,
+                "early_command_cost": -1.4536627986789086,
+                "late_state_cost": 4222.660423904273,
+                "late_command_cost": 0.003078995121356333
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 79.61630423315393,
+                "state_cost": 80.96830472827895,
+                "command_cost": -1.3520004951250326,
+                "early_state_cost": 24.800272257294502,
+                "early_command_cost": -1.3521619243313376,
+                "late_state_cost": 56.16803247098444,
+                "late_command_cost": 0.000161429206304916
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 4334.9049359001565
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 79.61630423315393
+              }
+            ]
+          },
+          "fitted": {
+            "mean_total_cost": 2207.2606179248423,
+            "actor_better_paths": 0,
+            "mean_state_cost": 2208.6619064428837,
+            "mean_command_cost": -1.4012885180418284,
+            "mean_early_state_cost": 69.2476782519253,
+            "mean_early_command_cost": -1.4029087539398581,
+            "mean_late_state_cost": 2139.4142281909585,
+            "mean_late_command_cost": 0.0016202358980295642,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 4334.904935446576,
+                "state_cost": 4336.355515876873,
+                "command_cost": -1.4505804302975516,
+                "early_state_cost": 113.69509207736897,
+                "early_command_cost": -1.4536594563747012,
+                "late_state_cost": 4222.660423799504,
+                "late_command_cost": 0.003079026077149595
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 79.61630040310821,
+                "state_cost": 80.96829700889431,
+                "command_cost": -1.3519966057861053,
+                "early_state_cost": 24.80026442648163,
+                "early_command_cost": -1.352158051505015,
+                "late_state_cost": 56.16803258241268,
+                "late_command_cost": 0.000161445718909533
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 4334.904935446576
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 79.61630040310821
+              }
+            ]
+          },
+          "known_inverse": {
+            "mean_total_cost": 2207.442267402221,
+            "actor_better_paths": 0,
+            "mean_state_cost": 2209.4283320793925,
+            "mean_command_cost": -1.9860646771711088,
+            "mean_early_state_cost": 70.01280540349906,
+            "mean_early_command_cost": -1.9878858996506932,
+            "mean_late_state_cost": 2139.4155266758935,
+            "mean_late_command_cost": 0.001821222479584327,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 4335.063733634013,
+                "state_cost": 4336.897469279672,
+                "command_cost": -1.8337356456588976,
+                "early_state_cost": 114.23601626698655,
+                "early_command_cost": -1.8370781445340811,
+                "late_state_cost": 4222.661453012686,
+                "late_command_cost": 0.0033424988751835543
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 79.8208011704293,
+                "state_cost": 81.95919487911263,
+                "command_cost": -2.1383937086833202,
+                "early_state_cost": 25.789594540011564,
+                "early_command_cost": -2.138693654767305,
+                "late_state_cost": 56.169600339101066,
+                "late_command_cost": 0.00029994608398509974
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 4335.063733634013
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 79.8208011704293
+              }
+            ]
+          }
+        },
+        "alignment": {
+          "initial_states": {
+            "sampled_states": 2,
+            "controls": {
+              "actor": {
+                "action_component_rmse_from_actor": 0.0,
+                "output_force_component_rmse_from_actor": 0.0,
+                "physical_input_action_jacobian_error_sq": 0.0,
+                "physical_input_output_force_jacobian_error_sq": 0.0,
+                "load_input_action_jacobian_error_sq": 0.0,
+                "load_input_output_force_jacobian_error_sq": 0.0,
+                "load_cancellation_jacobian_residual_sq": 1.8627061241547884,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.02375573106110096,
+                    0.004577037412673235
+                  ],
+                  [
+                    0.02146231383085251,
+                    -0.04649615287780762
+                  ]
+                ]
+              },
+              "fitted": {
+                "action_component_rmse_from_actor": 0.7307238578796387,
+                "output_force_component_rmse_from_actor": 3.247406807184333,
+                "physical_input_action_jacobian_error_sq": 3.4312074184417725,
+                "physical_input_output_force_jacobian_error_sq": 53.743934631347656,
+                "load_input_action_jacobian_error_sq": 0.0954238623380661,
+                "load_input_output_force_jacobian_error_sq": 1.5518243312835693,
+                "load_cancellation_jacobian_residual_sq": 0.32525838163606274,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.525948166847229,
+                    1.8794551692735695e-07
+                  ],
+                  [
+                    -3.334829443701892e-07,
+                    -1.1516047716140747
+                  ]
+                ]
+              },
+              "known_local": {
+                "action_component_rmse_from_actor": 0.7307239770889282,
+                "output_force_component_rmse_from_actor": 3.2474072223580257,
+                "physical_input_action_jacobian_error_sq": 3.4312071800231934,
+                "physical_input_output_force_jacobian_error_sq": 53.74391555786133,
+                "load_input_action_jacobian_error_sq": 0.095550537109375,
+                "load_input_output_force_jacobian_error_sq": 1.5538432598114014,
+                "load_cancellation_jacobian_residual_sq": 0.3252621232371067,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.5262765884399414,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -1.15232515335083
+                  ]
+                ]
+              },
+              "known_inverse": {
+                "action_component_rmse_from_actor": 0.7785633736248391,
+                "output_force_component_rmse_from_actor": 3.573123841754761,
+                "physical_input_action_jacobian_error_sq": 8.352076859197785,
+                "physical_input_output_force_jacobian_error_sq": 70.56755525820724,
+                "load_input_action_jacobian_error_sq": 0.0741280338360611,
+                "load_input_output_force_jacobian_error_sq": 0.6225250915884458,
+                "load_cancellation_jacobian_residual_sq": 0.7510541462078437,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.19053879776020793,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.7848901885281921
+                  ]
+                ]
+              }
+            }
+          },
+          "actor_trajectory": {
+            "sampled_states": 40,
+            "controls": {
+              "actor": {
+                "action_component_rmse_from_actor": 0.0,
+                "output_force_component_rmse_from_actor": 0.0,
+                "physical_input_action_jacobian_error_sq": 0.0,
+                "physical_input_output_force_jacobian_error_sq": 0.0,
+                "load_input_action_jacobian_error_sq": 0.0,
+                "load_input_output_force_jacobian_error_sq": 0.0,
+                "load_cancellation_jacobian_residual_sq": 1.8910404773812832,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.019616995006799698,
+                    0.004630496259778738
+                  ],
+                  [
+                    0.01925978995859623,
+                    -0.03602192550897598
+                  ]
+                ]
+              },
+              "fitted": {
+                "action_component_rmse_from_actor": 0.818816602230072,
+                "output_force_component_rmse_from_actor": 3.7649268859932996,
+                "physical_input_action_jacobian_error_sq": 2.183969020843506,
+                "physical_input_output_force_jacobian_error_sq": 50.77558135986328,
+                "load_input_action_jacobian_error_sq": 0.06151442974805832,
+                "load_input_output_force_jacobian_error_sq": 1.488827109336853,
+                "load_cancellation_jacobian_residual_sq": 0.8592955977320866,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.5805959701538086,
+                    2.0747370399476495e-07
+                  ],
+                  [
+                    -2.2667761356842675e-07,
+                    -0.7827777862548828
+                  ]
+                ]
+              },
+              "known_local": {
+                "action_component_rmse_from_actor": 0.8188166618347168,
+                "output_force_component_rmse_from_actor": 3.764927240223623,
+                "physical_input_action_jacobian_error_sq": 2.1839661598205566,
+                "physical_input_output_force_jacobian_error_sq": 50.775550842285156,
+                "load_input_action_jacobian_error_sq": 0.06159549951553345,
+                "load_input_output_force_jacobian_error_sq": 1.4907476902008057,
+                "load_cancellation_jacobian_residual_sq": 0.8595746176940613,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.580958366394043,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.7832672595977783
+                  ]
+                ]
+              },
+              "known_inverse": {
+                "action_component_rmse_from_actor": 0.8695894911698031,
+                "output_force_component_rmse_from_actor": 4.039432682469472,
+                "physical_input_action_jacobian_error_sq": 2.1761462936623337,
+                "physical_input_output_force_jacobian_error_sq": 46.11294880350853,
+                "load_input_action_jacobian_error_sq": 0.018648989696005664,
+                "load_input_output_force_jacobian_error_sq": 0.41185316955306295,
+                "load_cancellation_jacobian_residual_sq": 1.0656483582147012,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.3342376552037648,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.3624172283051843
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "actor": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -17909.830669644783,
+              -1873.013094728517
+            ],
+            "mean_cost": 9891.42188218665,
+            "state_costs": [
+              17909.816213642684,
+              1872.9847026659409
+            ],
+            "command_costs": [
+              0.0144560020895038,
+              0.02839206257585497
+            ],
+            "early_state_costs": [
+              134.08154691283647,
+              41.29062344208507
+            ],
+            "early_command_costs": [
+              0.0026961356454717213,
+              0.000349897078761342
+            ],
+            "late_state_costs": [
+              17775.734666729848,
+              1831.6940792238559
+            ],
+            "late_command_costs": [
+              0.011759866444032077,
+              0.028042165497093628
+            ],
+            "mean_state_cost": 9891.400458154312,
+            "mean_command_cost": 0.021424032332679387,
+            "mean_early_state_cost": 87.68608517746077,
+            "mean_early_command_cost": 0.0015230163621165317,
+            "mean_late_state_cost": 9803.714372976852,
+            "mean_late_command_cost": 0.019901015970562853
+          },
+          "known_local": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -10.024595740351954,
+              -16.21929838769159
+            ],
+            "mean_cost": 13.121947064021771,
+            "state_costs": [
+              5.579937355879419,
+              9.799244047445965
+            ],
+            "command_costs": [
+              4.44465838447252,
+              6.420054340245612
+            ],
+            "early_state_costs": [
+              5.573808392642974,
+              9.731699488890499
+            ],
+            "early_command_costs": [
+              1.8014219573157924,
+              1.2331963547351805
+            ],
+            "late_state_costs": [
+              0.006128963236445628,
+              0.0675445585554666
+            ],
+            "late_command_costs": [
+              2.6432364271567277,
+              5.186857985510431
+            ],
+            "mean_state_cost": 7.689590701662692,
+            "mean_command_cost": 5.432356362359066,
+            "mean_early_state_cost": 7.652753940766736,
+            "mean_early_command_cost": 1.5173091560254863,
+            "mean_late_state_cost": 0.03683676089595611,
+            "mean_late_command_cost": 3.9150472063335795
+          },
+          "fitted": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -10.023795847418382,
+              -16.2167573549302
+            ],
+            "mean_cost": 13.12027660117429,
+            "state_costs": [
+              5.579875547411409,
+              9.798660405943052
+            ],
+            "command_costs": [
+              4.443920300006973,
+              6.418096948987134
+            ],
+            "early_state_costs": [
+              5.573862123431623,
+              9.731713422542708
+            ],
+            "early_command_costs": [
+              1.801154818541696,
+              1.233192609608776
+            ],
+            "late_state_costs": [
+              0.00601342397978577,
+              0.066946983400344
+            ],
+            "late_command_costs": [
+              2.6427654814652772,
+              5.184904339378358
+            ],
+            "mean_state_cost": 7.689267976677231,
+            "mean_command_cost": 5.4310086244970535,
+            "mean_early_state_cost": 7.652787772987166,
+            "mean_early_command_cost": 1.517173714075236,
+            "mean_late_state_cost": 0.03648020369006488,
+            "mean_late_command_cost": 3.9138349104218175
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              60000,
+              60001
+            ],
+            "returns": [
+              -9.722497726602933,
+              -15.50784264595279
+            ],
+            "mean_cost": 12.615170186277862,
+            "state_costs": [
+              5.057873004058618,
+              8.762572666274965
+            ],
+            "command_costs": [
+              4.664624722544319,
+              6.745269979677837
+            ],
+            "early_state_costs": [
+              5.057784837877788,
+              8.759151236139916
+            ],
+            "early_command_costs": [
+              2.0844161411987856,
+              2.0170539026726573
+            ],
+            "late_state_costs": [
+              8.816618082985173e-05,
+              0.0034214301350488086
+            ],
+            "late_command_costs": [
+              2.5802085813455338,
+              4.72821607700518
+            ],
+            "mean_state_cost": 6.910222835166792,
+            "mean_command_cost": 5.704947351111079,
+            "mean_early_state_cost": 6.908468037008852,
+            "mean_early_command_cost": 2.050735021935721,
+            "mean_late_state_cost": 0.0017547981579393301,
+            "mean_late_command_cost": 3.6542123291753565
+          }
+        },
+        "paired_excess_costs": {
+          "known_local": {
+            "mean_total_cost": 9878.299935122623,
+            "actor_better_paths": 0,
+            "mean_state_cost": 9883.71086745265,
+            "mean_command_cost": -5.4109323300263865,
+            "mean_early_state_cost": 80.03333123669404,
+            "mean_early_command_cost": -1.5157861396633698,
+            "mean_late_state_cost": 9803.677536215957,
+            "mean_late_command_cost": -3.8951461903630165,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 17899.80607390442,
+                "state_cost": 17904.236276286803,
+                "command_cost": -4.430202382383016,
+                "early_state_cost": 128.5077385201935,
+                "early_command_cost": -1.7987258216703206,
+                "late_state_cost": 17775.728537766612,
+                "late_command_cost": -2.6314765607126955
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1856.793796340825,
+                "state_cost": 1863.185458618495,
+                "command_cost": -6.391662277669757,
+                "early_state_cost": 31.558923953194572,
+                "early_command_cost": -1.232846457656419,
+                "late_state_cost": 1831.6265346653004,
+                "late_command_cost": -5.158815820013338
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 17899.80607390442
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1856.793796340825
+              }
+            ]
+          },
+          "fitted": {
+            "mean_total_cost": 9878.301605585471,
+            "actor_better_paths": 0,
+            "mean_state_cost": 9883.711190177635,
+            "mean_command_cost": -5.409584592164374,
+            "mean_early_state_cost": 80.03329740447361,
+            "mean_early_command_cost": -1.5156506977131192,
+            "mean_late_state_cost": 9803.677892773161,
+            "mean_late_command_cost": -3.893933894451255,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 17899.806873797355,
+                "state_cost": 17904.236338095274,
+                "command_cost": -4.42946429791747,
+                "early_state_cost": 128.50768478940486,
+                "early_command_cost": -1.7984586828962241,
+                "late_state_cost": 17775.72865330587,
+                "late_command_cost": -2.631005615021245
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1856.7963373735865,
+                "state_cost": 1863.1860422599977,
+                "command_cost": -6.389704886411279,
+                "early_state_cost": 31.558910019542363,
+                "early_command_cost": -1.2328427125300145,
+                "late_state_cost": 1831.6271322404555,
+                "late_command_cost": -5.156862173881264
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 17899.806873797355
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1856.7963373735865
+              }
+            ]
+          },
+          "known_inverse": {
+            "mean_total_cost": 9878.806712000367,
+            "actor_better_paths": 0,
+            "mean_state_cost": 9884.490235319146,
+            "mean_command_cost": -5.6835233187783984,
+            "mean_early_state_cost": 80.77761714045192,
+            "mean_early_command_cost": -2.049212005573605,
+            "mean_late_state_cost": 9803.712618178695,
+            "mean_late_command_cost": -3.634311313204794,
+            "per_path": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 17900.10817191817,
+                "state_cost": 17904.758340638626,
+                "command_cost": -4.650168720454816,
+                "early_state_cost": 129.02376207495868,
+                "early_command_cost": -2.081720005553314,
+                "late_state_cost": 17775.734578563668,
+                "late_command_cost": -2.5684487149015016
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1857.5052520825639,
+                "state_cost": 1864.2221299996659,
+                "command_cost": -6.716877917101982,
+                "early_state_cost": 32.53147220594516,
+                "early_command_cost": -2.016704005593896,
+                "late_state_cost": 1831.690657793721,
+                "late_command_cost": -4.700173911508086
+              }
+            ],
+            "five_largest_actor_excesses": [
+              {
+                "evaluation_seed": 60000,
+                "total_cost": 17900.10817191817
+              },
+              {
+                "evaluation_seed": 60001,
+                "total_cost": 1857.5052520825639
+              }
+            ]
+          }
+        },
+        "alignment": {
+          "initial_states": {
+            "sampled_states": 2,
+            "controls": {
+              "actor": {
+                "action_component_rmse_from_actor": 0.0,
+                "output_force_component_rmse_from_actor": 0.0,
+                "physical_input_action_jacobian_error_sq": 0.0,
+                "physical_input_output_force_jacobian_error_sq": 0.0,
+                "load_input_action_jacobian_error_sq": 0.0,
+                "load_input_output_force_jacobian_error_sq": 0.0,
+                "load_cancellation_jacobian_residual_sq": 1.863223234292592,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.02343355119228363,
+                    0.005136282183229923
+                  ],
+                  [
+                    0.021661659702658653,
+                    -0.04656241834163666
+                  ]
+                ]
+              },
+              "fitted": {
+                "action_component_rmse_from_actor": 0.7144380807876587,
+                "output_force_component_rmse_from_actor": 3.2143462968281202,
+                "physical_input_action_jacobian_error_sq": 3.8371124267578125,
+                "physical_input_output_force_jacobian_error_sq": 52.59359359741211,
+                "load_input_action_jacobian_error_sq": 0.10723560303449631,
+                "load_input_output_force_jacobian_error_sq": 1.5174258947372437,
+                "load_cancellation_jacobian_residual_sq": 0.38144063748232215,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.4621807038784027,
+                    1.651584682349494e-07
+                  ],
+                  [
+                    -3.385924571830401e-07,
+                    -1.1692492961883545
+                  ]
+                ]
+              },
+              "known_local": {
+                "action_component_rmse_from_actor": 0.7144268751144409,
+                "output_force_component_rmse_from_actor": 3.2143314754294665,
+                "physical_input_action_jacobian_error_sq": 3.837404251098633,
+                "physical_input_output_force_jacobian_error_sq": 52.59156799316406,
+                "load_input_action_jacobian_error_sq": 0.10738613456487656,
+                "load_input_output_force_jacobian_error_sq": 1.5193405151367188,
+                "load_cancellation_jacobian_residual_sq": 0.38148383399944175,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.4624309539794922,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -1.1699742078781128
+                  ]
+                ]
+              },
+              "known_inverse": {
+                "action_component_rmse_from_actor": 0.7722519493491877,
+                "output_force_component_rmse_from_actor": 3.5370563523476224,
+                "physical_input_action_jacobian_error_sq": 8.395988573960926,
+                "physical_input_output_force_jacobian_error_sq": 74.15199795559661,
+                "load_input_action_jacobian_error_sq": 0.07437466396020548,
+                "load_input_output_force_jacobian_error_sq": 0.6556801696919707,
+                "load_cancellation_jacobian_residual_sq": 0.7442917091237968,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.1773095505982702,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.8192722979975174
+                  ]
+                ]
+              }
+            }
+          },
+          "actor_trajectory": {
+            "sampled_states": 40,
+            "controls": {
+              "actor": {
+                "action_component_rmse_from_actor": 0.0,
+                "output_force_component_rmse_from_actor": 0.0,
+                "physical_input_action_jacobian_error_sq": 0.0,
+                "physical_input_output_force_jacobian_error_sq": 0.0,
+                "load_input_action_jacobian_error_sq": 0.0,
+                "load_input_output_force_jacobian_error_sq": 0.0,
+                "load_cancellation_jacobian_residual_sq": 1.911209657528104,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.015903916209936142,
+                    0.00474110571667552
+                  ],
+                  [
+                    0.015562297776341438,
+                    -0.029310548678040504
+                  ]
+                ]
+              },
+              "fitted": {
+                "action_component_rmse_from_actor": 0.9074979424476624,
+                "output_force_component_rmse_from_actor": 4.400247651225874,
+                "physical_input_action_jacobian_error_sq": 1.0329011678695679,
+                "physical_input_output_force_jacobian_error_sq": 23.101802825927734,
+                "load_input_action_jacobian_error_sq": 0.028788575902581215,
+                "load_input_output_force_jacobian_error_sq": 0.6735830903053284,
+                "load_cancellation_jacobian_residual_sq": 1.32466927911964,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.23618602752685547,
+                    8.440017040811654e-08
+                  ],
+                  [
+                    -1.3388893194132834e-07,
+                    -0.4623539447784424
+                  ]
+                ]
+              },
+              "known_local": {
+                "action_component_rmse_from_actor": 0.9074975252151489,
+                "output_force_component_rmse_from_actor": 4.400252368444214,
+                "physical_input_action_jacobian_error_sq": 1.0329185724258423,
+                "physical_input_output_force_jacobian_error_sq": 23.101438522338867,
+                "load_input_action_jacobian_error_sq": 0.028827261179685593,
+                "load_input_output_force_jacobian_error_sq": 0.6744439005851746,
+                "load_cancellation_jacobian_residual_sq": 1.3247117384973328,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.23632486164569855,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.4626395106315613
+                  ]
+                ]
+              },
+              "known_inverse": {
+                "action_component_rmse_from_actor": 0.9282344127234697,
+                "output_force_component_rmse_from_actor": 4.513925327064466,
+                "physical_input_action_jacobian_error_sq": 1.358796833092524,
+                "physical_input_output_force_jacobian_error_sq": 22.540696790533154,
+                "load_input_action_jacobian_error_sq": 0.011713341297315705,
+                "load_input_output_force_jacobian_error_sq": 0.1993792029231926,
+                "load_cancellation_jacobian_residual_sq": 1.508295179252507,
+                "mean_output_force_load_jacobian": [
+                  [
+                    -0.10252265419188347,
+                    0.0
+                  ],
+                  [
+                    0.0,
+                    -0.255459624186254
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "feedback_gains": {
+    "known_local": [
+      [
+        1.8308695554733276,
+        0.0,
+        1.3416049480438232,
+        0.0,
+        0.4000000059604645,
+        0.0
+      ],
+      [
+        0.0,
+        1.8308695554733276,
+        0.0,
+        1.3416049480438232,
+        0.0,
+        0.4000000059604645
+      ]
+    ],
+    "fitted": [
+      [
+        1.8308693170547485,
+        0.0,
+        1.3416093587875366,
+        0.0,
+        0.3997504711151123,
+        -1.4284927374319523e-07
+      ],
+      [
+        0.0,
+        1.8308696746826172,
+        0.0,
+        1.3416032791137695,
+        1.1576000957802535e-07,
+        0.3997499346733093
+      ]
+    ],
+    "known_inverse_physical": [
+      [
+        1.7443094781511401,
+        0.0,
+        1.0009921811968023,
+        0.0
+      ],
+      [
+        0.0,
+        1.7443094781511401,
+        0.0,
+        1.0009921811968023
+      ]
+    ]
+  },
+  "evaluation_episodes_including_controls": 48,
+  "checkpoint_selection": "last",
+  "environment_steps": 1200,
+  "training_updates": 201,
+  "training_returns": [
+    -12736.338275130753,
+    -2912.04437863435,
+    -10267.781025056831,
+    -10324.241825431627,
+    -9902.94701266094,
+    -10142.46082453991
+  ],
+  "reset_counts": {
+    "0.2": 2,
+    "0.5": 2,
+    "1.0": 2
+  },
+  "jacobian_sampler": {
+    "rng": {
+      "bit_generator": "PCG64",
+      "state": {
+        "state": 123520154666100266047356126867070573296,
+        "inc": 186094301505186129257483416482235724871
+      },
+      "has_uint32": 0,
+      "uinteger": 1319544693
+    },
+    "episode_length": 200,
+    "batches": 201,
+    "reset_samples": 25728,
+    "replay_samples": 25728,
+    "radius_samples": {
+      "0.5": 8577,
+      "1.0": 8580,
+      "0.2": 8571
+    }
+  },
+  "sindy": {
+    "sparsity": 0.2962962962962963,
+    "n_coeffs": 54,
+    "n_nonzero": 16,
+    "n_control": 2,
+    "r_squared": 0.9763578406286215,
+    "action_reference": "LQRFeedbackReference"
+  },
+  "reference_identification": {
+    "selected_reference": "cubic-local",
+    "identification_interactions": 10000,
+    "validation_interactions": 1000,
+    "auxiliary_world_model": "linear-unchanged",
+    "both_models_use_same_transitions": true,
+    "gains": {
+      "linear": [
+        [
+          1.7769243717193604,
+          0.0,
+          1.0971506834030151,
+          0.0,
+          0.34562233090400696,
+          -0.5435817241668701
+        ],
+        [
+          0.0,
+          1.7768794298171997,
+          0.0,
+          1.097041368484497,
+          -0.20962466299533844,
+          0.12626922130584717
+        ]
+      ],
+      "cubic-local": [
+        [
+          1.8308693170547485,
+          0.0,
+          1.3416093587875366,
+          0.0,
+          0.3997504711151123,
+          -1.4284927374319523e-07
+        ],
+        [
+          0.0,
+          1.8308696746826172,
+          0.0,
+          1.3416032791137695,
+          1.1576000957802535e-07,
+          0.3997499346733093
+        ]
+      ]
+    },
+    "fits": {
+      "linear": {
+        "gain": [
+          [
+            1.7769243768580723,
+            0.0,
+            1.097150625975565,
+            0.0,
+            0.34562232996035597,
+            -0.5435817443744316
+          ],
+          [
+            0.0,
+            1.7768794243701822,
+            0.0,
+            1.0970413350472117,
+            -0.2096246703265575,
+            0.12626922707474642
+          ]
+        ],
+        "dynamics": [
+          [
+            1.0,
+            0.0,
+            0.049994878154571654,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.049998191122229876
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "load_matrix": [
+          [
+            0.0017598120029475891,
+            -0.0027658171187360326
+          ],
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.06915254335105762,
+            -0.10876055660101087
+          ],
+          [
+            -0.04198109120173602,
+            0.025287672150132737
+          ]
+        ],
+        "linear_action_matrix": [
+          [
+            0.005001936234871029,
+            0.0
+          ],
+          [
+            0.0,
+            0.005003596681553507
+          ],
+          [
+            0.20008348162654768,
+            0.0
+          ],
+          [
+            0.0,
+            0.20014280315547942
+          ]
+        ],
+        "cubic_action_matrix": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0
+          ]
+        ],
+        "parameter_errors": {
+          "dynamics_max_abs_error": 5.121845428349148e-06,
+          "load_matrix_max_abs_error": 0.10876055660101087,
+          "linear_action_matrix_max_abs_error": 0.07514280315547942,
+          "cubic_action_matrix_max_abs_error": 0.125,
+          "load_gain_max_abs_error": 0.5435817443744316
+        },
+        "feature_names": [
+          "1",
+          "x0",
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x5",
+          "u0",
+          "u1"
+        ],
+        "coefficients": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.049994878154571654,
+            0.0,
+            0.0017598120029475891,
+            -0.0027658171187360326,
+            0.005001936234871029,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.049998191122229876,
+            0.0,
+            0.0,
+            0.0,
+            0.005003596681553507
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.06915254335105762,
+            -0.10876055660101087,
+            0.20008348162654768,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -0.04198109120173602,
+            0.025287672150132737,
+            0.0,
+            0.20014280315547942
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -0.10277281916351019,
+            -0.007212776431918185,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -0.012018290063892337,
+            -0.1253315350790961,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      "cubic": {
+        "gain": [
+          [
+            1.8308693687766442,
+            0.0,
+            1.3416093302365992,
+            0.0,
+            0.3997504593865764,
+            -1.4284927585510554e-07
+          ],
+          [
+            0.0,
+            1.8308696263897746,
+            0.0,
+            1.3416032654329666,
+            1.1576000772605752e-07,
+            0.39974992854412195
+          ]
+        ],
+        "dynamics": [
+          [
+            1.0,
+            0.0,
+            0.050000152159203635,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.04999995065084714
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "load_matrix": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.05000003449277723,
+            -1.786731835401456e-08
+          ],
+          [
+            1.4479045664295725e-08,
+            0.04999997480465285
+          ]
+        ],
+        "linear_action_matrix": [
+          [
+            0.003124821689599333,
+            0.0
+          ],
+          [
+            0.0,
+            0.003125079542605984
+          ],
+          [
+            0.12500000032214506,
+            0.0
+          ],
+          [
+            0.0,
+            0.12500000421424784
+          ]
+        ],
+        "cubic_action_matrix": [
+          [
+            0.0031252953194081364,
+            0.0
+          ],
+          [
+            0.0,
+            0.0031248836693355867
+          ],
+          [
+            0.1249999993777822,
+            0.0
+          ],
+          [
+            0.0,
+            0.124999994585579
+          ]
+        ],
+        "parameter_errors": {
+          "dynamics_max_abs_error": 1.5215920363270685e-07,
+          "load_matrix_max_abs_error": 0.0012500000000000002,
+          "linear_action_matrix_max_abs_error": 1.783104006673926e-07,
+          "cubic_action_matrix_max_abs_error": 2.953194081357739e-07,
+          "load_gain_max_abs_error": 0.0002500714558780759
+        },
+        "feature_names": [
+          "1",
+          "x0",
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x5",
+          "u0",
+          "u1",
+          "u2",
+          "u3"
+        ],
+        "coefficients": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.050000152159203635,
+            0.0,
+            0.0,
+            0.0,
+            0.003124821689599333,
+            0.0,
+            0.0031252953194081364,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.04999995065084714,
+            0.0,
+            0.0,
+            0.0,
+            0.003125079542605984,
+            0.0,
+            0.0031248836693355867
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.05000003449277723,
+            -1.786731835401456e-08,
+            0.12500000032214506,
+            0.0,
+            0.1249999993777822,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.4479045664295725e-08,
+            0.04999997480465285,
+            0.0,
+            0.12500000421424784,
+            0.0,
+            0.124999994585579
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -0.10277281916351019,
+            -0.007212776431918185,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -0.012018290063892337,
+            -0.1253315350790961,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ]
+      }
+    },
+    "validation": {
+      "linear": {
+        "physical_rmse": 0.013350647906923014,
+        "physical_rmse_by_output": [
+          0.00048043566094734354,
+          0.00046310885899193335,
+          0.019221268870790478,
+          0.018521790758339336
+        ],
+        "physical_r_squared": 0.9765501430899513
+      },
+      "cubic": {
+        "physical_rmse": 3.1388956942744797e-06,
+        "physical_rmse_by_output": [
+          4.831697312846076e-06,
+          4.007860721561226e-06,
+          4.0452704680528375e-08,
+          2.796087313085499e-08
+        ],
+        "physical_r_squared": 0.9999999987037484
+      }
+    }
+  },
+  "reference_is_optimal": false,
+  "symbolic_identification_interactions": 10000,
+  "symbolic_validation_interactions": 1000,
+  "optimizer_updates_during_evaluation": 0,
+  "early_steps": 50,
+  "sample_interval": 10,
+  "runtime": {
+    "torch": "2.5.1+cu121",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "pysindy": "2.1.0",
+    "sklearn": "1.7.2",
+    "python": "3.11.15 | packaged by conda-forge | (main, Mar  5 2026, 16:45:40) [GCC 14.3.0]",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 3080 Ti"
+  }
+}

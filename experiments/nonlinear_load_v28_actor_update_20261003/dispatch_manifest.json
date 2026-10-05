@@ -1,0 +1,313 @@
+{
+  "config": {
+    "env_name": "NonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.01,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "NonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "runtime_requirement": {
+    "torch": "2.5.1+cu121",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "pysindy": "2.1.0",
+    "sklearn": "1.7.2",
+    "python_minor_versions": [
+      "3.10",
+      "3.11"
+    ]
+  },
+  "source_tasks": {
+    "19": {
+      "training_id": "t129046",
+      "diagnostic_id": "t130081",
+      "diagnostic_status": "done",
+      "exit_code": 0
+    },
+    "20": {
+      "training_id": "t129047",
+      "diagnostic_id": "t130082",
+      "diagnostic_status": "done",
+      "exit_code": 0
+    }
+  },
+  "revision": "nonlinear_load_v28_actor_update_diagnostic",
+  "source_revision": "nonlinear_load_v25_critic_replay",
+  "status": "complete",
+  "training_seeds": [
+    19,
+    20
+  ],
+  "arms": [
+    "uniform",
+    "early"
+  ],
+  "gradient_batches": 8,
+  "gradient_noise_seeds": [
+    94000,
+    94001,
+    94002,
+    94003,
+    94004,
+    94005,
+    94006,
+    94007
+  ],
+  "parameter_scales": [
+    0.5,
+    1.0
+  ],
+  "evaluation_radii": [
+    0.2,
+    1.0
+  ],
+  "evaluation_loads": [
+    1,
+    50
+  ],
+  "evaluation_seed_start": 60000,
+  "evaluation_episodes_per_block": 100,
+  "evaluation_noise_seeds": [
+    92000,
+    92001,
+    92002,
+    92003,
+    92004,
+    92005,
+    92006,
+    92007
+  ],
+  "formal_controller_episodes": 57600,
+  "formal_evaluation_environment_interactions": 11520000,
+  "formal_shadow_adam_steps": 258,
+  "retained_optimizer_updates": 0,
+  "training_environment_interactions": 0,
+  "historical_hold_unchanged": true,
+  "placement": "automatically selected compatible Linux GPUs; no preference, pin, allowlist or Windows",
+  "raw_evidence_policy": "raw rollout matrices and full source checkpoints stay remote; sampled Adam/batch JSON and compact results only",
+  "protocol_document": "docs/nonlinear_load_v28_actor_update_protocol.md",
+  "preflight_tasks": [
+    {
+      "id": "t130182",
+      "signature": "CS-BAPR/nonlinear_load_v28/preflight/seed19",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v28.sh diagnose --seed 19 --input-dir ../inputs --result-dir ../preflight_outputs/seed19 --raw-dir ../preflight_raw_outputs/seed19 --ckpt-dir ../preflight_checkpoints/seed19 --device cuda --threads 2 --preflight-only",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v28_actor_update_20261003",
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v28_actor_update_20261003/preflight_checkpoints/seed19",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v28_actor_update_20261003/preflight_outputs/seed19",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v28_actor_update_diagnostic/preflight/seed19",
+      "status": "done",
+      "node": "node007",
+      "gpu_idx": 3,
+      "started_at": 1791029184.7654517,
+      "finished_at": 1791029251.7660582,
+      "exit_code": 0,
+      "result_synced_at": 1791029268.879225,
+      "last_block_reason": null,
+      "seed": 19
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t130187",
+      "signature": "CS-BAPR/nonlinear_load_v28/formal/seed19",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v28.sh diagnose --seed 19 --input-dir ../inputs --result-dir ../outputs/seed19 --raw-dir ../raw_outputs/seed19 --ckpt-dir ../checkpoints/seed19 --device cuda --threads 2",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v28_actor_update_20261003",
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v28_actor_update_20261003/checkpoints/seed19",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v28_actor_update_20261003/outputs/seed19",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v28_actor_update_diagnostic/seed19",
+      "status": "done",
+      "node": "node007",
+      "gpu_idx": 3,
+      "started_at": 1791029418.5091321,
+      "finished_at": 1791029772.2045965,
+      "exit_code": 0,
+      "result_synced_at": 1791029790.6678116,
+      "last_block_reason": null,
+      "result_sync_error": null,
+      "seed": 19,
+      "elapsed_seconds": 353.6954643726349
+    },
+    {
+      "id": "t130188",
+      "signature": "CS-BAPR/nonlinear_load_v28/formal/seed20",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v28.sh diagnose --seed 20 --input-dir ../inputs --result-dir ../outputs/seed20 --raw-dir ../raw_outputs/seed20 --ckpt-dir ../checkpoints/seed20 --device cuda --threads 2",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v28_actor_update_20261003",
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v28_actor_update_20261003/checkpoints/seed20",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v28_actor_update_20261003/outputs/seed20",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v28_actor_update_diagnostic/seed20",
+      "status": "done",
+      "node": "jtl110gpu",
+      "gpu_idx": 0,
+      "started_at": 1791029417.044018,
+      "finished_at": 1791029712.5349307,
+      "exit_code": 0,
+      "result_synced_at": 1791029731.5664086,
+      "last_block_reason": null,
+      "result_sync_error": null,
+      "seed": 20,
+      "elapsed_seconds": 295.49091267585754
+    }
+  ],
+  "formal_results_pending": false,
+  "tests": {
+    "focused_and_regressions": "15 passed in 8.91s",
+    "launcher_syntax": "passed",
+    "scheduler_doctor": "ok; no issues"
+  },
+  "input_files": {
+    "v26_seed20.json": {
+      "bytes": 1767120,
+      "pulled_this_round": false
+    },
+    "early_seed19.json": {
+      "bytes": 699514,
+      "pulled_this_round": false
+    },
+    "v26_seed19.json": {
+      "bytes": 1770944,
+      "pulled_this_round": false
+    },
+    "actor_state_seed20.json": {
+      "bytes": 1061630,
+      "pulled_this_round": true
+    },
+    "early_seed20.json": {
+      "bytes": 698584,
+      "pulled_this_round": false
+    },
+    "actor_state_seed19.json": {
+      "bytes": 1062256,
+      "pulled_this_round": true
+    }
+  },
+  "new_remote_input_bytes": 2123886,
+  "preflight_validation": {
+    "passed": true,
+    "task_id": "t130182",
+    "exit_code": 0,
+    "result_json_bytes": 36029,
+    "original_parameters_unchanged": true,
+    "retained_optimizer_updates": 0,
+    "controller_episodes": 36,
+    "evaluation_environment_interactions": 7200,
+    "shadow_adam_steps": 5,
+    "interpretation": "numerical admission only; no performance tuning"
+  },
+  "results_document": "docs/nonlinear_load_v28_actor_update_results.md",
+  "formal_validation": {
+    "passed": true,
+    "completed_task_ids": [
+      "t130187",
+      "t130188"
+    ],
+    "result_json_bytes": 1889230,
+    "raw_matrix_bytes_remaining_remote": 12660880,
+    "controller_episodes": 57600,
+    "evaluation_environment_interactions": 11520000,
+    "shadow_adam_steps": 258,
+    "training_environment_interactions": 0,
+    "retained_optimizer_updates": 0,
+    "original_parameters_unchanged": true,
+    "unperturbed_v26_baselines": "all eight blocks passed",
+    "matched_noise_paths_and_return_decompositions": "passed"
+  },
+  "next_step": "Proposed v29: paired same-seed online training with early critic sampling in both arms, actor uniform versus 50/25/25 uniform/reset/early coverage only; preserve native alpha/reward/belief and Jacobian sampling, reference, losses and optimizer history; no tasks submitted yet.",
+  "follow_on_tasks_submitted": 0,
+  "decision": "Supports one actor-coverage-only online comparison; local cost changes are small, seed19 small-radius regression remains; no policy promotion; historical HOLD unchanged."
+}

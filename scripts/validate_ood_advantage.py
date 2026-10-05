@@ -37,7 +37,7 @@ from scripts.train_csbapr import (
 )
 from scripts.ood_eval import (
     make_perturbed_env_compound, evaluate_policy_on_env,
-    compute_ood_distance_compound, theoretical_bound_corrected
+    compute_ood_distance_compound
 )
 
 
@@ -94,6 +94,7 @@ def train_agent(method_name, env_name, seed, n_episodes, save_path):
             sindy_ok = True
         except Exception as ex:
             print(f"    [WARN] SINDy failed: {ex}")
+            raise
 
     # Training
     mode_profiles = MUJOCO_MODE_PROFILES.get(env_name, {})

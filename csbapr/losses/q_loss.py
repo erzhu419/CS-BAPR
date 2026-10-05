@@ -1,20 +1,8 @@
-"""
-CS-BAPR Q-Loss: extends BA-PR Q-loss with symbolic consistency penalty Γ_sym.
+"""Critic update with a detached action-reference Jacobian discrepancy.
 
-Corresponds to CSBAPR.lean Part III (L189-395):
-- t_mode_pointwise_bound (L251): Γ_sym frozen, doesn't affect contraction
-- csbapr_contraction (L299): full contraction with λ_sym·Γ_sym
-
-⚠️ CRITICAL: Γ_sym via SINDy is h-independent (IRM guarantees cross-mode invariance).
-   All modes h share same sym_penalty (doesn't violate Lean — proof holds for any Γ_sym value).
-
-⚠️ CRITICAL: sym_penalty is scalar (.mean() aggregated), broadcast to [ensemble, batch].
-
-⚠️ Temporal ordering (inherited BA-PR + 1 new):
-   1. Surprise → Belief → Q-loss (order immutable)
-   2. Belief frozen within Q-loss
-   3. Target network frozen within Q-loss, soft_update at end
-   4. SINDy coefficients frozen within entire update() ← CS-BAPR NEW
+The discrepancy is a batch scalar shared by the run-length modes. Holding
+this field fixed preserves a fixed-operator contraction; it does not prove
+invariance or convergence of changing actor-critic gradient updates.
 """
 
 import torch
@@ -27,7 +15,7 @@ def compute_q_loss_csbapr(
     soft_q_net: nn.Module,
     target_soft_q_net: nn.Module,
     policy_net: nn.Module,
-    f_sym_torch: nn.Module,
+    pi_sym_torch: nn.Module,
     state: torch.Tensor,
     action: torch.Tensor,
     reward: torch.Tensor,
@@ -50,7 +38,7 @@ def compute_q_loss_csbapr(
     """
     CS-BAPR Q-loss = BA-PR Q-loss + λ_sym · Γ_sym
     
-    Γ_sym = compute_jacobian_loss(policy, f_sym, next_state)
+    Γ_sym = compute_jacobian_loss(policy, pi_sym, next_state)
     
     Adapted from BAPR/sac_ensemble_bapr.py:compute_q_loss_bapr
     with the addition of symbolic consistency penalty.
@@ -80,7 +68,7 @@ def compute_q_loss_csbapr(
 
     # ===== CS-BAPR NEW: symbolic consistency penalty =====
     # sym_penalty: scalar (batch-aggregated Jacobian deviation)
-    sym_penalty = compute_jacobian_loss(policy_net, f_sym_torch, next_state)
+    sym_penalty = compute_jacobian_loss(policy_net, pi_sym_torch, next_state).detach()
 
     # Group-A1 fix: conservative target via elementwise min over ensemble.
     # When enable_min_q_target = False, fall back to per-critic targets

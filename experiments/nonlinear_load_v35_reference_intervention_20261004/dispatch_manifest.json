@@ -1,0 +1,359 @@
+{
+  "revision": "nonlinear_load_v35_reference_intervention",
+  "source_revision": "nonlinear_load_v34_linear_confirmation",
+  "source_task_ids": [
+    "t134595",
+    "t134591"
+  ],
+  "source_decision": {
+    "all_seed_radius_load_reference_improvement": true,
+    "reference_intervention_admitted": true,
+    "learner_replication_admitted": false,
+    "historical_hold_unchanged": true
+  },
+  "historical_hold_unchanged": true,
+  "frozen_date": "2026-10-04 (Asia/Shanghai)",
+  "training_seeds": [
+    21,
+    22
+  ],
+  "references": [
+    "cubic-local",
+    "cost-linear"
+  ],
+  "reference_mappings": {
+    "cubic-local": "tanh",
+    "cost-linear": "clip"
+  },
+  "confirmed_gains": {
+    "21": [
+      [
+        1.8308695636613228,
+        0.0,
+        1.3416050824755654,
+        0.0,
+        0.3038881283232111,
+        0.0
+      ],
+      [
+        0.0,
+        1.8308695690043504,
+        0.0,
+        1.3416049518367306,
+        0.0,
+        0.3038874575716283
+      ]
+    ],
+    "22": [
+      [
+        1.8308695672003175,
+        0.0,
+        1.3416051377849951,
+        0.0,
+        0.30388775837723964,
+        0.0
+      ],
+      [
+        0.0,
+        1.8308695675373416,
+        0.0,
+        1.341605062651111,
+        0.0,
+        0.3038877883349774
+      ]
+    ]
+  },
+  "config": {
+    "env_name": "SustainedNonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.01,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "runtime_requirement": {
+    "torch": "2.5.1+cu121",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "pysindy": "2.1.0",
+    "sklearn": "1.7.2",
+    "python_minor_versions": [
+      "3.10",
+      "3.11"
+    ]
+  },
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.08,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 1.0,
+    "storm_probability_rule": "always-active load",
+    "tail_shape": 1.5,
+    "tail_rule": "0.5 + 0.5 * min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "SustainedNonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "shared_prefix_episodes": 5,
+  "prefix_jacobian_weight": 0.0,
+  "arm_jacobian_weight": 0.01,
+  "critic_sampling": "early-after-prefix",
+  "actor_sampling": "uniform",
+  "jacobian_sampling": "half-uniform-half-resets",
+  "jacobian_input_columns": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "reset_cycle": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "radii": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "severities": [
+    1,
+    50
+  ],
+  "evaluation_seed_start": 66000,
+  "preflight_seed_start": 66500,
+  "evaluation_episodes_per_severity": 100,
+  "actual_training_interactions": 398000,
+  "actual_training_updates": 396002,
+  "shared_identification_and_validation_interactions": 22000,
+  "formal_evaluation_episodes": 9600,
+  "formal_evaluation_interactions": 1920000,
+  "source_input_json_bytes": 6189,
+  "status": "complete",
+  "scheduler_static_contract_override": "The static source inspector cannot resolve the shell launcher's delegated trainer. --allow-no-resume skips this static check only; --resume-flag=--resume, per-arm last checkpoints and full-state restoration remain active and covered by exact-next-update and prefix-fork tests. No scheduler changes.",
+  "preflight_tasks": [
+    {
+      "id": "t134705",
+      "signature": "CS-BAPR/nonlinear_load_v35/preflight/seed21",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v35.sh --seed 21 --ckpt-dir ../preflight_checkpoints/seed21 --result-dir ../preflight_outputs/seed21 --device cuda --threads 2 --preflight-only",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v35_reference_intervention_20261004",
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v35_reference_intervention_20261004/preflight_checkpoints/seed21",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v35_reference_intervention_20261004/preflight_outputs/seed21",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v35_reference_intervention/preflight/seed21",
+      "status": "done",
+      "node": "node007",
+      "gpu_idx": 3,
+      "started_at": 1791081409.8681982,
+      "finished_at": 1791081530.2693603,
+      "exit_code": 0,
+      "stage_excludes": [
+        ".runtime/",
+        "preflight_checkpoints/",
+        "checkpoints/",
+        "preflight_outputs/",
+        "outputs/"
+      ],
+      "resume_flag": "--resume",
+      "seed": 21,
+      "result_synced_at": 1791081536.9914753,
+      "result_sync_error": null
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t134718",
+      "signature": "CS-BAPR/nonlinear_load_v35/formal/seed21",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v35.sh --seed 21 --ckpt-dir ../checkpoints/seed21 --result-dir ../outputs/seed21 --device cuda --threads 2",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v35_reference_intervention_20261004",
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v35_reference_intervention_20261004/checkpoints/seed21",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v35_reference_intervention_20261004/outputs/seed21",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v35_reference_intervention/seed21",
+      "status": "done",
+      "node": "node007",
+      "gpu_idx": 3,
+      "started_at": 1791081722.9803956,
+      "finished_at": 1791092142.1642609,
+      "exit_code": 0,
+      "stage_excludes": [
+        ".runtime/",
+        "preflight_checkpoints/",
+        "checkpoints/",
+        "preflight_outputs/",
+        "outputs/"
+      ],
+      "resume_flag": "--resume",
+      "seed": 21,
+      "last_block_reason": null,
+      "result_synced_at": 1791092157.9231193,
+      "result_sync_error": null
+    },
+    {
+      "id": "t134719",
+      "signature": "CS-BAPR/nonlinear_load_v35/formal/seed22",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v35.sh --seed 22 --ckpt-dir ../checkpoints/seed22 --result-dir ../outputs/seed22 --device cuda --threads 2",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v35_reference_intervention_20261004",
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v35_reference_intervention_20261004/checkpoints/seed22",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v35_reference_intervention_20261004/outputs/seed22",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v35_reference_intervention/seed22",
+      "status": "done",
+      "node": "jtl110gpu",
+      "gpu_idx": 0,
+      "started_at": 1791081758.7238839,
+      "finished_at": 1791088506.0024278,
+      "exit_code": 0,
+      "stage_excludes": [
+        ".runtime/",
+        "preflight_checkpoints/",
+        "checkpoints/",
+        "preflight_outputs/",
+        "outputs/"
+      ],
+      "resume_flag": "--resume",
+      "seed": 22,
+      "last_block_reason": null,
+      "result_synced_at": 1791088512.3001788,
+      "result_sync_error": null
+    }
+  ],
+  "formal_results_pending": false,
+  "formal_validation": {
+    "passed": true,
+    "completed_task_ids": ["t134718", "t134719"],
+    "paired_full_prefix_verified": true,
+    "training_interactions": 398000,
+    "training_updates": 396002,
+    "evaluation_episodes": 9600,
+    "evaluation_json_bytes": 6812482
+  },
+  "decision": {
+    "radius1_repair_passed": true,
+    "small_radius_retention_passed": true,
+    "all_radius_own_fitted_added_value_passed": false,
+    "ready_for_learner_replication": false,
+    "historical_hold_unchanged": true
+  },
+  "tests": {
+    "focused_and_regressions": "50 passed in 15.64s",
+    "launcher_syntax": "passed",
+    "scheduler_doctor": "ok; no issues"
+  },
+  "placement": "any free compatible Linux GPU; no preference, pin, allowlist or Windows",
+  "artifact_policy": "logs and compact evaluation JSON only; checkpoints, replay and raw trajectories remain remote",
+  "stage_excludes": [
+    ".runtime/",
+    "checkpoints/",
+    "preflight_checkpoints/",
+    "outputs/",
+    "preflight_outputs/"
+  ],
+  "decision_rule": "Retain radius1 strict total/early-state cost reduction, radius0.2 nonincrease and all-block strict own-fitted added value for each seed; no pooling, tuning or threshold changes.",
+  "protocol_document": "docs/nonlinear_load_v35_reference_intervention_protocol.md",
+  "results_document": "docs/nonlinear_load_v35_reference_intervention_results.md",
+  "local_runtime_reuse": "Existing v27 Torch runtime for unit tests; hard-linked pinned v31 wheelhouse for worker bootstrap; no local checkpoint access.",
+  "resource_request": {
+    "cpu_cores": 2,
+    "ram_mb": 2048,
+    "vram_mb": 512,
+    "basis": "unchanged v31 learner path: observed peak 220 MB VRAM and 1486 MB RAM; same original reservations"
+  },
+  "preflight_validation": {
+    "revision": "nonlinear_load_v35_reference_intervention",
+    "preflight_only": true,
+    "completed_task_ids": [
+      "t134705"
+    ],
+    "paired_full_prefix_verified": true,
+    "evaluation_json_bytes": 248787,
+    "actual_training_interactions": 1400,
+    "actual_training_updates": 401,
+    "shared_identification_and_validation_interactions": 11000,
+    "historical_hold_unchanged": true,
+    "passed": true,
+    "interpretation": "numerical admission only; separate preflight paths do not enter the formal performance decision"
+  },
+  "next_step": "Freeze one diagnostic for the ID own-reference gap: compare tanh-actor versus hard-clipped-reference action/Jacobian alignment and loss-scale contributions using the completed v35 compact evaluation evidence; do not add seeds, baselines or tune on outcomes. Any subsequent intervention must change one representation/loss factor and retain the same individual-seed gates."
+}

@@ -120,62 +120,29 @@ def compute_irm_advantage(symbolic_model, envs_data: dict) -> dict:
 
 
 def select_best_sindy_coefficients(symbolic_model, envs_data: dict,
-                                     n_candidates: int = 5,
-                                     threshold: float = 0.1,
+                                     threshold: float = None,
                                      verbose: bool = True):
-    """
-    IRM-based coefficient selection for SINDy formulas.
-    
-    Workflow:
-    1. Fit SINDy separately in each environment
-    2. Compute cross-environment consistency for each fit
-    3. Select the coefficients with the lowest cross-env variance
-    
-    Args:
-        symbolic_model: SymbolicWorldModel instance
-        envs_data: dict of env_name → (X_list, U_list) for fitting
-        n_candidates: Not used (kept for API consistency)
-        threshold: STLSQ threshold
-        verbose: Print diagnostics
-    
-    Returns:
-        best_coeffs: Best coefficient matrix
-        irm_variance: Cross-env variance of best fit
-    """
+    """Select a fitted candidate by prediction-error variance, not causal accuracy."""
     from csbapr.sindy.world_model import SymbolicWorldModel
 
-    all_fits = {}
-    
-    # Fit SINDy in each environment
-    for env_name, (X_list, U_list, X_dot_list) in envs_data.items():
+    candidates, evaluation_data = [], []
+    for X_list, U_list, X_dot_list in envs_data.values():
         candidate = SymbolicWorldModel(
-            n_state=symbolic_model.n_state,
-            n_control=symbolic_model.n_control,
+            n_state=symbolic_model.n_state, n_control=symbolic_model.n_control,
             poly_degree=symbolic_model.poly_degree,
-            threshold=threshold,
+            threshold=symbolic_model.threshold if threshold is None else threshold,
             discrete_time=symbolic_model.discrete_time,
         )
-        
-        if symbolic_model.discrete_time:
-            candidate.fit(X_list, U=U_list, multiple_trajectories=True, t=1.0)
-        else:
-            X_flat, X_dot_flat = np.vstack([x[:-1] for x in X_list]), np.vstack(X_dot_list)
-            candidate.fit(X_flat, X_dot=X_dot_flat)
-        
-        all_fits[env_name] = candidate.coeffs
-        
-        if verbose:
-            print(f"[IRM] Env '{env_name}': sparsity = {candidate.sparsity:.3f}")
-
-    # Compute cross-environment coefficient variance
-    coeff_stack = np.stack(list(all_fits.values()))
-    coeff_variance = np.var(coeff_stack, axis=0).mean()
-    
-    # Use mean coefficients as the IRM-consistent estimate
-    best_coeffs = np.mean(coeff_stack, axis=0)
-    
+        targets = None if candidate.discrete_time else X_dot_list
+        candidate.fit(X_list, U=U_list, X_dot=targets,
+                      multiple_trajectories=True, t=1.0)
+        candidates.append(candidate)
+        evaluation_data.append(candidate.training_arrays(X_list, U_list, targets, True))
+    variances = [
+        float(np.var([candidate.prediction_error(x, y, u) for x, u, y in evaluation_data]))
+        for candidate in candidates
+    ]
+    index = int(np.argmin(variances))
     if verbose:
-        print(f"[IRM] Cross-env coefficient variance: {coeff_variance:.6f}")
-        print(f"[IRM] Using mean coefficients across {len(all_fits)} environments")
-    
-    return best_coeffs, coeff_variance
+        print(f"[IRM-inspired] selected candidate {index}; prediction-error variance={variances[index]:.6f}")
+    return candidates[index].coeffs.copy(), variances[index]

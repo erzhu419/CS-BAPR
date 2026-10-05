@@ -1,0 +1,491 @@
+{
+  "revision": "nonlinear_load_v9_training_preflight",
+  "method": "csbapr-centered-mlp-no-sindy-no-target-shift",
+  "training_seed": 997,
+  "training_episodes": 6,
+  "config": {
+    "env_name": "NonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 6,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.0,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "environment": "nonlinear_load",
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "NonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "evaluation_seed_start": 70000,
+  "evaluation_episodes_per_severity": 2,
+  "actor_type": "centered-tanh-mlp",
+  "checkpoint_selection": "last",
+  "environment_steps": 1200,
+  "training_updates": 201,
+  "training_returns": [
+    -17062.139541286524,
+    -2208.682288734792,
+    -7406.019709348378,
+    -4363.14188930357,
+    -13507.69430276797,
+    -9511.43371925907
+  ],
+  "sindy": null,
+  "runtime": {
+    "python": "3.11.15 | packaged by conda-forge | (main, Mar  5 2026, 16:45:40) [GCC 14.3.0]",
+    "torch": "2.5.1+cu121",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "pysindy": "2.1.0",
+    "sklearn": "1.7.2",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU"
+  },
+  "policy_curvature_bound": 0.2995124169944955,
+  "policy_alignment": {
+    "reference": "known_model_diagnostic",
+    "origin_action": [
+      0.0,
+      0.0
+    ],
+    "initial_states": {
+      "1": {
+        "n_states": 2,
+        "state_norm_median": 0.1966915875673294,
+        "state_norm_p95": 0.19827675819396973,
+        "unit_ball_state_fraction": 1.0,
+        "action_component_rmse": 0.22071467339992523,
+        "jacobian_squared_frobenius_mean": 9.698339462280273,
+        "actor_jacobian_frobenius_mean": 0.018548771739006042,
+        "reference_jacobian_frobenius_mean": 3.1020288467407227,
+        "actor_saturated_component_fraction": 0.0,
+        "reference_saturated_component_fraction": 0.0,
+        "opposed_action_component_fraction": 0.5,
+        "oddness_component_rmse": 3.383500734344125e-05
+      },
+      "2": {
+        "n_states": 2,
+        "state_norm_median": 0.1969628781080246,
+        "state_norm_p95": 0.19831067323684692,
+        "unit_ball_state_fraction": 1.0,
+        "action_component_rmse": 0.22065094113349915,
+        "jacobian_squared_frobenius_mean": 9.699104309082031,
+        "actor_jacobian_frobenius_mean": 0.01854918897151947,
+        "reference_jacobian_frobenius_mean": 3.102156162261963,
+        "actor_saturated_component_fraction": 0.0,
+        "reference_saturated_component_fraction": 0.0,
+        "opposed_action_component_fraction": 0.5,
+        "oddness_component_rmse": 3.397791806492023e-05
+      },
+      "5": {
+        "n_states": 2,
+        "state_norm_median": 0.19853165745735168,
+        "state_norm_p95": 0.1988355964422226,
+        "unit_ball_state_fraction": 1.0,
+        "action_component_rmse": 0.22048987448215485,
+        "jacobian_squared_frobenius_mean": 9.701191902160645,
+        "actor_jacobian_frobenius_mean": 0.01855030283331871,
+        "reference_jacobian_frobenius_mean": 3.102503776550293,
+        "actor_saturated_component_fraction": 0.0,
+        "reference_saturated_component_fraction": 0.0,
+        "opposed_action_component_fraction": 0.5,
+        "oddness_component_rmse": 3.4585988032631576e-05
+      },
+      "10": {
+        "n_states": 2,
+        "state_norm_median": 0.19906657934188843,
+        "state_norm_p95": 0.20513583719730377,
+        "unit_ball_state_fraction": 1.0,
+        "action_component_rmse": 0.22032208740711212,
+        "jacobian_squared_frobenius_mean": 9.703983306884766,
+        "actor_jacobian_frobenius_mean": 0.018551696091890335,
+        "reference_jacobian_frobenius_mean": 3.1029694080352783,
+        "actor_saturated_component_fraction": 0.0,
+        "reference_saturated_component_fraction": 0.0,
+        "opposed_action_component_fraction": 0.5,
+        "oddness_component_rmse": 3.629136335803196e-05
+      },
+      "20": {
+        "n_states": 2,
+        "state_norm_median": 0.20119205117225647,
+        "state_norm_p95": 0.22854213416576385,
+        "unit_ball_state_fraction": 1.0,
+        "action_component_rmse": 0.22036781907081604,
+        "jacobian_squared_frobenius_mean": 9.706951141357422,
+        "actor_jacobian_frobenius_mean": 0.01855269819498062,
+        "reference_jacobian_frobenius_mean": 3.1034655570983887,
+        "actor_saturated_component_fraction": 0.0,
+        "reference_saturated_component_fraction": 0.0,
+        "opposed_action_component_fraction": 0.25,
+        "oddness_component_rmse": 4.2951276554958895e-05
+      },
+      "50": {
+        "n_states": 2,
+        "state_norm_median": 0.35728034377098083,
+        "state_norm_p95": 0.8415188789367676,
+        "unit_ball_state_fraction": 1.0,
+        "action_component_rmse": 0.24835960566997528,
+        "jacobian_squared_frobenius_mean": 9.450714111328125,
+        "actor_jacobian_frobenius_mean": 0.018319355323910713,
+        "reference_jacobian_frobenius_mean": 3.063457489013672,
+        "actor_saturated_component_fraction": 0.0,
+        "reference_saturated_component_fraction": 0.0,
+        "opposed_action_component_fraction": 0.5,
+        "oddness_component_rmse": 0.00028378088609315455
+      }
+    }
+  },
+  "feedback_controls": {
+    "known_local_linear": {
+      "gain": [
+        [
+          1.8308695554733276,
+          0.0,
+          1.3416049480438232,
+          0.0,
+          0.4000000059604645,
+          0.0
+        ],
+        [
+          0.0,
+          1.8308695554733276,
+          0.0,
+          1.3416049480438232,
+          0.0,
+          0.4000000059604645
+        ]
+      ],
+      "amplitude_results": {
+        "1": {
+          "mean": -0.31233037500144234,
+          "std": 0.21495387953514988,
+          "returns": [
+            -0.5272842545365922,
+            -0.09737649546629246
+          ],
+          "evaluation_seeds": [
+            70000,
+            70001
+          ]
+        },
+        "2": {
+          "mean": -0.31261700385758495,
+          "std": 0.21520155694768772,
+          "returns": [
+            -0.5278185608052727,
+            -0.09741544690989724
+          ],
+          "evaluation_seeds": [
+            70000,
+            70001
+          ]
+        },
+        "5": {
+          "mean": -0.32921887928543403,
+          "std": 0.227848973347302,
+          "returns": [
+            -0.5570678526327361,
+            -0.10136990593813204
+          ],
+          "evaluation_seeds": [
+            70000,
+            70001
+          ]
+        },
+        "10": {
+          "mean": -0.38200406152244243,
+          "std": 0.26239590683891306,
+          "returns": [
+            -0.6443999683613555,
+            -0.11960815468352934
+          ],
+          "evaluation_seeds": [
+            70000,
+            70001
+          ]
+        },
+        "20": {
+          "mean": -0.6477754258074231,
+          "std": 0.45081891424907305,
+          "returns": [
+            -1.0985943400564961,
+            -0.19695651155834998
+          ],
+          "evaluation_seeds": [
+            70000,
+            70001
+          ]
+        },
+        "50": {
+          "mean": -3.0522823867915494,
+          "std": 2.0499829356318213,
+          "returns": [
+            -5.102265322423371,
+            -1.002299451159728
+          ],
+          "evaluation_seeds": [
+            70000,
+            70001
+          ]
+        }
+      }
+    },
+    "known_inverse": {
+      "physical_gain": [
+        [
+          1.7443094781511401,
+          0.0,
+          1.0009921811968023,
+          0.0
+        ],
+        [
+          0.0,
+          1.7443094781511401,
+          0.0,
+          1.0009921811968023
+        ]
+      ],
+      "reference_is_optimal": false,
+      "controller": "inverse_actuator_with_current_force_compensation",
+      "amplitude_results": {
+        "1": {
+          "mean": -0.331908331370523,
+          "std": 0.23063967074459213,
+          "returns": [
+            -0.5625480021151151,
+            -0.10126866062593085
+          ],
+          "evaluation_seeds": [
+            70000,
+            70001
+          ]
+        },
+        "2": {
+          "mean": -0.33209937403876855,
+          "std": 0.23081546258233235,
+          "returns": [
+            -0.5629148366211009,
+            -0.10128391145643618
+          ],
+          "evaluation_seeds": [
+            70000,
+            70001
+          ]
+        },
+        "5": {
+          "mean": -0.3483376485383979,
+          "std": 0.24317270890081674,
+          "returns": [
+            -0.5915103574392147,
+            -0.10516493963758115
+          ],
+          "evaluation_seeds": [
+            70000,
+            70001
+          ]
+        },
+        "10": {
+          "mean": -0.39980195627903675,
+          "std": 0.2765383688642767,
+          "returns": [
+            -0.6763403251433134,
+            -0.12326358741476005
+          ],
+          "evaluation_seeds": [
+            70000,
+            70001
+          ]
+        },
+        "20": {
+          "mean": -0.656904643217515,
+          "std": 0.45675317828390183,
+          "returns": [
+            -1.1136578215014168,
+            -0.20015146493361313
+          ],
+          "evaluation_seeds": [
+            70000,
+            70001
+          ]
+        },
+        "50": {
+          "mean": -2.9710021850674724,
+          "std": 2.003226322192822,
+          "returns": [
+            -4.974228507260294,
+            -0.9677758628746502
+          ],
+          "evaluation_seeds": [
+            70000,
+            70001
+          ]
+        }
+      }
+    }
+  },
+  "amplitude_results": {
+    "1": {
+      "mean": -287.9074028509267,
+      "std": 18.905370274547096,
+      "returns": [
+        -306.8127731254738,
+        -269.00203257637963
+      ],
+      "evaluation_seeds": [
+        70000,
+        70001
+      ]
+    },
+    "2": {
+      "mean": -291.64900465525375,
+      "std": 31.918197943304705,
+      "returns": [
+        -323.5672025985585,
+        -259.73080671194907
+      ],
+      "evaluation_seeds": [
+        70000,
+        70001
+      ]
+    },
+    "5": {
+      "mean": -310.873862750675,
+      "std": 78.45268028510735,
+      "returns": [
+        -389.3265430357824,
+        -232.42118246556768
+      ],
+      "evaluation_seeds": [
+        70000,
+        70001
+      ]
+    },
+    "10": {
+      "mean": -347.7883111413466,
+      "std": 161.97024664638803,
+      "returns": [
+        -509.7585577877346,
+        -185.81806449495852
+      ],
+      "evaluation_seeds": [
+        70000,
+        70001
+      ]
+    },
+    "20": {
+      "mean": -446.59352333491614,
+      "std": 319.689793680038,
+      "returns": [
+        -766.2833170149542,
+        -126.90372965487813
+      ],
+      "evaluation_seeds": [
+        70000,
+        70001
+      ]
+    },
+    "50": {
+      "mean": -5696.147002503339,
+      "std": 5325.6904376842895,
+      "returns": [
+        -11021.837440187628,
+        -370.4565648190499
+      ],
+      "evaluation_seeds": [
+        70000,
+        70001
+      ]
+    }
+  }
+}

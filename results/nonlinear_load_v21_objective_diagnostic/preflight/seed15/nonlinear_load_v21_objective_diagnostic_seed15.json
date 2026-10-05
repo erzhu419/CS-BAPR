@@ -1,0 +1,354 @@
+{
+  "revision": "nonlinear_load_v21_objective_diagnostic",
+  "source_revision": "nonlinear_load_v20_jacobian_scope",
+  "source_task_id": "t126954",
+  "training_seed": 15,
+  "preflight_only": true,
+  "checkpoint_selection": "last",
+  "runtime": {
+    "torch": "2.5.1+cu121",
+    "numpy": "2.2.6",
+    "pysindy": "2.1.0",
+    "scipy": "1.15.3",
+    "sklearn": "1.7.2",
+    "python": "3.11.15 | packaged by conda-forge | (main, Mar  5 2026, 16:45:40) [GCC 14.3.0]",
+    "device": "cuda"
+  },
+  "config": {
+    "env_name": "NonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.01,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "NonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "gamma": 0.99,
+  "alpha": 0.01,
+  "weighted_lambda": 0.28583824634552,
+  "risk_beta": -2.57167649269104,
+  "reward_std": 33.65139865561919,
+  "radius_results": {
+    "1.0": {
+      "50": {
+        "evaluation_seeds": [
+          60000,
+          60001
+        ],
+        "initial_observations": [
+          [
+            -0.5362853407859802,
+            -0.20284754037857056,
+            -0.7328752279281616,
+            0.3383147120475769,
+            -0.07900130748748779,
+            -0.04912799969315529
+          ],
+          [
+            0.8103775978088379,
+            -0.47049322724342346,
+            -0.09418223053216934,
+            0.036047033965587616,
+            0.27719560265541077,
+            0.4518720507621765
+          ]
+        ],
+        "reproduction_max_abs_errors": {
+          "total_cost": 1.9472276591159243e-07,
+          "state_cost": 2.0484464613446107e-07,
+          "command_cost": 1.6288906401484837e-07
+        },
+        "disturbance_paths_matched": true,
+        "continuations": {
+          "actor": {
+            "total_cost": [
+              10.167322462957861,
+              16.186535054461093
+            ],
+            "discounted_cost": [
+              7.788150185163652,
+              12.056150254853117
+            ],
+            "state_cost": [
+              5.752827224425326,
+              9.802564014642904
+            ],
+            "command_cost": [
+              4.41449523853253,
+              6.383971039818175
+            ],
+            "early_state_cost": [
+              5.746715639955838,
+              9.746472060540404
+            ],
+            "late_state_cost": [
+              0.006111584469485115,
+              0.056091954102494644
+            ]
+          },
+          "fitted-first": {
+            "total_cost": [
+              10.13205483999452,
+              16.167147174507832
+            ],
+            "discounted_cost": [
+              7.757170178437097,
+              12.039429743315706
+            ],
+            "state_cost": [
+              5.719701112854072,
+              9.780411306724153
+            ],
+            "command_cost": [
+              4.412353727140439,
+              6.386735867783702
+            ],
+            "early_state_cost": [
+              5.713593081382202,
+              9.724325226833034
+            ],
+            "late_state_cost": [
+              0.006108031471867821,
+              0.05608607989110778
+            ]
+          }
+        },
+        "initial_scores": {
+          "actor": {
+            "action": [
+              [
+                0.9455647468566895,
+                -0.05921050161123276
+              ],
+              [
+                -0.8878559470176697,
+                0.5384323596954346
+              ]
+            ],
+            "q_mean": [
+              -0.04051680117845535,
+              -0.013128682971000671
+            ],
+            "q_std": [
+              0.018795736134052277,
+              0.17764170467853546
+            ],
+            "risk_score": [
+              -0.08885335922241211,
+              -0.46996569633483887
+            ],
+            "log_probability": [
+              0.8712081909179688,
+              0.6040475368499756
+            ],
+            "soft_surrogate_score": [
+              -0.09756544232368469,
+              -0.4760061800479889
+            ]
+          },
+          "fitted-first": {
+            "action": [
+              [
+                0.9637923836708069,
+                -0.06277512013912201
+              ],
+              [
+                -0.8992236852645874,
+                0.5597128868103027
+              ]
+            ],
+            "q_mean": [
+              -0.038528069853782654,
+              -0.011541768908500671
+            ],
+            "q_std": [
+              0.018476087599992752,
+              0.1770879477262497
+            ],
+            "risk_score": [
+              -0.08604259043931961,
+              -0.46695470809936523
+            ],
+            "log_probability": [
+              1.2341735363006592,
+              0.7344255447387695
+            ],
+            "soft_surrogate_score": [
+              -0.098384328186512,
+              -0.47429895401000977
+            ]
+          }
+        },
+        "summary": {
+          "mean_fitted_first_minus_actor_cost": {
+            "total_cost": -0.027327751458300575,
+            "discounted_cost": -0.02385025913198291,
+            "state_cost": -0.027639409745003007,
+            "command_cost": 0.00031165828671753104,
+            "early_state_cost": -0.027634696140502513,
+            "late_state_cost": -4.713604502078108e-06
+          },
+          "mean_fitted_first_minus_actor_score": {
+            "q_mean": 0.0017878226935863495,
+            "risk_score": 0.002910878509283066,
+            "soft_surrogate_score": 0.0004441700875759125
+          },
+          "discount_changes_path_ordering_count": 0,
+          "discount_changes_mean_ordering": false,
+          "ordering": {
+            "total_cost": {
+              "q_mean": {
+                "fitted_first_lower_cost_paths": 2,
+                "fitted_first_higher_cost_paths": 0,
+                "score_prefers_fitted_first_paths": 2,
+                "score_prefers_actor_paths": 0,
+                "actor_preferred_despite_lower_fitted_first_cost_paths": 0,
+                "fitted_first_preferred_despite_higher_cost_paths": 0
+              },
+              "risk_score": {
+                "fitted_first_lower_cost_paths": 2,
+                "fitted_first_higher_cost_paths": 0,
+                "score_prefers_fitted_first_paths": 2,
+                "score_prefers_actor_paths": 0,
+                "actor_preferred_despite_lower_fitted_first_cost_paths": 0,
+                "fitted_first_preferred_despite_higher_cost_paths": 0
+              },
+              "soft_surrogate_score": {
+                "fitted_first_lower_cost_paths": 2,
+                "fitted_first_higher_cost_paths": 0,
+                "score_prefers_fitted_first_paths": 1,
+                "score_prefers_actor_paths": 1,
+                "actor_preferred_despite_lower_fitted_first_cost_paths": 1,
+                "fitted_first_preferred_despite_higher_cost_paths": 0
+              }
+            },
+            "discounted_cost": {
+              "q_mean": {
+                "fitted_first_lower_cost_paths": 2,
+                "fitted_first_higher_cost_paths": 0,
+                "score_prefers_fitted_first_paths": 2,
+                "score_prefers_actor_paths": 0,
+                "actor_preferred_despite_lower_fitted_first_cost_paths": 0,
+                "fitted_first_preferred_despite_higher_cost_paths": 0
+              },
+              "risk_score": {
+                "fitted_first_lower_cost_paths": 2,
+                "fitted_first_higher_cost_paths": 0,
+                "score_prefers_fitted_first_paths": 2,
+                "score_prefers_actor_paths": 0,
+                "actor_preferred_despite_lower_fitted_first_cost_paths": 0,
+                "fitted_first_preferred_despite_higher_cost_paths": 0
+              },
+              "soft_surrogate_score": {
+                "fitted_first_lower_cost_paths": 2,
+                "fitted_first_higher_cost_paths": 0,
+                "score_prefers_fitted_first_paths": 1,
+                "score_prefers_actor_paths": 1,
+                "actor_preferred_despite_lower_fitted_first_cost_paths": 1,
+                "fitted_first_preferred_despite_higher_cost_paths": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters_unchanged": true,
+  "optimizer_updates": 0,
+  "fitting_interactions": 0,
+  "controller_episodes": 4
+}

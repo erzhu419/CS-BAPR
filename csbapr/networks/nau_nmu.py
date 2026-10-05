@@ -1,19 +1,7 @@
-"""
-NAU/NMU Layers and CS-BAPR Actor Architecture
+"""Arithmetic actor heads; whole-policy bounds require smooth features.
 
-Corresponds to CSBAPR.lean:
-- Part IX (L776-953):
-  - NAULayer → nau_has_arithmetic_bias_1d (L843): L=0
-  - NMULayer → nmu_has_bounded_arithmetic_bias (L876): L=2|c|
-  - NAU_NMU_Actor → nau_nmu_composition_bias (L896): L=2|wc|
-  - ReLU comparison → relu_derivative_not_lipschitz (L908): L=∞
-- Part XI (L1200-1462):
-  - IsFunctionLipschitz (L1217): K_g for feature extractor
-  - composed_deriv_lipschitz_simple (L1417): L_eff = L_h·K_g·B_g + L_g
-  - derivative_jump_not_lip (L1254): LeakyReLU is function-Lip but NOT deriv-Lip
-
-Reference: stable-nalu/stable_nalu/layer/re_regualized_linear_nac.py
-Reference: stable-nalu/stable_nalu/layer/re_regualized_linear_mnac.py
+The quadratic branch is NMU-inspired, not the published multiplicative NMU.
+Historical LeakyReLU actors remain available without a global derivative bound.
 """
 
 import math
@@ -24,7 +12,7 @@ import torch.nn.functional as F
 
 class NAULayer(nn.Module):
     """
-    Neural Arithmetic Unit (Addition/Subtraction).
+    Neural Addition Unit (addition/subtraction).
     
     Corresponds to CSBAPR.lean: NAULayer (L799), weights ∈ {-1, 0, 1}
     Reference: stable-nalu/stable_nalu/layer/re_regualized_linear_nac.py
@@ -34,7 +22,7 @@ class NAULayer(nn.Module):
     - regularization drives W toward {-1,0,1} (progressive discretization)
     - More stable than STE: STE locks weights too early in training
     
-    Lean guarantee: L=0 (nau_has_arithmetic_bias_1d)
+    Fixed-weight input derivative curvature is zero, before nonlinear composition.
     """
     def __init__(self, in_features: int, out_features: int):
         super().__init__()
@@ -65,14 +53,7 @@ class NAULayer(nn.Module):
 
 class NMULayer(nn.Module):
     """
-    Neural Multiplication Unit (simplified quadratic).
-    
-    Corresponds to CSBAPR.lean: NMUUnit (L858)
-    Lean proves simplified version: f(x) = c·x² with L=2|c|
-    
-    Note: stable-nalu's MNAC uses weighted product y = Π(xᵢ·wᵢ + 1 - wᵢ),
-    which is more powerful but not directly covered by the Lean proof.
-    We keep the simplified version for direct Lean coverage.
+    NMU-inspired quadratic branch f(x) = c*x**2, with curvature 2*max(abs(c)).
     """
     def __init__(self, features: int):
         super().__init__()
@@ -93,35 +74,29 @@ class NMULayer(nn.Module):
 
 class NAU_NMU_Actor(nn.Module):
     """
-    CS-BAPR Actor with NAU/NMU output heads for OOD extrapolation.
-    
-    Architecture:
-    - Feature extraction: standard layers (LeakyReLU to avoid dead zones, trap #6)
-    - NAU linear head: L=0 component (nau_has_arithmetic_bias_1d)
-    - NMU quadratic head: L=2|c| component (nmu_has_bounded_arithmetic_bias)
-    - Learnable mixing weight α controlling NAU vs NMU ratio
-    
-    Lean guarantees:
-    - NAU output: L=0 (nau_has_arithmetic_bias_1d)
-    - NMU output: L=2|c| (nmu_has_bounded_arithmetic_bias)
-    - Composition: L=2|wc| (nau_nmu_composition_bias)
-    
-    For SAC integration, outputs (mean, log_std) for Gaussian policy.
+    Mixed arithmetic Gaussian actor with historical or smooth feature activations.
+
+    The derivative certificate covers the deterministic action tanh(mean),
+    not the sampled Gaussian policy, log-standard-deviation head, or return.
     """
     def __init__(self, state_dim: int, action_dim: int, hidden_dim: int = 256,
-                 log_std_min: float = -20, log_std_max: float = 2):
+                 log_std_min: float = -20, log_std_max: float = 2,
+                 activation: str = "leaky_relu"):
         super().__init__()
         self.action_dim = action_dim
         self.log_std_min = log_std_min
         self.log_std_max = log_std_max
         self.mean_clip = 0.0
 
-        # Feature extraction (ReLU allowed, OOD bound constrains overall policy)
+        if activation not in ("leaky_relu", "tanh"):
+            raise ValueError("Arithmetic features support leaky_relu or tanh")
+        self.activation_name = activation
+        Act = nn.Tanh if activation == "tanh" else lambda: nn.LeakyReLU(0.01)
         self.feature_net = nn.Sequential(
             nn.Linear(state_dim, hidden_dim),
-            nn.LeakyReLU(0.01),  # LeakyReLU avoids dead zones
+            Act(),
             nn.Linear(hidden_dim, hidden_dim),
-            nn.LeakyReLU(0.01),
+            Act(),
         )
 
         # NAU linear output head (L=0 component)
@@ -201,16 +176,17 @@ class NAU_NMU_Actor(nn.Module):
         return self.nau_head.regularization_loss()
 
     def l_eff_surrogate_loss(self, target: float = 200.0, eps: float = 1e-6):
-        """
-        Differentiable upper-bound surrogate for the L_eff diagnostic.
+        """Smooth actor: whole-policy bound with Frobenius norm upper bounds.
 
-        compute_L_eff() uses exact spectral norms for logging. This cheaper
-        training penalty uses Frobenius norms as an upper bound and penalizes
-        the log excess above target, which keeps the NMU/mix branch from
-        silently driving the policy into high-curvature regimes.
+        Historical actor: quadratic-branch penalty only, not a certificate.
         """
+        if self.activation_name == "tanh" and not self.mean_clip:
+            surrogate = self.derivative_bounds(norm="fro")["L_pi"]
+            penalty = torch.relu(torch.log(surrogate + eps) - math.log(target + eps)) ** 2
+            return penalty, surrogate
         alpha = torch.sigmoid(self.mix_alpha)
         l_h = (1.0 - alpha) * 2.0 * torch.linalg.vector_norm(self.nmu_head.coeff, ord=2)
+        l_h = l_h * torch.linalg.matrix_norm(self.nmu_proj.weight, ord="fro") ** 2
         k_g = torch.ones((), dtype=l_h.dtype, device=l_h.device)
         for module in self.feature_net:
             if isinstance(module, nn.Linear):
@@ -226,43 +202,32 @@ class NAU_NMU_Actor(nn.Module):
         return self.nmu_head.lipschitz_constant
 
     def compute_L_eff(self) -> float:
-        """
-        Effective derivative Lipschitz constant for the composed architecture.
-
-        Corresponds to CSBAPR.lean: composed_deriv_lipschitz_simple (L1417)
-
-        For π = h ∘ g where h = output head (NAU/NMU), g = feature extractor (LeakyReLU MLP):
-            L_eff = L_h · K_g · B_g + L_g
-
-        - L_h: output head derivative-Lipschitz (NAU: 0, NMU: 2|c|, mixed: (1-α)·2|c|)
-        - K_g: feature extractor function-Lipschitz (product of layer spectral norms)
-        - B_g: feature extractor derivative upper bound (≈ K_g for Lipschitz functions)
-        - L_g: feature extractor derivative-Lipschitz (0 for piecewise-linear, per
-                derivative_jump_not_lip: LeakyReLU is NOT deriv-Lip globally, but
-                within each linear region L_g=0, and the composition rule handles this)
-        """
+        """Whole deterministic-policy curvature bound, or infinity if uncertified."""
+        if self.activation_name != "tanh" or self.mean_clip:
+            return math.inf
         with torch.no_grad():
-            # L_h: output head derivative-Lipschitz
-            alpha = torch.sigmoid(self.mix_alpha).item()
-            L_nmu = self.nmu_head.lipschitz_constant  # 2*max(|c|)
-            L_h = (1 - alpha) * L_nmu  # NAU contributes 0
+            return self.derivative_bounds()["L_pi"].item()
 
-            # K_g: feature extractor function-Lipschitz (product of spectral norms)
-            K_g = 1.0
-            for module in self.feature_net:
-                if isinstance(module, nn.Linear):
-                    s = torch.linalg.svdvals(module.weight)
-                    K_g *= s[0].item()
-                elif isinstance(module, nn.LeakyReLU):
-                    K_g *= 1.0  # LeakyReLU Lipschitz constant = 1
-
-            # B_g: derivative upper bound ≈ K_g
-            B_g = K_g
-
-            # L_g: piecewise-linear feature extractor has L_g = 0 within linear regions
-            L_g = 0.0
-
-        return L_h * K_g * B_g + L_g
+    def derivative_bounds(self, norm=2):
+        """Global bounds for tanh features, quadratic projection, and action squash."""
+        if self.activation_name != "tanh" or self.mean_clip:
+            raise ValueError("Finite bounds require tanh features and no hard mean clamp")
+        matrix_norm = lambda weight: torch.linalg.matrix_norm(weight.double(), ord=norm)
+        curvature = 4.0 / (3.0 * math.sqrt(3.0))
+        w1 = matrix_norm(self.feature_net[0].weight)
+        w2 = matrix_norm(self.feature_net[2].weight)
+        k_g = w2 * w1
+        l_g = curvature * (k_g ** 2 + w2 * w1 ** 2)
+        alpha = torch.sigmoid(self.mix_alpha.double())
+        u_norm = matrix_norm(self.nmu_proj.weight)
+        c_max = self.nmu_head.coeff.double().abs().max()
+        l_h = 2 * (1 - alpha) * c_max * u_norm ** 2
+        k_h = alpha * matrix_norm(self.nau_head.W.clamp(-1, 1))
+        k_h = k_h + l_h * math.sqrt(self.nau_head.in_features)
+        k_pi = k_h * k_g
+        l_pi = curvature * k_pi ** 2 + l_h * k_g ** 2 + k_h * l_g
+        return {"K_G": k_g, "L_G": l_g, "K_H": k_h, "L_H": l_h,
+                "K_pi": k_pi, "L_pi": l_pi}
 
 
 class KAN_Actor(nn.Module):
@@ -345,11 +310,5 @@ class KAN_Actor(nn.Module):
         )
 
     def compute_L_eff(self) -> float:
-        """Approx Lipschitz via sum of layer weight spectral norms."""
-        with torch.no_grad():
-            L = 1.0
-            for layer in self.kan_mean.layers:
-                if hasattr(layer, 'base_weight'):
-                    s = torch.linalg.svdvals(layer.base_weight)
-                    L *= (s[0].item() + 1.0)  # +1 for spline contribution
-        return float(L)
+        """No whole-policy spline derivative certificate is implemented."""
+        return math.inf

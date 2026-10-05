@@ -1,0 +1,502 @@
+{
+  "revision": "nonlinear_load_v33_cost_reference",
+  "source_revision": "nonlinear_load_v32_reference",
+  "training_seed": 21,
+  "source_symbolic_constraint": "on",
+  "source_config": {
+    "env_name": "SustainedNonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.01,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.08,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 1.0,
+    "storm_probability_rule": "always-active load",
+    "tail_shape": 1.5,
+    "tail_rule": "0.5 + 0.5 * min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "SustainedNonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "reference_identification": {
+    "fits": {
+      "cubic": {
+        "gain": [
+          [
+            1.8308695636613153,
+            0.0,
+            1.3416050824755659,
+            0.0,
+            0.4000000378806692,
+            0.0
+          ],
+          [
+            0.0,
+            1.83086956900435,
+            0.0,
+            1.3416049518367312,
+            0.0,
+            0.3999999861340498
+          ]
+        ],
+        "dynamics": [
+          [
+            1.0,
+            0.0,
+            0.05000000020408876,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.05000000030827072
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "load_matrix": [
+          [
+            0.001250022203370576,
+            0.0
+          ],
+          [
+            0.0,
+            0.0012499782620105614
+          ],
+          [
+            0.050000005106777254,
+            0.0
+          ],
+          [
+            0.0,
+            0.04999999701966856
+          ]
+        ],
+        "linear_action_matrix": [
+          [
+            0.0031249941383631116,
+            0.0
+          ],
+          [
+            0.0,
+            0.0031250052288143808
+          ],
+          [
+            0.12500000245608395,
+            0.0
+          ],
+          [
+            0.0,
+            0.12499999539564163
+          ]
+        ],
+        "cubic_action_matrix": [
+          [
+            0.0031250053869665046,
+            0.0
+          ],
+          [
+            0.0,
+            0.0031249880760260947
+          ],
+          [
+            0.12499999675733778,
+            0.0
+          ],
+          [
+            0.0,
+            0.12500000725220056
+          ]
+        ]
+      }
+    }
+  },
+  "source_candidate_gain": [
+    [
+      1.8308695636613228,
+      0.0,
+      1.3416050824755654,
+      0.0,
+      0.3038881283232111,
+      0.0
+    ],
+    [
+      0.0,
+      1.8308695690043504,
+      0.0,
+      1.3416049518367306,
+      0.0,
+      0.3038874575716283
+    ]
+  ],
+  "radius_results": {
+    "0.2": {
+      "1": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -0.28479956190315664,
+              -0.22582725585954996
+            ]
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -0.28490109330226904,
+              -0.22590988507497525
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -0.30929270458736696,
+              -0.23807511381640736
+            ]
+          },
+          "cost_linear": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -0.2813606926321637,
+              -0.21925577950227654
+            ]
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -50.8381190827512,
+              -49.32798069324236
+            ]
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -45.683225285146285,
+              -41.757340109001746
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -45.354421907664026,
+              -41.944906953813174
+            ]
+          },
+          "cost_linear": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -48.76321136872336,
+              -45.43878101545371
+            ]
+          }
+        }
+      }
+    },
+    "0.5": {
+      "1": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -1.4565803032851226,
+              -1.1999030098858228
+            ]
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -1.4739999241796637,
+              -1.2067752175573736
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -1.479579474228209,
+              -1.2176951722418883
+            ]
+          },
+          "cost_linear": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -1.4443291798377436,
+              -1.1886589104749885
+            ]
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -51.79590569989091,
+              -49.95343487121467
+            ]
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -46.87847973877038,
+              -42.53880442065353
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -46.406434010349216,
+              -42.504641187975814
+            ]
+          },
+          "cost_linear": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -49.71300826354996,
+              -45.91030085889204
+            ]
+          }
+        }
+      }
+    },
+    "1.0": {
+      "1": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -5.188533967869892,
+              -4.453486786463788
+            ]
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -5.430797462981539,
+              -4.564007498607213
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -5.0952941927604884,
+              -4.390881676989489
+            ]
+          },
+          "cost_linear": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -4.914714995038854,
+              -4.31210135910448
+            ]
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -55.14835787892777,
+              -52.44873939298462
+            ]
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -50.92032795107182,
+              -45.34426445684207
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -49.82350286413478,
+              -44.94440878975914
+            ]
+          },
+          "cost_linear": {
+            "evaluation_seeds": [
+              64000,
+              64001
+            ],
+            "returns": [
+              -53.11071052848433,
+              -48.320904251026846
+            ]
+          }
+        }
+      }
+    }
+  }
+}

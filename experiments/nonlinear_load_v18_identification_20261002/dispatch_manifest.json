@@ -1,0 +1,193 @@
+{
+  "revision": "nonlinear_load_v18_identification",
+  "source_revision": "nonlinear_load_v17_reset_jacobian",
+  "source_study": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v17_reset_jacobian_20261002",
+  "status": "formal_complete_identification_pass",
+  "method": "csbapr-centered-mlp-jacobian-only-no-target-shift",
+  "config": {
+    "env_name": "NonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.01,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "NonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "runtime_requirement": {
+    "torch": "2.5.1+cu121",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "pysindy": "2.1.0",
+    "sklearn": "1.7.2",
+    "python_minor_versions": [
+      "3.10",
+      "3.11"
+    ]
+  },
+  "training_seeds": [
+    11,
+    12
+  ],
+  "radii": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "severities": [
+    1,
+    50
+  ],
+  "load_gain_tolerance": 0.001,
+  "evaluation_seed_start": 60000,
+  "evaluation_episodes_per_severity": 100,
+  "intervention": "add u_x^3/u_y^3 as control features; same transitions and threshold; local derivative for feedback",
+  "independent_validation_seed_offsets": {
+    "1": 71000,
+    "50": 72000
+  },
+  "decision_rules": {
+    "physical_prediction": "each seed/load: independent physical RMSE cubic < linear",
+    "load_gain": "each seed: maximum absolute error from diag(0.4,0.4) <= 0.001",
+    "direct_feedback": "each seed/radius/load: cubic cost < linear cost",
+    "next": "fresh matched actor experiment only if all three gates pass"
+  },
+  "placement": "idle compatible Linux GPU; no node/GPU preference, pin or allowlist; no Windows",
+  "optimizer_updates": 0,
+  "new_actor_training_interactions": 0,
+  "historical_v13_v15_v17_gate": "HOLD",
+  "tests": {
+    "local": "3 focused tests passed",
+    "launcher_syntax": "passed",
+    "frozen_runtime": "3 focused tests passed"
+  },
+  "tasks": [
+    {
+      "id": "t126814",
+      "seed": 11,
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v18.sh --seed 11 --source-evaluation ../inputs/source_evaluation_seed11.json --result-dir ../outputs/seed11 --device cuda --threads 2",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v18_identification_20261002",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v18_identification_20261002/outputs/seed11",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v18_identification/seed11"
+    },
+    {
+      "id": "t126815",
+      "seed": 12,
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v18.sh --seed 12 --source-evaluation ../inputs/source_evaluation_seed12.json --result-dir ../outputs/seed12 --device cuda --threads 2",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v18_identification_20261002",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v18_identification_20261002/outputs/seed12",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v18_identification/seed12"
+    }
+  ],
+  "input_json_bytes": 216145,
+  "manual_result_pull_bytes": 1882696,
+  "completion": {
+    "all_exit_codes_zero": true,
+    "original_fit_and_controls_reproduced": true,
+    "decision": {
+      "physical_validation_improved_each_seed_and_load": true,
+      "local_load_gain_recovered_each_seed": true,
+      "direct_feedback_improved_all_blocks": true,
+      "ready_for_matched_actor_experiment": true,
+      "historical_v13_v15_v17_hold_unchanged": true
+    },
+    "result_json_bytes": 1882696,
+    "task_observations": "results/nonlinear_load_v18_identification/task_observations.json",
+    "summary": "results/nonlinear_load_v18_identification/summary.json",
+    "results_note": "docs/nonlinear_load_v18_identification_results.md",
+    "new_training_submitted": false
+  }
+}

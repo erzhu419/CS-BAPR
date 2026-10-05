@@ -1,0 +1,321 @@
+{
+  "revision": "nonlinear_load_v33_cost_reference",
+  "source_revision": "nonlinear_load_v32_reference",
+  "source_formal_validation_passed": true,
+  "source_task_ids": [
+    "t134571",
+    "t134572"
+  ],
+  "source_reference_gate": {
+    "all_seed_radius_load_reference_improvement": false,
+    "reference_intervention_admitted": false,
+    "learner_replication_admitted": false,
+    "historical_hold_unchanged": true
+  },
+  "source_learner_gate": {
+    "radius1_repair_passed": true,
+    "small_radius_retention_passed": true,
+    "all_radius_own_fitted_added_value_passed": false,
+    "ready_for_learner_replication": false,
+    "historical_hold_unchanged": true
+  },
+  "source_config": {
+    "env_name": "SustainedNonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.01,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.08,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 1.0,
+    "storm_probability_rule": "always-active load",
+    "tail_shape": 1.5,
+    "tail_rule": "0.5 + 0.5 * min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "SustainedNonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "runtime_requirement": {
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "python_minor_versions": [
+      "3.10",
+      "3.11"
+    ]
+  },
+  "training_seeds": [
+    21,
+    22
+  ],
+  "controllers": [
+    "fitted_local",
+    "fitted_inverse",
+    "known_inverse",
+    "cost_linear",
+    "cost_nonlinear"
+  ],
+  "comparators": [
+    "fitted_local",
+    "cost_linear"
+  ],
+  "radii": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "severities": [
+    1,
+    50
+  ],
+  "evaluation_seed_start": 64000,
+  "evaluation_episodes_per_severity": 100,
+  "formal_fresh_controller_episodes": 6000,
+  "formal_reproduction_episodes": 72,
+  "formal_evaluation_interactions": 1214400,
+  "preflight_episodes": 96,
+  "preflight_interactions": 19200,
+  "new_training_interactions": 0,
+  "new_identification_interactions": 0,
+  "optimizer_updates": 0,
+  "checkpoint_access": false,
+  "source_input_json_bytes": 18965,
+  "status": "complete",
+  "preflight_tasks": [
+    {
+      "id": "t134575",
+      "signature": "CS-BAPR/nonlinear_load_v33/preflight/seed21",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v33.sh --seed 21 --source-evaluation ../inputs/source_seed21.json --result-dir ../preflight_outputs/seed21 --preflight-only",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v33_cost_reference_20261004",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v33_cost_reference_20261004/preflight_outputs/seed21",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v33_cost_reference/preflight/seed21",
+      "status": "done",
+      "node": "local",
+      "gpu_idx": null,
+      "started_at": 1791073455.8946702,
+      "finished_at": 1791073502.8204749,
+      "exit_code": 0,
+      "last_block_reason": null,
+      "exit_status_path": "/tmp/scheduleurm_exit_t134575_a6c1c8e8d2fbd06581c5baed.status",
+      "stage_input_paths": [
+        "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v33_cost_reference_20261004/runtime"
+      ],
+      "seed": 21,
+      "result_synced_at": null,
+      "result_sync_error": null,
+      "elapsed_seconds": 46.92580461502075
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t134576",
+      "signature": "CS-BAPR/nonlinear_load_v33/formal/seed21",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v33.sh --seed 21 --source-evaluation ../inputs/source_seed21.json --result-dir ../outputs/seed21",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v33_cost_reference_20261004",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v33_cost_reference_20261004/outputs/seed21",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v33_cost_reference/seed21",
+      "status": "done",
+      "node": "local",
+      "gpu_idx": null,
+      "started_at": 1791073692.3144782,
+      "finished_at": 1791073717.0,
+      "exit_code": 0,
+      "result_synced_at": null,
+      "result_sync_error": null,
+      "last_block_reason": null,
+      "exit_status_path": "/tmp/scheduleurm_exit_t134576_ac1817cc52509feab1d51e61.status",
+      "stage_input_paths": [
+        "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v33_cost_reference_20261004/runtime"
+      ],
+      "seed": 21,
+      "scheduler_status": "done",
+      "terminal_evidence": "scheduler wrapper exit receipt and complete diagnostic JSON",
+      "local_result_collection": "compact JSON copied from local output; no remote transfer",
+      "elapsed_seconds": 24.685521841049194
+    },
+    {
+      "id": "t134577",
+      "signature": "CS-BAPR/nonlinear_load_v33/formal/seed22",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v33.sh --seed 22 --source-evaluation ../inputs/source_seed22.json --result-dir ../outputs/seed22",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v33_cost_reference_20261004",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v33_cost_reference_20261004/outputs/seed22",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v33_cost_reference/seed22",
+      "status": "done",
+      "node": "local",
+      "gpu_idx": null,
+      "started_at": 1791073692.3141418,
+      "finished_at": 1791073717.0,
+      "exit_code": 0,
+      "result_synced_at": null,
+      "result_sync_error": null,
+      "last_block_reason": null,
+      "exit_status_path": "/tmp/scheduleurm_exit_t134577_88ed4384ec6fe4f9d716479d.status",
+      "stage_input_paths": [
+        "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v33_cost_reference_20261004/runtime"
+      ],
+      "seed": 22,
+      "scheduler_status": "done",
+      "terminal_evidence": "scheduler wrapper exit receipt and complete diagnostic JSON",
+      "local_result_collection": "compact JSON copied from local output; no remote transfer",
+      "elapsed_seconds": 24.685858249664307
+    }
+  ],
+  "formal_results_pending": false,
+  "historical_hold_unchanged": true,
+  "placement": "any free compatible Linux/WSL CPU; no preference, pin, allowlist or Windows",
+  "artifact_policy": "compact ID fit and source reproduction controls only; no checkpoints or trajectories",
+  "decision_rule": "strict lower total cost versus both fitted_local and cost_linear in every seed/radius/load block admits one reference-only learner intervention; no automatic replication",
+  "cost_model": {
+    "load_persistence": "1 - documented refresh_probability",
+    "state_cost": "unchanged physical Q with zero direct load-state cost",
+    "command_cost": "unchanged R times action_force_scale squared",
+    "terminal_value": "undiscounted local-linear augmented-model discrete Riccati solution",
+    "nonlinear_action_solver": "all real quintic stationary roots plus both bounds",
+    "axis_separability_tolerance": 1e-10,
+    "surrogate_excess_tolerance": 1e-09,
+    "old_gain_origin_preserved": false,
+    "cost_linear_origin_jacobian_matched": true,
+    "reference_is_optimal": false
+  },
+  "scheduler_evaluation_policy_override": "Generic run_* wrapper classified as training; CPU/one-shot overrides apply only to read-only NumPy/SciPy control evaluation with zero training, fitting, optimizer updates or checkpoint access.",
+  "protocol_document": "docs/nonlinear_load_v33_cost_reference_protocol.md",
+  "results_document": "docs/nonlinear_load_v33_cost_reference_results.md",
+  "tests": {
+    "focused_and_regressions": "31 passed in 6.44s",
+    "launcher_syntax": "passed",
+    "scheduler_doctor": "ok; no issues"
+  },
+  "local_runtime_reuse": "Hard-linked unchanged pinned v32 dependencies; worker runtime directories excluded from staging. No new local package installation.",
+  "preflight_validation": {
+    "passed": true,
+    "task_id": "t134575",
+    "exit_code": 0,
+    "evaluation_json_bytes": 79755,
+    "evaluation_interactions": 19200,
+    "source_controls_reproduced": true,
+    "matched_linear_origin_jacobian": true,
+    "interpretation": "numerical admission only; no performance gate or tuning"
+  },
+  "formal_validation": {
+    "passed": true,
+    "evaluation_episodes": 6072,
+    "completed_task_ids": [
+      "t134576",
+      "t134577"
+    ],
+    "source_controls_reproduced": true,
+    "evaluation_json_bytes": 3502993,
+    "evaluation_interactions": 1214400,
+    "new_training_interactions": 0,
+    "optimizer_updates": 0,
+    "checkpoint_access": false,
+    "historical_hold_unchanged": true
+  },
+  "decision": {
+    "original_reference_improvement_all_blocks": false,
+    "nonlinear_added_value_all_blocks": false,
+    "reference_intervention_admitted": false,
+    "learner_replication_admitted": false,
+    "historical_hold_unchanged": true
+  },
+  "follow_on_tasks_submitted": 2,
+  "next_step": "Separately freeze a fresh-path confirmatory diagnostic of cost_linear, a positive secondary control; no v33 nonlinear reference learner intervention or retrospective gate change. Keep existing seed21/22 ID fits; no seed/baseline expansion.",
+  "secondary_control_observation": {
+    "cost_linear_improved_vs_fitted_local_all_12_blocks": true,
+    "interpretation": "hypothesis-generating secondary-control result; independent confirmation required before reference-only learner intervention",
+    "cost_linear_worse_than_v32_inverse_in_all_ood_blocks": true
+  },
+  "follow_on_revision": "nonlinear_load_v34_linear_confirmation",
+  "follow_on_task_ids": [
+    "t134595",
+    "t134591"
+  ],
+  "follow_on_startup_failed_task_ids": [
+    "t134590"
+  ]
+}

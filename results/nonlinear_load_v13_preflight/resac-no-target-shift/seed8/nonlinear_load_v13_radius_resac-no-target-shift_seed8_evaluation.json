@@ -1,0 +1,763 @@
+{
+  "revision": "nonlinear_load_v13_radius",
+  "method": "resac-no-target-shift",
+  "training_seed": 8,
+  "training_episodes": 500,
+  "config": {
+    "env_name": "NonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.001,
+    "actor_type": null,
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 1000000000000,
+    "penalty_scale": 0.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.0,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.1,
+    "sindy_lib_degree": 2,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "environment": "nonlinear_load",
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "NonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "evaluation_seed_start": 60000,
+  "evaluation_episodes_per_severity": 1,
+  "source_revision": "nonlinear_load_v11_replication",
+  "reproduction_revision": "nonlinear_load_v12_paths",
+  "source_task_id": "t120861",
+  "checkpoint_selection": "last",
+  "training_updates": 99001,
+  "environment_steps": 100000,
+  "actor_type": null,
+  "optimizer_steps_taken": 0,
+  "new_training_interactions": 0,
+  "new_identification_interactions": 0,
+  "radii": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "severities": [
+    1,
+    50
+  ],
+  "preflight_only": true,
+  "reproduction": {
+    "passed": true,
+    "radius": 0.2,
+    "source_revision": "nonlinear_load_v12_paths",
+    "evaluation_seeds": [
+      60000
+    ],
+    "severities": [
+      1,
+      50
+    ],
+    "rtol": 0.0001,
+    "atol": 0.001,
+    "maximum_absolute_return_gaps": {
+      "actor": {
+        "1": 1.6364272958924175e-07,
+        "50": 6.48774771434546e-05
+      },
+      "known_local_linear": {
+        "1": 1.637495694595259e-11,
+        "50": 8.996964950824804e-09
+      },
+      "known_inverse": {
+        "1": 0.0,
+        "50": 0.0
+      }
+    }
+  },
+  "radius_results": {
+    "0.2": {
+      "environment_settings": {
+        "initial_amplitude": 0.2,
+        "base_force_cap": 0.05,
+        "refresh_probability": 0.1,
+        "base_storm_probability": 0.05,
+        "storm_probability_rule": "base_probability * sqrt(severity)",
+        "tail_shape": 1.5,
+        "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+        "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+        "action_force_scale": 5.0,
+        "episode_length": 200,
+        "observation": [
+          "x",
+          "y",
+          "vx",
+          "vy",
+          "current_force_x",
+          "current_force_y"
+        ],
+        "environment": "NonlinearLoad-v0",
+        "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+        "linear_share": 0.5,
+        "local_force_gain": 2.5,
+        "maximum_force": 5.0,
+        "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+        "state_cost_diagonal": [
+          1.0,
+          1.0,
+          0.1,
+          0.1
+        ],
+        "command_force_cost_diagonal": [
+          0.01,
+          0.01
+        ]
+      },
+      "amplitude_results": {
+        "1": {
+          "mean": -15.350030716358683,
+          "std": 0.0,
+          "returns": [
+            -15.350030716358683
+          ],
+          "evaluation_seeds": [
+            60000
+          ],
+          "maximum_physical_state_norm": [
+            0.3776172298865467
+          ],
+          "saturated_component_fraction": [
+            0.0
+          ],
+          "outside_unit_observation_ball_fraction": [
+            0.0
+          ]
+        },
+        "50": {
+          "mean": -1063.0372097857555,
+          "std": 0.0,
+          "returns": [
+            -1063.0372097857555
+          ],
+          "evaluation_seeds": [
+            60000
+          ],
+          "maximum_physical_state_norm": [
+            3.843619920298894
+          ],
+          "saturated_component_fraction": [
+            0.035
+          ],
+          "outside_unit_observation_ball_fraction": [
+            0.76
+          ]
+        }
+      },
+      "feedback_controls": {
+        "known_local_linear": {
+          "gain": [
+            [
+              1.8308695554733276,
+              0.0,
+              1.3416049480438232,
+              0.0,
+              0.4000000059604645,
+              0.0
+            ],
+            [
+              0.0,
+              1.8308695554733276,
+              0.0,
+              1.3416049480438232,
+              0.0,
+              0.4000000059604645
+            ]
+          ],
+          "amplitude_results": {
+            "1": {
+              "mean": -0.3515663372988935,
+              "std": 0.0,
+              "returns": [
+                -0.3515663372988935
+              ],
+              "evaluation_seeds": [
+                60000
+              ],
+              "maximum_physical_state_norm": [
+                0.19802141276333574
+              ],
+              "saturated_component_fraction": [
+                0.0
+              ],
+              "outside_unit_observation_ball_fraction": [
+                0.0
+              ]
+            },
+            "50": {
+              "mean": -3.3436224042084106,
+              "std": 0.0,
+              "returns": [
+                -3.3436224042084106
+              ],
+              "evaluation_seeds": [
+                60000
+              ],
+              "maximum_physical_state_norm": [
+                0.19802141276333574
+              ],
+              "saturated_component_fraction": [
+                0.0
+              ],
+              "outside_unit_observation_ball_fraction": [
+                0.265
+              ]
+            }
+          }
+        },
+        "known_inverse": {
+          "physical_gain": [
+            [
+              1.7443094781511401,
+              0.0,
+              1.0009921811968023,
+              0.0
+            ],
+            [
+              0.0,
+              1.7443094781511401,
+              0.0,
+              1.0009921811968023
+            ]
+          ],
+          "reference_is_optimal": false,
+          "amplitude_results": {
+            "1": {
+              "mean": -0.3648753021246958,
+              "std": 0.0,
+              "returns": [
+                -0.3648753021246958
+              ],
+              "evaluation_seeds": [
+                60000
+              ],
+              "maximum_physical_state_norm": [
+                0.19802141276333574
+              ],
+              "saturated_component_fraction": [
+                0.0
+              ],
+              "outside_unit_observation_ball_fraction": [
+                0.0
+              ]
+            },
+            "50": {
+              "mean": -3.2306112928788826,
+              "std": 0.0,
+              "returns": [
+                -3.2306112928788826
+              ],
+              "evaluation_seeds": [
+                60000
+              ],
+              "maximum_physical_state_norm": [
+                0.19802141276333574
+              ],
+              "saturated_component_fraction": [
+                0.0
+              ],
+              "outside_unit_observation_ball_fraction": [
+                0.265
+              ]
+            }
+          }
+        }
+      }
+    },
+    "0.5": {
+      "environment_settings": {
+        "initial_amplitude": 0.5,
+        "base_force_cap": 0.05,
+        "refresh_probability": 0.1,
+        "base_storm_probability": 0.05,
+        "storm_probability_rule": "base_probability * sqrt(severity)",
+        "tail_shape": 1.5,
+        "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+        "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+        "action_force_scale": 5.0,
+        "episode_length": 200,
+        "observation": [
+          "x",
+          "y",
+          "vx",
+          "vy",
+          "current_force_x",
+          "current_force_y"
+        ],
+        "environment": "NonlinearLoad-v0",
+        "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+        "linear_share": 0.5,
+        "local_force_gain": 2.5,
+        "maximum_force": 5.0,
+        "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+        "state_cost_diagonal": [
+          1.0,
+          1.0,
+          0.1,
+          0.1
+        ],
+        "command_force_cost_diagonal": [
+          0.01,
+          0.01
+        ]
+      },
+      "amplitude_results": {
+        "1": {
+          "mean": -18.468665959780125,
+          "std": 0.0,
+          "returns": [
+            -18.468665959780125
+          ],
+          "evaluation_seeds": [
+            60000
+          ],
+          "maximum_physical_state_norm": [
+            0.49505353190833934
+          ],
+          "saturated_component_fraction": [
+            0.0
+          ],
+          "outside_unit_observation_ball_fraction": [
+            0.0
+          ]
+        },
+        "50": {
+          "mean": -974.9421563420177,
+          "std": 0.0,
+          "returns": [
+            -974.9421563420177
+          ],
+          "evaluation_seeds": [
+            60000
+          ],
+          "maximum_physical_state_norm": [
+            3.6701653327336987
+          ],
+          "saturated_component_fraction": [
+            0.025
+          ],
+          "outside_unit_observation_ball_fraction": [
+            0.745
+          ]
+        }
+      },
+      "feedback_controls": {
+        "known_local_linear": {
+          "gain": [
+            [
+              1.8308695554733276,
+              0.0,
+              1.3416049480438232,
+              0.0,
+              0.4000000059604645,
+              0.0
+            ],
+            [
+              0.0,
+              1.8308695554733276,
+              0.0,
+              1.3416049480438232,
+              0.0,
+              0.4000000059604645
+            ]
+          ],
+          "amplitude_results": {
+            "1": {
+              "mean": -1.8948862768243633,
+              "std": 0.0,
+              "returns": [
+                -1.8948862768243633
+              ],
+              "evaluation_seeds": [
+                60000
+              ],
+              "maximum_physical_state_norm": [
+                0.49505353190833934
+              ],
+              "saturated_component_fraction": [
+                0.0
+              ],
+              "outside_unit_observation_ball_fraction": [
+                0.0
+              ]
+            },
+            "50": {
+              "mean": -4.88452467725602,
+              "std": 0.0,
+              "returns": [
+                -4.88452467725602
+              ],
+              "evaluation_seeds": [
+                60000
+              ],
+              "maximum_physical_state_norm": [
+                0.49505353190833934
+              ],
+              "saturated_component_fraction": [
+                0.0
+              ],
+              "outside_unit_observation_ball_fraction": [
+                0.265
+              ]
+            }
+          }
+        },
+        "known_inverse": {
+          "physical_gain": [
+            [
+              1.7443094781511401,
+              0.0,
+              1.0009921811968023,
+              0.0
+            ],
+            [
+              0.0,
+              1.7443094781511401,
+              0.0,
+              1.0009921811968023
+            ]
+          ],
+          "reference_is_optimal": false,
+          "amplitude_results": {
+            "1": {
+              "mean": -1.8369525335095374,
+              "std": 0.0,
+              "returns": [
+                -1.8369525335095374
+              ],
+              "evaluation_seeds": [
+                60000
+              ],
+              "maximum_physical_state_norm": [
+                0.49505353190833934
+              ],
+              "saturated_component_fraction": [
+                0.0
+              ],
+              "outside_unit_observation_ball_fraction": [
+                0.0
+              ]
+            },
+            "50": {
+              "mean": -4.689985198711395,
+              "std": 0.0,
+              "returns": [
+                -4.689985198711395
+              ],
+              "evaluation_seeds": [
+                60000
+              ],
+              "maximum_physical_state_norm": [
+                0.49505353190833934
+              ],
+              "saturated_component_fraction": [
+                0.0
+              ],
+              "outside_unit_observation_ball_fraction": [
+                0.265
+              ]
+            }
+          }
+        }
+      }
+    },
+    "1.0": {
+      "environment_settings": {
+        "initial_amplitude": 1.0,
+        "base_force_cap": 0.05,
+        "refresh_probability": 0.1,
+        "base_storm_probability": 0.05,
+        "storm_probability_rule": "base_probability * sqrt(severity)",
+        "tail_shape": 1.5,
+        "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+        "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+        "action_force_scale": 5.0,
+        "episode_length": 200,
+        "observation": [
+          "x",
+          "y",
+          "vx",
+          "vy",
+          "current_force_x",
+          "current_force_y"
+        ],
+        "environment": "NonlinearLoad-v0",
+        "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+        "linear_share": 0.5,
+        "local_force_gain": 2.5,
+        "maximum_force": 5.0,
+        "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+        "state_cost_diagonal": [
+          1.0,
+          1.0,
+          0.1,
+          0.1
+        ],
+        "command_force_cost_diagonal": [
+          0.01,
+          0.01
+        ]
+      },
+      "amplitude_results": {
+        "1": {
+          "mean": -33.66938666301149,
+          "std": 0.0,
+          "returns": [
+            -33.66938666301149
+          ],
+          "evaluation_seeds": [
+            60000
+          ],
+          "maximum_physical_state_norm": [
+            0.9901070638166787
+          ],
+          "saturated_component_fraction": [
+            0.0025
+          ],
+          "outside_unit_observation_ball_fraction": [
+            0.0
+          ]
+        },
+        "50": {
+          "mean": -897.0269232123892,
+          "std": 0.0,
+          "returns": [
+            -897.0269232123892
+          ],
+          "evaluation_seeds": [
+            60000
+          ],
+          "maximum_physical_state_norm": [
+            3.5309504304405603
+          ],
+          "saturated_component_fraction": [
+            0.025
+          ],
+          "outside_unit_observation_ball_fraction": [
+            0.75
+          ]
+        }
+      },
+      "feedback_controls": {
+        "known_local_linear": {
+          "gain": [
+            [
+              1.8308695554733276,
+              0.0,
+              1.3416049480438232,
+              0.0,
+              0.4000000059604645,
+              0.0
+            ],
+            [
+              0.0,
+              1.8308695554733276,
+              0.0,
+              1.3416049480438232,
+              0.0,
+              0.4000000059604645
+            ]
+          ],
+          "amplitude_results": {
+            "1": {
+              "mean": -7.018395703913515,
+              "std": 0.0,
+              "returns": [
+                -7.018395703913515
+              ],
+              "evaluation_seeds": [
+                60000
+              ],
+              "maximum_physical_state_norm": [
+                0.9901070638166787
+              ],
+              "saturated_component_fraction": [
+                0.0025
+              ],
+              "outside_unit_observation_ball_fraction": [
+                0.0
+              ]
+            },
+            "50": {
+              "mean": -10.024595867857018,
+              "std": 0.0,
+              "returns": [
+                -10.024595867857018
+              ],
+              "evaluation_seeds": [
+                60000
+              ],
+              "maximum_physical_state_norm": [
+                0.9901070638166787
+              ],
+              "saturated_component_fraction": [
+                0.0025
+              ],
+              "outside_unit_observation_ball_fraction": [
+                0.265
+              ]
+            }
+          }
+        },
+        "known_inverse": {
+          "physical_gain": [
+            [
+              1.7443094781511401,
+              0.0,
+              1.0009921811968023,
+              0.0
+            ],
+            [
+              0.0,
+              1.7443094781511401,
+              0.0,
+              1.0009921811968023
+            ]
+          ],
+          "reference_is_optimal": false,
+          "amplitude_results": {
+            "1": {
+              "mean": -6.859597966141555,
+              "std": 0.0,
+              "returns": [
+                -6.859597966141555
+              ],
+              "evaluation_seeds": [
+                60000
+              ],
+              "maximum_physical_state_norm": [
+                0.9901070638166787
+              ],
+              "saturated_component_fraction": [
+                0.0025
+              ],
+              "outside_unit_observation_ball_fraction": [
+                0.0
+              ]
+            },
+            "50": {
+              "mean": -9.722497726602933,
+              "std": 0.0,
+              "returns": [
+                -9.722497726602933
+              ],
+              "evaluation_seeds": [
+                60000
+              ],
+              "maximum_physical_state_norm": [
+                0.9901070638166787
+              ],
+              "saturated_component_fraction": [
+                0.005
+              ],
+              "outside_unit_observation_ball_fraction": [
+                0.265
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "runtime": {
+    "torch": "2.5.1+cu121",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "pysindy": "2.1.0",
+    "sklearn": "1.7.2",
+    "python": "3.11.15 | packaged by conda-forge | (main, Mar  5 2026, 16:45:40) [GCC 14.3.0]",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 2080"
+  }
+}

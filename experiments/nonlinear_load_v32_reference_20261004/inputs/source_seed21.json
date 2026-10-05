@@ -1,0 +1,467 @@
+{
+  "revision": "nonlinear_load_v31_symbolic",
+  "training_seed": 21,
+  "symbolic_constraint": "on",
+  "training_updates": 99001,
+  "environment_steps": 100000,
+  "checkpoint_selection": "last",
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.08,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 1.0,
+    "storm_probability_rule": "always-active load",
+    "tail_shape": 1.5,
+    "tail_rule": "0.5 + 0.5 * min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "SustainedNonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "config": {
+    "env_name": "SustainedNonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.01,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "source_task_id": "t132398",
+  "reference_identification": {
+    "fits": {
+      "cubic": {
+        "gain": [
+          [
+            1.8308695636613153,
+            0.0,
+            1.3416050824755659,
+            0.0,
+            0.4000000378806692,
+            0.0
+          ],
+          [
+            0.0,
+            1.83086956900435,
+            0.0,
+            1.3416049518367312,
+            0.0,
+            0.3999999861340498
+          ]
+        ],
+        "dynamics": [
+          [
+            1.0,
+            0.0,
+            0.05000000020408876,
+            0.0
+          ],
+          [
+            0.0,
+            1.0,
+            0.0,
+            0.05000000030827072
+          ],
+          [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "load_matrix": [
+          [
+            0.001250022203370576,
+            0.0
+          ],
+          [
+            0.0,
+            0.0012499782620105614
+          ],
+          [
+            0.050000005106777254,
+            0.0
+          ],
+          [
+            0.0,
+            0.04999999701966856
+          ]
+        ],
+        "linear_action_matrix": [
+          [
+            0.0031249941383631116,
+            0.0
+          ],
+          [
+            0.0,
+            0.0031250052288143808
+          ],
+          [
+            0.12500000245608395,
+            0.0
+          ],
+          [
+            0.0,
+            0.12499999539564163
+          ]
+        ],
+        "cubic_action_matrix": [
+          [
+            0.0031250053869665046,
+            0.0
+          ],
+          [
+            0.0,
+            0.0031249880760260947
+          ],
+          [
+            0.12499999675733778,
+            0.0
+          ],
+          [
+            0.0,
+            0.12500000725220056
+          ]
+        ],
+        "parameter_errors": {
+          "dynamics_max_abs_error": 3.0827071451078325e-10,
+          "load_matrix_max_abs_error": 2.2203370575717835e-08,
+          "linear_action_matrix_max_abs_error": 5.861636888978422e-09,
+          "cubic_action_matrix_max_abs_error": 1.1923973905914736e-08,
+          "load_gain_max_abs_error": 3.7880669156997726e-08
+        },
+        "feature_names": [
+          "1",
+          "x0",
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x5",
+          "u0",
+          "u1",
+          "u2",
+          "u3"
+        ],
+        "coefficients": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.05000000020408876,
+            0.0,
+            0.001250022203370576,
+            0.0,
+            0.0031249941383631116,
+            0.0,
+            0.0031250053869665046,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.05000000030827072,
+            0.0,
+            0.0012499782620105614,
+            0.0,
+            0.0031250052288143808,
+            0.0,
+            0.0031249880760260947
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.050000005106777254,
+            0.0,
+            0.12500000245608395,
+            0.0,
+            0.12499999675733778,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.04999999701966856,
+            0.0,
+            0.12499999539564163,
+            0.0,
+            0.12500000725220056
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            -0.09747343156816717,
+            0.00878054545397012,
+            0.0,
+            0.0015318102727875217,
+            0.0,
+            -0.0013461393449866244
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.005592289457897766,
+            -0.10247849392598822,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ]
+      }
+    }
+  },
+  "radius_results": {
+    "0.2": {
+      "1": {
+        "controllers": {
+          "fitted": {
+            "evaluation_seeds": [
+              62000,
+              62001
+            ],
+            "returns": [
+              -0.3249804646446737,
+              -0.21499884742558908
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              62000,
+              62001
+            ],
+            "returns": [
+              -0.3462987438896757,
+              -0.24211487078994998
+            ]
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "fitted": {
+            "evaluation_seeds": [
+              62000,
+              62001
+            ],
+            "returns": [
+              -50.410243764665,
+              -50.11890608977078
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              62000,
+              62001
+            ],
+            "returns": [
+              -45.375195964128764,
+              -43.60151655051349
+            ]
+          }
+        }
+      }
+    },
+    "0.5": {
+      "1": {
+        "controllers": {
+          "fitted": {
+            "evaluation_seeds": [
+              62000,
+              62001
+            ],
+            "returns": [
+              -1.7529321286101667,
+              -1.1375184299147192
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              62000,
+              62001
+            ],
+            "returns": [
+              -1.7587085855000213,
+              -1.1892489025615478
+            ]
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "fitted": {
+            "evaluation_seeds": [
+              62000,
+              62001
+            ],
+            "returns": [
+              -51.47467416011806,
+              -50.71305983999911
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              62000,
+              62001
+            ],
+            "returns": [
+              -46.51159100439457,
+              -44.02451862263096
+            ]
+          }
+        }
+      }
+    },
+    "1.0": {
+      "1": {
+        "controllers": {
+          "fitted": {
+            "evaluation_seeds": [
+              62000,
+              62001
+            ],
+            "returns": [
+              -6.577149596485872,
+              -4.167391311656702
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              62000,
+              62001
+            ],
+            "returns": [
+              -6.455219490267112,
+              -4.113225507023952
+            ]
+          }
+        }
+      },
+      "50": {
+        "controllers": {
+          "fitted": {
+            "evaluation_seeds": [
+              62000,
+              62001
+            ],
+            "returns": [
+              -55.90381424950831,
+              -53.05179437845686
+            ]
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              62000,
+              62001
+            ],
+            "returns": [
+              -50.949370040670814,
+              -46.26688596484186
+            ]
+          }
+        }
+      }
+    }
+  }
+}

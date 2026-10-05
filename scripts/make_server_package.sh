@@ -15,6 +15,11 @@ rsync -a --exclude='__pycache__' --exclude='*.pt' --exclude='*.pyc' \
 rsync -a --exclude='__pycache__' \
       /home/erzhu419/mine_code/CS-BAPR/scripts "$STAGE/CS-BAPR/"
 
+# Small aggregate source for reproducing the manuscript figure.
+mkdir -p "$STAGE/CS-BAPR/paper/source_data"
+rsync -a /home/erzhu419/mine_code/CS-BAPR/paper/source_data/reported_tables.csv \
+      "$STAGE/CS-BAPR/paper/source_data/"
+
 # ── offline-sumo env (MultiLineEnv + calibrated data) ──
 mkdir -p "$STAGE/offline-sumo/env"
 rsync -a --exclude='__pycache__' --exclude='*.pyc' \
@@ -42,11 +47,11 @@ cat > "$STAGE/README.md" <<'EOF'
 ## One-line deploy + run (recommended)
 
 ```bash
-tar -xzf csbapr_server.tar.gz && cd csbapr_server && pip install -q -r requirements.txt && bash CS-BAPR/scripts/run_smart.sh
+mkdir -p csbapr_server && tar -xzf csbapr_server.tar.gz -C csbapr_server && cd csbapr_server && pip install -q -r requirements.txt && bash CS-BAPR/scripts/run_smart_CS-BAPR.sh
 ```
 
-This auto-detects free GPU memory and CPU cores, schedules the 12 runs
-adaptively, and produces `results.json`, `results_table.md`, and `figure1.pdf`
+This auto-detects free GPU memory and CPU cores, schedules the 12 example runs
+adaptively, and produces `results.json` and `results_table.md`
 under `/tmp/csbapr_exp/` when finished.
 
 ## Setup (manual)
@@ -58,7 +63,7 @@ pip install -r requirements.txt
 
 **Smart (auto resource allocation)** — the recommended path, handles shared GPUs:
 ```bash
-bash CS-BAPR/scripts/run_smart.sh
+bash CS-BAPR/scripts/run_smart_CS-BAPR.sh
 ```
 
 **Sequential (one run at a time, ~54h)**:
@@ -80,7 +85,7 @@ bash CS-BAPR/scripts/run_parallel.sh
 
 ## Collect results
 ```bash
-python scripts/collect_results.py --logdir /tmp/csbapr_exp --output results.json
+python CS-BAPR/scripts/collect_results.py --logdir /tmp/csbapr_exp --output results.json
 ```
 
 Produces markdown tables:
@@ -88,19 +93,19 @@ Produces markdown tables:
 - OOD sweep (od_1x/2x/5x/10x/20x/50x)
 - Abrupt shift (burst_5x/10x/20x/50x at t=3600s)
 
-## Figure 1: Theoretical bound vs. actual (after runs complete)
+## Manuscript Figure 1: reported return degradation
 ```bash
-python scripts/plot_figure1.py --logdir /tmp/csbapr_exp --output figure1.pdf
+python CS-BAPR/scripts/plot_figure1.py --source CS-BAPR/paper/source_data/reported_tables.csv --output figure1.pdf
 ```
 
-Overlays actual OOD reward degradation vs. CS-BAPR's Lean-proved bound
-(Part X: δ + (ε + (L_eff+M)·d)·d) for paper's main theoretical result.
+Reproduces the manuscript figure from its retained aggregate table values.
+These are the reported historical medians, separate from newly collected runs.
 
 ## Methods evaluated
-- `csbapr` — NAU actor + training fixes (main method)
-- `csbapr-kan` — KAN actor (ID-focused variant)
-- `csbapr-no-nau` — MLP actor + fixes (ablation: isolates NAU contribution)
-- `bapr` — plain MLP + vanilla SAC (baseline)
+- `csbapr` — NAU/quadratic mixed actor + training stabilization
+- `csbapr-kan` — KAN actor + training stabilization
+- `csbapr-no-nau` — ReLU MLP actor + stabilization
+- `bapr` — MLP actor with current BAPR training defaults
 
 ## Environment
 MultiLineEnv loads 12 SUMO-calibrated bus lines from `offline-sumo/env/calibrated_env/`.
@@ -111,7 +116,7 @@ The scripts expect:
   CS-BAPR/            ← current directory
   offline-sumo/env/   ← parallel to CS-BAPR
 
-Adjust `--env_path` if calibrated_env lives elsewhere.
+Adjust `--env-path` if calibrated_env lives elsewhere.
 EOF
 
 # ── Tarball ──

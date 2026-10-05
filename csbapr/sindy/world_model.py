@@ -1,51 +1,13 @@
-"""
-Symbolic World Model — PySINDy Wrapper for CS-BAPR.
-
-Corresponds to CSBAPR.lean Part VI (L461-595):
-- BasisLibrary (L463) → PySINDy feature_library
-- SINDyCoeffs (L470) → model.coefficients()
-- SINDyIdentifies (L502) → fit quality < ε₁
-- sindy_implies_jacobian_consistency_nD (L518) → bridge theorem
-
-Compatible with PySINDy 2.x API:
-- SINDy(optimizer, feature_library) — no feature_names/discrete_time
-- fit(x, t, x_dot=, u=, feature_names=) — t is required
-- coefficients() — method, not attribute
-- predict(x) — no t argument
-"""
+"""Sparse state-increment or continuous-time dynamics with explicit controls."""
 
 import numpy as np
-import warnings
-
-try:
-    import pysindy as ps
-except ImportError:
-    ps = None
-    warnings.warn("PySINDy not installed. Install with: pip install pysindy")
+import pysindy as ps
 
 
 class SymbolicWorldModel:
-    """
-    SINDy-based symbolic dynamics model.
-
-    Identifies sparse analytic formula f_sym from trajectory data.
-    In CS-BAPR, f_sym approximates the environment dynamics (NOT the policy).
-
-    Lean mapping:
-    - fit() → SINDyIdentifies (L502): SINDy identifies f_sym with error ε₁
-    - predict() → SINDyCoeffs.reconstruct (L475): Θ(x) · ξ
-    - deriv_error() → ε₁ estimation for OOD bound
-
-    ⚠️ SINDy identifies ENVIRONMENT DYNAMICS ds/dt = f(s), not policy π(s).
-    Policy π is constrained via Jacobian Consistency Loss to align with ∇f_sym.
-    """
     def __init__(self, n_state: int, n_control: int = 0,
                  poly_degree: int = 2, threshold: float = 0.1,
-                 discrete_time: bool = True,
-                 feature_names: list = None):
-        if ps is None:
-            raise ImportError("PySINDy required. Install: pip install pysindy")
-
+                 discrete_time: bool = True, feature_names: list = None):
         self.n_state = n_state
         self.n_control = n_control
         self.discrete_time = discrete_time
@@ -54,92 +16,80 @@ class SymbolicWorldModel:
         self.feature_names = feature_names
         self.coeffs = None
         self.sparsity = None
-
         self.library = ps.PolynomialLibrary(degree=poly_degree)
         self.optimizer = ps.STLSQ(threshold=threshold)
+        self.model = ps.SINDy(feature_library=self.library, optimizer=self.optimizer)
 
-        # PySINDy 2.x: only optimizer + feature_library in __init__
-        self.model = ps.SINDy(
-            feature_library=self.library,
-            optimizer=self.optimizer,
-        )
+    def training_arrays(self, X, U=None, X_dot=None, multiple_trajectories=False):
+        """Align each transition before concatenation; never difference across resets."""
+        xs = X if multiple_trajectories else [X]
+        us = U if multiple_trajectories else [U]
+        ys = X_dot if multiple_trajectories else [X_dot]
+        if U is None:
+            us = [None] * len(xs)
+        if X_dot is None:
+            ys = [None] * len(xs)
+        if not (len(xs) == len(us) == len(ys)):
+            raise ValueError("State, control and target trajectory counts must match")
+        states, controls, targets = [], [], []
+        for x, u, y in zip(xs, us, ys):
+            x = np.asarray(x, dtype=float)
+            if y is None:
+                if not self.discrete_time:
+                    raise ValueError("Continuous-time fitting requires explicit derivatives")
+                y = np.diff(x, axis=0)
+                x = x[:-1]
+            else:
+                y = np.asarray(y, dtype=float)
+                if len(x) == len(y) + 1:
+                    x = x[:-1]
+            if x.ndim != 2 or x.shape != y.shape or x.shape[1] != self.n_state:
+                raise ValueError("States and dynamics targets must be aligned [N, n_state]")
+            states.append(x)
+            targets.append(y)
+            if self.n_control:
+                if u is None:
+                    raise ValueError("Control-aware fitting requires actions")
+                u = np.asarray(u, dtype=float).reshape(-1, self.n_control)
+                if len(u) != len(x):
+                    raise ValueError("Each transition requires its own aligned action")
+                controls.append(u)
+        return (np.vstack(states),
+                np.vstack(controls) if self.n_control else None,
+                np.vstack(targets))
 
     def fit(self, X, U=None, X_dot=None, t=None, multiple_trajectories=False):
-        """
-        Fit SINDy model.
-
-        Corresponds to Lean: SINDyIdentifies (L502)
-
-        For discrete-time mode:
-          - X is state trajectories, X_dot = X[1:] - X[:-1] computed internally
-          - multiple_trajectories: concat list of arrays before fitting
-
-        For continuous-time:
-          - X_dot must be provided externally
-        """
-        fit_kwargs = {}
-        if self.feature_names:
-            fit_kwargs['feature_names'] = self.feature_names
-
-        # PySINDy 2.x: no multiple_trajectories param. Concat manually.
-        if multiple_trajectories and isinstance(X, list):
-            if self.discrete_time:
-                # Discrete: compute x_dot = x_{t+1} - x_t per trajectory, then concat
-                all_x, all_xdot = [], []
-                for traj in X:
-                    all_x.append(traj[:-1])
-                    all_xdot.append(traj[1:] - traj[:-1])
-                X_concat = np.vstack(all_x)
-                X_dot_concat = np.vstack(all_xdot)
-                self.model.fit(X_concat, t=t or 1.0,
-                               x_dot=X_dot_concat, **fit_kwargs)
-            else:
-                # Continuous: X_dot must already be provided
-                X_concat = np.vstack(X)
-                X_dot_concat = np.vstack(X_dot) if X_dot is not None else None
-                self.model.fit(X_concat, t=t or 1.0,
-                               x_dot=X_dot_concat, **fit_kwargs)
-        else:
-            # Single array
-            if self.discrete_time and X_dot is None:
-                # Auto-compute finite differences
-                X_arr = np.asarray(X)
-                x_curr = X_arr[:-1]
-                x_dot_auto = X_arr[1:] - X_arr[:-1]
-                self.model.fit(x_curr, t=t or 1.0,
-                               x_dot=x_dot_auto, **fit_kwargs)
-            else:
-                self.model.fit(X, t=t or 1.0,
-                               x_dot=X_dot, **fit_kwargs)
-
-        self.coeffs = self._get_coefficients()
-        self.sparsity = (np.abs(self.coeffs) > 1e-6).mean()
-
-    def _get_coefficients(self):
-        """Compatibility shim for PySINDy versions."""
-        if hasattr(self.model, 'coefficients_'):
-            return self.model.coefficients_
-        elif callable(getattr(self.model, 'coefficients', None)):
-            return self.model.coefficients()
-        else:
-            raise AttributeError("Cannot find SINDy coefficients")
+        """Discrete targets are x_next - x, not x_next; u is in environment units."""
+        x, u, y = self.training_arrays(X, U, X_dot, multiple_trajectories)
+        self.model.fit(x, t=1.0 if t is None else t, x_dot=y, u=u,
+                       feature_names=self.feature_names)
+        self.coeffs = self.model.coefficients().copy()
+        self.sparsity = float((np.abs(self.coeffs) > 1e-6).mean())
+        return self
 
     def predict(self, x, u=None):
-        """
-        One-step prediction: x_dot = Θ(x) · ξ
-        Corresponds to Lean: SINDyCoeffs.reconstruct (L475)
-        """
-        return self.model.predict(x)
+        if self.n_control and u is None:
+            raise ValueError("Control-aware prediction requires actions")
+        return self.model.predict(x, u=u if self.n_control else None)
 
-    def deriv_error(self, states, true_dynamics, u=None):
-        """Estimate ε₁ = ‖fderiv(f_real) - fderiv(f_sym)‖"""
-        pred = self.model.predict(states)
-        return np.linalg.norm(pred - true_dynamics, axis=-1).mean()
+    def prediction_error(self, states, targets, u=None):
+        """Mean prediction error, not a derivative-error certificate."""
+        return np.linalg.norm(self.predict(states, u) - targets, axis=-1).mean()
+
+    def linear_dynamics(self):
+        """Extract A, B only from a homogeneous degree-one discrete increment fit."""
+        if not self.discrete_time or self.poly_degree != 1 or not self.n_control:
+            raise ValueError("Feedback construction requires linear, discrete control dynamics")
+        powers = self.library.powers_
+        constant = (powers.sum(axis=1) == 0)
+        if np.max(np.abs(self.coeffs[:, constant])) > 1e-6:
+            raise ValueError("The LQR reference requires a zero-intercept dynamics fit")
+        linear = self.coeffs[:, powers.sum(axis=1) == 1]
+        return (np.eye(self.n_state) + linear[:, :self.n_state],
+                linear[:, self.n_state:])
 
     def get_feature_names(self):
-        """Get feature names for debugging."""
         return self.model.get_feature_names()
 
     def print_equations(self):
-        """Print discovered equations."""
         self.model.print()

@@ -1,0 +1,1915 @@
+{
+  "revision": "nonlinear_load_v32_reference",
+  "source_revision": "nonlinear_load_v31_symbolic",
+  "training_seed": 21,
+  "source_symbolic_constraint": "on",
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.08,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 1.0,
+    "storm_probability_rule": "always-active load",
+    "tail_shape": 1.5,
+    "tail_rule": "0.5 + 0.5 * min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "SustainedNonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "source_config": {
+    "env_name": "SustainedNonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.01,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "radii": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "severities": [
+    1,
+    50
+  ],
+  "evaluation_seeds": [
+    63000,
+    63001
+  ],
+  "preflight_only": true,
+  "runtime": {
+    "python": "3.11.15 | packaged by conda-forge | (main, Mar  5 2026, 16:45:40) [GCC 14.3.0]",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3"
+  },
+  "reference_specification": {
+    "linear_coefficients": [
+      2.4999997632452438,
+      2.500000086661626
+    ],
+    "cubic_coefficients": [
+      2.4999996549624113,
+      2.50000031507382
+    ],
+    "maximum_force_from_fit": [
+      4.999999418207655,
+      5.000000401735446
+    ],
+    "force_gain": [
+      [
+        4.577173475686211,
+        0.0,
+        3.3540123885575306,
+        0.0,
+        0.9999999999997615,
+        0.0
+      ],
+      [
+        0.0,
+        4.5771740811770085,
+        0.0,
+        3.3540124958574946,
+        0.0,
+        0.9999999999997736
+      ]
+    ],
+    "gain": [
+      [
+        1.8308695636613153,
+        0.0,
+        1.3416050824755659,
+        0.0,
+        0.4000000378806692,
+        0.0
+      ],
+      [
+        0.0,
+        1.83086956900435,
+        0.0,
+        1.3416049518367312,
+        0.0,
+        0.3999999861340498
+      ]
+    ],
+    "origin_action_jacobian": [
+      [
+        -1.8308695636613153,
+        -0.0,
+        -1.3416050824755659,
+        -0.0,
+        -0.4000000378806692,
+        -0.0
+      ],
+      [
+        -0.0,
+        -1.83086956900435,
+        -0.0,
+        -1.3416049518367312,
+        -0.0,
+        -0.3999999861340498
+      ]
+    ],
+    "rule": "inverse_ID_cubic(cap*tanh(-diag(linear)*gain*observation/cap))",
+    "fit_source": "existing ID-only cubic fit; no oracle plant matrices or new fit"
+  },
+  "origin_jacobian_preserved": true,
+  "source_controls_reproduced": true,
+  "reproduction": {
+    "0.2": {
+      "1": {
+        "fitted_local": {
+          "evaluation_seeds": [
+            62000,
+            62001
+          ],
+          "maximum_return_error": 5.972187189229317e-10
+        },
+        "known_inverse": {
+          "evaluation_seeds": [
+            62000,
+            62001
+          ],
+          "maximum_return_error": 4.163336342344337e-15
+        }
+      },
+      "50": {
+        "fitted_local": {
+          "evaluation_seeds": [
+            62000,
+            62001
+          ],
+          "maximum_return_error": 1.1462280866680885e-06
+        },
+        "known_inverse": {
+          "evaluation_seeds": [
+            62000,
+            62001
+          ],
+          "maximum_return_error": 0.0
+        }
+      }
+    },
+    "0.5": {
+      "1": {
+        "fitted_local": {
+          "evaluation_seeds": [
+            62000,
+            62001
+          ],
+          "maximum_return_error": 3.551090310693894e-09
+        },
+        "known_inverse": {
+          "evaluation_seeds": [
+            62000,
+            62001
+          ],
+          "maximum_return_error": 1.3322676295501878e-15
+        }
+      },
+      "50": {
+        "fitted_local": {
+          "evaluation_seeds": [
+            62000,
+            62001
+          ],
+          "maximum_return_error": 7.597014430871241e-07
+        },
+        "known_inverse": {
+          "evaluation_seeds": [
+            62000,
+            62001
+          ],
+          "maximum_return_error": 0.0
+        }
+      }
+    },
+    "1.0": {
+      "1": {
+        "fitted_local": {
+          "evaluation_seeds": [
+            62000,
+            62001
+          ],
+          "maximum_return_error": 6.449654055273868e-08
+        },
+        "known_inverse": {
+          "evaluation_seeds": [
+            62000,
+            62001
+          ],
+          "maximum_return_error": 8.881784197001252e-16
+        }
+      },
+      "50": {
+        "fitted_local": {
+          "evaluation_seeds": [
+            62000,
+            62001
+          ],
+          "maximum_return_error": 9.858457516997987e-07
+        },
+        "known_inverse": {
+          "evaluation_seeds": [
+            62000,
+            62001
+          ],
+          "maximum_return_error": 7.105427357601002e-15
+        }
+      }
+    }
+  },
+  "radius_results": {
+    "0.2": {
+      "1": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -0.5106603603872605,
+              -0.47090675778737084
+            ],
+            "state_costs_by_window": [
+              [
+                0.39070096540074684,
+                7.46721461296199e-05,
+                1.1153244484498603e-08,
+                4.239805720278396e-10
+              ],
+              [
+                0.3301003971355176,
+                6.462853570042052e-05,
+                1.2256555372988151e-08,
+                4.454235551276674e-10
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                0.08985995065265362,
+                0.011807960867279043,
+                0.009097670421758103,
+                0.009119129321468009
+              ],
+              [
+                0.11249996613547526,
+                0.009662411448855612,
+                0.009393303040866493,
+                0.009186038788976537
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              0.226565796412417,
+              0.1990836559305595
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              0.04979943145275118,
+              0.04878989584413092
+            ],
+            "maximum_load_components": [
+              0.08,
+              0.08
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 0.49078355908731564,
+            "mean_state_costs_by_window": [
+              0.3604006812681322,
+              6.965034091502021e-05,
+              1.1704899928743377e-08,
+              4.3470206357775347e-10
+            ],
+            "mean_command_costs_by_window": [
+              0.10117995839406443,
+              0.010735186158067327,
+              0.009245486731312298,
+              0.009152584055222273
+            ],
+            "late_cost_share": 0.059502644056426926
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -0.5108129429977131,
+              -0.4723307002352728
+            ],
+            "state_costs_by_window": [
+              [
+                0.39258893444135695,
+                7.674464990081151e-05,
+                1.3387416565680139e-08,
+                8.675630089323036e-12
+              ],
+              [
+                0.3337744396716375,
+                6.789697469196881e-05,
+                1.194026934052952e-08,
+                5.296392615879034e-12
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                0.08812460032809956,
+                0.0118082216545818,
+                0.009097112068039682,
+                0.009117316459641958
+              ],
+              [
+                0.11025849021690294,
+                0.009654735578178145,
+                0.009390976107550044,
+                0.009184149740746621
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              0.22602441814552707,
+              0.19825490769513268
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              0.04979943145275118,
+              0.04878989584413092
+            ],
+            "maximum_load_components": [
+              0.08,
+              0.08
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 0.49157182161649293,
+            "mean_state_costs_by_window": [
+              0.3631816870564972,
+              7.232081229639016e-05,
+              1.266384295310483e-08,
+              6.986011352601035e-12
+            ],
+            "mean_command_costs_by_window": [
+              0.09919154527250125,
+              0.010731478616379972,
+              0.009244044087794863,
+              0.00915073310019429
+            ],
+            "late_cost_share": 0.059398419525914556
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -0.5596162042723768,
+              -0.4901417904959654
+            ],
+            "state_costs_by_window": [
+              [
+                0.32693607664218693,
+                1.0351108608129497e-06,
+                3.898908595766549e-12,
+                2.1762424027303057e-12
+              ],
+              [
+                0.26829371388293033,
+                9.217546268898124e-07,
+                2.255174220855412e-12,
+                2.2488712522669553e-12
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                0.202883257437249,
+                0.011576757696634995,
+                0.009101657293413772,
+                0.009117420085956054
+              ],
+              [
+                0.19356322941647366,
+                0.009709947903026067,
+                0.009389765801153046,
+                0.009184211733251107
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              0.27469087388371605,
+              0.24159158559799607
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              0.04979943145275118,
+              0.04878989584413092
+            ],
+            "maximum_load_components": [
+              0.08,
+              0.08
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 0.5248789973841711,
+            "mean_state_costs_by_window": [
+              0.29761489526255863,
+              9.78432743851381e-07,
+              3.0770414083109805e-12,
+              2.2125568274986305e-12
+            ],
+            "mean_command_costs_by_window": [
+              0.19822324342686132,
+              0.01064335279983053,
+              0.00924571154728341,
+              0.00915081590960358
+            ],
+            "late_cost_share": 0.05532867354091383
+          }
+        },
+        "inverse_minus_local": {
+          "mean_total_cost_change": 0.0007882625291772694,
+          "better_paths": 0,
+          "per_path_cost_changes": [
+            0.00015258261045258958,
+            0.0014239424479019491
+          ],
+          "evaluation_seeds": [
+            63000,
+            63001
+          ],
+          "mean_state_cost_change": 0.0027836767909733572,
+          "mean_command_cost_change": -0.0019954142617959643
+        },
+        "initial_jacobians": {
+          "states": 2,
+          "controls": {
+            "fitted_local": {
+              "mean_output_force_load_jacobian": [
+                [
+                  -1.0303337799615528,
+                  0.0
+                ],
+                [
+                  0.0,
+                  -1.1305378396534316
+                ]
+              ],
+              "load_cancellation_jacobian_residual_sq": 0.018784460206410142
+            },
+            "fitted_inverse": {
+              "mean_output_force_load_jacobian": [
+                [
+                  -0.996020666154311,
+                  0.0
+                ],
+                [
+                  0.0,
+                  -0.9808613440012428
+                ]
+              ],
+              "load_cancellation_jacobian_residual_sq": 0.00040122879200699417
+            }
+          },
+          "action_jacobian_difference_sq": 0.07130464346074888
+        }
+      },
+      "50": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -49.74452755960656,
+              -50.869313175198286
+            ],
+            "state_costs_by_window": [
+              [
+                0.66568106554948,
+                0.356014832434287,
+                0.5247712439347311,
+                0.4532335832097163
+              ],
+              [
+                0.5002049413506594,
+                0.24385546710565661,
+                0.26589496212864533,
+                0.38740989380666757
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                12.073257618635228,
+                12.711026331367249,
+                11.258757467131517,
+                11.701785417344329
+              ],
+              [
+                12.399068166968236,
+                12.965194152225358,
+                12.19715127476605,
+                11.910534316847011
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              0.23463508486145382,
+              0.30059928109064465
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              2.489971572637562,
+              2.439494792206542
+            ],
+            "maximum_load_components": [
+              4.0,
+              4.0
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 50.30692036740243,
+            "mean_state_costs_by_window": [
+              0.5829430034500698,
+              0.2999351497699718,
+              0.3953331030316882,
+              0.42032173850819193
+            ],
+            "mean_command_costs_by_window": [
+              12.236162892801733,
+              12.838110241796304,
+              11.727954370948783,
+              11.80615986709567
+            ],
+            "late_cost_share": 0.7451820584000952
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -45.03755251093204,
+              -43.58898693025882
+            ],
+            "state_costs_by_window": [
+              [
+                0.46184283971061885,
+                0.5094528980260846,
+                0.23634271658083986,
+                0.1443584954019895
+              ],
+              [
+                0.5045724488575783,
+                0.10744456443641655,
+                0.06395124832364121,
+                0.14338430899422222
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                10.437629591198204,
+                11.805281242318486,
+                10.885431191299078,
+                10.557213536396755
+              ],
+              [
+                11.191358944544783,
+                10.34409505842472,
+                10.66878179691242,
+                10.565398559765022
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              0.3066823704752136,
+              0.17313011742491066
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              2.489971572637562,
+              2.439494792206542
+            ],
+            "maximum_load_components": [
+              4.0,
+              4.0
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 44.31326972059543,
+            "mean_state_costs_by_window": [
+              0.48320764428409857,
+              0.3084487312312506,
+              0.15014698245224053,
+              0.14387140219810585
+            ],
+            "mean_command_costs_by_window": [
+              10.814494267871494,
+              11.074688150371603,
+              10.777106494105748,
+              10.561306048080889
+            ],
+            "late_cost_share": 0.7450492373189792
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -45.0957506889703,
+              -43.65001970473798
+            ],
+            "state_costs_by_window": [
+              [
+                0.37392885494199646,
+                0.25829316655110546,
+                0.06148384987081376,
+                0.04650762540609924
+              ],
+              [
+                0.33528708401213486,
+                0.03295617034871662,
+                0.029005542416925403,
+                0.050064611602635624
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                10.815414030583945,
+                12.052826800020382,
+                10.860255611966235,
+                10.62704074962971
+              ],
+              [
+                11.198651330904294,
+                10.503501946518648,
+                10.771960591232169,
+                10.728592427702468
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              0.2784929892178807,
+              0.19921867310916022
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              2.489971572637562,
+              2.439494792206542
+            ],
+            "maximum_load_components": [
+              4.0,
+              4.0
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 44.37288519685414,
+            "mean_state_costs_by_window": [
+              0.35460796947706563,
+              0.14562466844991104,
+              0.045244696143869584,
+              0.04828611850436743
+            ],
+            "mean_command_costs_by_window": [
+              11.00703268074412,
+              11.278164373269515,
+              10.816108101599202,
+              10.67781658866609
+            ],
+            "late_cost_share": 0.7439508249279521
+          }
+        },
+        "inverse_minus_local": {
+          "mean_total_cost_change": -5.993650646806994,
+          "better_paths": 2,
+          "per_path_cost_changes": [
+            -4.706975048674522,
+            -7.280326244939467
+          ],
+          "evaluation_seeds": [
+            63000,
+            63001
+          ],
+          "mean_state_cost_change": -0.6128582345942261,
+          "mean_command_cost_change": -5.380792412212754
+        },
+        "initial_jacobians": {
+          "states": 2,
+          "controls": {
+            "fitted_local": {
+              "mean_output_force_load_jacobian": [
+                [
+                  -1.2011697549184297,
+                  0.0
+                ],
+                [
+                  0.0,
+                  -1.327754430144805
+                ]
+              ],
+              "load_cancellation_jacobian_residual_sq": 0.1555182461360214
+            },
+            "fitted_inverse": {
+              "mean_output_force_load_jacobian": [
+                [
+                  -0.8108603206551552,
+                  0.0
+                ],
+                [
+                  0.0,
+                  -0.9143384615481904
+                ]
+              ],
+              "load_cancellation_jacobian_residual_sq": 0.044581996287611406
+            }
+          },
+          "action_jacobian_difference_sq": 0.19620352216846818
+        }
+      }
+    },
+    "0.5": {
+      "1": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -2.8805202054481405,
+              -2.5235714655737294
+            ],
+            "state_costs_by_window": [
+              [
+                2.403696569788304,
+                0.0004365078183186411,
+                6.955846871937416e-08,
+                4.323867990847687e-10
+              ],
+              [
+                2.010462033950247,
+                0.00036900593260198646,
+                6.603905169270554e-08,
+                4.867924197599614e-10
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                0.4461678696982622,
+                0.01200903965369287,
+                0.009091085131164849,
+                0.009119063367542537
+              ],
+              [
+                0.4845004618211464,
+                0.009658481287969232,
+                0.009395349556954261,
+                0.009186066498966208
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              0.5713149242628922,
+              0.5025484090584924
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              0.04979943145275118,
+              0.04878989584413092
+            ],
+            "maximum_load_components": [
+              0.08,
+              0.08
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 2.702045835510935,
+            "mean_state_costs_by_window": [
+              2.2070793018692756,
+              0.00040275687546031377,
+              6.779876020603985e-08,
+              4.595896094223651e-10
+            ],
+            "mean_command_costs_by_window": [
+              0.4653341657597043,
+              0.01083376047083105,
+              0.009243217344059555,
+              0.009152564933254372
+            ],
+            "late_cost_share": 0.010966641458305192
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -2.910852208663583,
+              -2.5884373862704817
+            ],
+            "state_costs_by_window": [
+              [
+                2.4619054654847647,
+                0.00048488266840591006,
+                8.358942414304725e-08,
+                1.9318951309173336e-11
+              ],
+              [
+                2.101094400811001,
+                0.0004318340481138852,
+                7.650895507310341e-08,
+                1.0592234954140616e-11
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                0.41820842359082827,
+                0.01204604036630303,
+                0.0090900711710297,
+                0.00911724177350943
+              ],
+              [
+                0.4587010728837206,
+                0.009632839158594413,
+                0.009392983009282091,
+                0.009184179840226259
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              0.564060486801615,
+              0.4949927846190078
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              0.04979943145275118,
+              0.04878989584413092
+            ],
+            "maximum_load_components": [
+              0.08,
+              0.08
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 2.7496447974670324,
+            "mean_state_costs_by_window": [
+              2.2814999331478827,
+              0.0004583583582598976,
+              8.004918960807533e-08,
+              1.4955593131656976e-11
+            ],
+            "mean_command_costs_by_window": [
+              0.4384547482372744,
+              0.010839439762448722,
+              0.009241527090155896,
+              0.009150710806867845
+            ],
+            "late_cost_share": 0.010797800541083721
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -2.9222073318678934,
+              -2.4963121894825604
+            ],
+            "state_costs_by_window": [
+              [
+                2.0676525787093416,
+                6.808187883792425e-06,
+                9.726275659293523e-12,
+                2.175951973609577e-12
+              ],
+              [
+                1.7111099250763,
+                6.18244366727064e-06,
+                7.347545270716397e-12,
+                2.249371011649147e-12
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                0.8248990165836485,
+                0.011430070062371265,
+                0.009101438268121199,
+                0.009117420044619884
+              ],
+              [
+                0.7568694459580001,
+                0.009752506225978032,
+                0.009389917930216016,
+                0.009184211838802903
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              0.6816111989991537,
+              0.5998659704783367
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              0.04979943145275118,
+              0.04878989584413092
+            ],
+            "maximum_load_components": [
+              0.08,
+              0.08
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 2.709259760675227,
+            "mean_state_costs_by_window": [
+              1.8893812518928208,
+              6.495315775531533e-06,
+              8.53691046500496e-12,
+              2.212661492629362e-12
+            ],
+            "mean_command_costs_by_window": [
+              0.7908842312708243,
+              0.010591288144174649,
+              0.009245678099168608,
+              0.009150815941711393
+            ],
+            "late_cost_share": 0.010701918631956325
+          }
+        },
+        "inverse_minus_local": {
+          "mean_total_cost_change": 0.047598961956097474,
+          "better_paths": 0,
+          "per_path_cost_changes": [
+            0.030332003215442604,
+            0.06486592069675234
+          ],
+          "evaluation_seeds": [
+            63000,
+            63001
+          ],
+          "mean_state_cost_change": 0.07447624456720228,
+          "mean_command_cost_change": -0.02687728261110241
+        },
+        "initial_jacobians": {
+          "states": 2,
+          "controls": {
+            "fitted_local": {
+              "mean_output_force_load_jacobian": [
+                [
+                  -1.1434574841918475,
+                  0.0
+                ],
+                [
+                  0.0,
+                  -1.3199674413074058
+                ]
+              ],
+              "load_cancellation_jacobian_residual_sq": 0.12853798596764376
+            },
+            "fitted_inverse": {
+              "mean_output_force_load_jacobian": [
+                [
+                  -0.976964294519491,
+                  0.0
+                ],
+                [
+                  0.0,
+                  -0.8801161169470316
+                ]
+              ],
+              "load_cancellation_jacobian_residual_sq": 0.01543940506319594
+            }
+          },
+          "action_jacobian_difference_sq": 0.1853964585910407
+        }
+      },
+      "50": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -51.844777627427,
+              -52.76125264888787
+            ],
+            "state_costs_by_window": [
+              [
+                2.733154695845138,
+                0.3564858725972711,
+                0.5247721478367777,
+                0.4532336062138467
+              ],
+              [
+                2.137708151531063,
+                0.24274573222411047,
+                0.2659034230068217,
+                0.38740991716858886
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                12.102119215789656,
+                12.714407392894245,
+                11.258819118826354,
+                11.701785577423703
+              ],
+              [
+                12.655916820238057,
+                12.963887072761434,
+                12.197147214532936,
+                11.910534317424906
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              0.5668935691375439,
+              0.5789785206177687
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              2.489971572637562,
+              2.439494792206542
+            ],
+            "maximum_load_components": [
+              4.0,
+              4.0
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 52.303015138157434,
+            "mean_state_costs_by_window": [
+              2.4354314236881005,
+              0.2996158024106908,
+              0.3953377854217997,
+              0.42032176169121777
+            ],
+            "mean_command_costs_by_window": [
+              12.379018018013856,
+              12.83914723282784,
+              11.727983166679646,
+              11.806159947424305
+            ],
+            "late_cost_share": 0.7167572576347683
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -47.01681706278609,
+              -45.975287055622424
+            ],
+            "state_costs_by_window": [
+              [
+                2.5769986545048287,
+                0.5132770048820382,
+                0.2364336706031667,
+                0.14435160953560694
+              ],
+              [
+                2.525575671370688,
+                0.13109180290460806,
+                0.06381748524678156,
+                0.14337225688565366
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                10.28972552246683,
+                11.814204755603773,
+                10.884641443593624,
+                10.557184401596215
+              ],
+              [
+                11.54110207272709,
+                10.335760126316506,
+                10.669160664258666,
+                10.565406975912447
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              0.5649867262597535,
+              0.433933932018582
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              2.489971572637562,
+              2.439494792206542
+            ],
+            "maximum_load_components": [
+              4.0,
+              4.0
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 46.49605205920426,
+            "mean_state_costs_by_window": [
+              2.5512871629377583,
+              0.32218440389332315,
+              0.15012557792497414,
+              0.1438619332106303
+            ],
+            "mean_command_costs_by_window": [
+              10.91541379759696,
+              11.07498244096014,
+              10.776901053926146,
+              10.561295688754331
+            ],
+            "late_cost_share": 0.7103689374876963
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -47.14480936023753,
+              -45.54258641048063
+            ],
+            "state_costs_by_window": [
+              [
+                2.1545419939026496,
+                0.25226622460502945,
+                0.06145169795860796,
+                0.04650763572733944
+              ],
+              [
+                1.8470607305900708,
+                0.03439372150373272,
+                0.029009388966124646,
+                0.050064668827975
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                11.097761352972178,
+                12.04498412575705,
+                10.86025442027026,
+                10.627041909044422
+              ],
+              [
+                11.573077117875773,
+                10.508384754984089,
+                10.772003625701322,
+                10.72859240203155
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              0.6804264784556068,
+              0.5239815879340493
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              2.489971572637562,
+              2.439494792206542
+            ],
+            "maximum_load_components": [
+              4.0,
+              4.0
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 46.34369788535908,
+            "mean_state_costs_by_window": [
+              2.00080136224636,
+              0.14332997305438108,
+              0.0452305434623663,
+              0.048286152277657216
+            ],
+            "mean_command_costs_by_window": [
+              11.335419235423975,
+              11.27668444037057,
+              10.816129022985791,
+              10.677817155537987
+            ],
+            "late_cost_share": 0.7122322730771229
+          }
+        },
+        "inverse_minus_local": {
+          "mean_total_cost_change": -5.806963078953178,
+          "better_paths": 2,
+          "per_path_cost_changes": [
+            -4.827960564640911,
+            -6.785965593265445
+          ],
+          "evaluation_seeds": [
+            63000,
+            63001
+          ],
+          "mean_state_cost_change": -0.383247695245123,
+          "mean_command_cost_change": -5.423715383708069
+        },
+        "initial_jacobians": {
+          "states": 2,
+          "controls": {
+            "fitted_local": {
+              "mean_output_force_load_jacobian": [
+                [
+                  -1.1031711969203637,
+                  0.0
+                ],
+                [
+                  0.0,
+                  -1.0511883162311157
+                ]
+              ],
+              "load_cancellation_jacobian_residual_sq": 0.0659877613910881
+            },
+            "fitted_inverse": {
+              "mean_output_force_load_jacobian": [
+                [
+                  -0.7889426723178294,
+                  0.0
+                ],
+                [
+                  0.0,
+                  -0.9931361517138944
+                ]
+              ],
+              "load_cancellation_jacobian_residual_sq": 0.05465991581387464
+            }
+          },
+          "action_jacobian_difference_sq": 0.07778896422951366
+        }
+      }
+    },
+    "1.0": {
+      "1": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -10.88340743596575,
+              -9.388013340538043
+            ],
+            "state_costs_by_window": [
+              [
+                9.516762506228888,
+                0.0015115711768288935,
+                2.517684338257927e-07,
+                4.575317625766386e-10
+              ],
+              [
+                8.041976108387138,
+                0.0012781675668744753,
+                2.2981049519091462e-07,
+                5.663028891616799e-10
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                1.3344479165105223,
+                0.012483843430201886,
+                0.009082368538019815,
+                0.009118977855327556
+              ],
+              [
+                1.316533050888161,
+                0.009642200281485977,
+                0.00939747817490445,
+                0.009186104862686829
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              1.1543100571446063,
+              1.0155990844257572
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              0.04979943145275118,
+              0.04878989584413092
+            ],
+            "maximum_load_components": [
+              0.08,
+              0.08
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 10.135710388251898,
+            "mean_state_costs_by_window": [
+              8.779369307308013,
+              0.0013948693718516844,
+              2.407894645083537e-07,
+              5.119173258691592e-10
+            ],
+            "mean_command_costs_by_window": [
+              1.3254904836993417,
+              0.011063021855843931,
+              0.009239923356462131,
+              0.009152541359007192
+            ],
+            "late_cost_share": 0.003043752836535769
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -11.225582001559925,
+              -9.88195476440528
+            ],
+            "state_costs_by_window": [
+              [
+                9.962877018204077,
+                0.0020163459822148855,
+                3.4729540539108475e-07,
+                5.939469110945077e-11
+              ],
+              [
+                8.609937688299697,
+                0.0018290422166172212,
+                3.278266067006732e-07,
+                4.17089384677435e-11
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                1.2299168432548757,
+                0.01257611625763773,
+                0.00907821869659091,
+                0.00911711180973097
+              ],
+              [
+                1.241956263347568,
+                0.009651196251545254,
+                0.00939601583479598,
+                0.009184230586739466
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              1.1219467966021364,
+              0.9847567279060915
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              0.04979943145275118,
+              0.04878989584413092
+            ],
+            "maximum_load_components": [
+              0.08,
+              0.08
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 10.553768382982604,
+            "mean_state_costs_by_window": [
+              9.286407353251887,
+              0.0019226940994160535,
+              3.3756100604587897e-07,
+              5.055181478859713e-11
+            ],
+            "mean_command_costs_by_window": [
+              1.2359365533012219,
+              0.011113656254591493,
+              0.009237117265693446,
+              0.009150671198235219
+            ],
+            "late_cost_share": 0.0029775597956237495
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -10.690150413998772,
+              -9.197000736402696
+            ],
+            "state_costs_by_window": [
+              [
+                8.567048058406867,
+                3.204955443733981e-05,
+                3.4222228813931906e-11,
+                2.1753629069714845e-12
+              ],
+              [
+                7.262538235207328,
+                3.085265009558042e-05,
+                3.3113352672404075e-11,
+                2.250132951250756e-12
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                2.093682971938908,
+                0.011168892537992685,
+                0.00910102157001786,
+                0.009117419954153187
+              ],
+              [
+                1.906015492557408,
+                0.009841726334759614,
+                0.009390217566805548,
+                0.009184212050934504
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              1.3403901986635653,
+              1.1764033629074198
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              0.04979943145275118,
+              0.04878989584413092
+            ],
+            "maximum_load_components": [
+              0.08,
+              0.08
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 9.943575575200734,
+            "mean_state_costs_by_window": [
+              7.914793146807098,
+              3.145110226646011e-05,
+              3.366779074316799e-11,
+              2.2127479291111202e-12
+            ],
+            "mean_command_costs_by_window": [
+              1.9998492322481578,
+              0.01050530943637615,
+              0.009245619568411703,
+              0.009150816002543846
+            ],
+            "late_cost_share": 0.002909737641823536
+          }
+        },
+        "inverse_minus_local": {
+          "mean_total_cost_change": 0.41805799473070593,
+          "better_paths": 0,
+          "per_path_cost_changes": [
+            0.34217456559417414,
+            0.4939414238672377
+          ],
+          "evaluation_seeds": [
+            63000,
+            63001
+          ],
+          "mean_state_cost_change": 0.5075659669816146,
+          "mean_command_cost_change": -0.08950797225091287
+        },
+        "initial_jacobians": {
+          "states": 2,
+          "controls": {
+            "fitted_local": {
+              "mean_output_force_load_jacobian": [
+                [
+                  -1.2740707584922042,
+                  0.0
+                ],
+                [
+                  0.0,
+                  -0.6708343209188402
+                ]
+              ],
+              "load_cancellation_jacobian_residual_sq": 0.20007564062664296
+            },
+            "fitted_inverse": {
+              "mean_output_force_load_jacobian": [
+                [
+                  -0.9144011523128703,
+                  0.0
+                ],
+                [
+                  0.0,
+                  -0.6125092129807065
+                ]
+              ],
+              "load_cancellation_jacobian_residual_sq": 0.16172880928775857
+            }
+          },
+          "action_jacobian_difference_sq": 0.11924300786390345
+        }
+      },
+      "50": {
+        "controllers": {
+          "fitted_local": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -59.4064584089257,
+              -59.82190803932539
+            ],
+            "state_costs_by_window": [
+              [
+                10.076441666125438,
+                0.35732838160370345,
+                0.5247685334738643,
+                0.4532336131016066
+              ],
+              [
+                8.44572341349625,
+                0.24004784191995376,
+                0.26592423046942826,
+                0.3874099944596246
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                12.313532560524967,
+                12.720462035811536,
+                11.258905912827696,
+                11.70178570545685
+              ],
+              [
+                13.413705016996005,
+                12.961417944689558,
+                12.197145338500764,
+                11.910534258793762
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              1.141638815885814,
+              1.0344553006173856
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0075
+            ],
+            "force_rms": [
+              2.489971572637562,
+              2.439494792206542
+            ],
+            "maximum_load_components": [
+              4.0,
+              4.0
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 59.61418322412555,
+            "mean_state_costs_by_window": [
+              9.261082539810843,
+              0.29868811176182863,
+              0.3953463819716463,
+              0.42032180378061557
+            ],
+            "mean_command_costs_by_window": [
+              12.863618788760487,
+              12.840939990250547,
+              11.72802562566423,
+              11.806159982125305
+            ],
+            "late_cost_share": 0.6288684985351334
+          },
+          "fitted_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -54.54831803778746,
+              -53.962970133685744
+            ],
+            "state_costs_by_window": [
+              [
+                10.171177719552759,
+                0.5205117913050291,
+                0.2364103525725404,
+                0.1443365089075275
+              ],
+              [
+                9.681065981617815,
+                0.18825016667049138,
+                0.06353728225207453,
+                0.14334728813035189
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                10.206898098096156,
+                11.828726540693472,
+                10.883127044119409,
+                10.557129982540562
+              ],
+              [
+                12.33452546548707,
+                10.316995455759166,
+                10.669825198627127,
+                10.565423295141656
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              1.1211538402024992,
+              0.877643183389333
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              2.489971572637562,
+              2.439494792206542
+            ],
+            "maximum_load_components": [
+              4.0,
+              4.0
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 54.255644085736606,
+            "mean_state_costs_by_window": [
+              9.926121850585286,
+              0.3543809789877602,
+              0.14997381741230748,
+              0.1438418985189397
+            ],
+            "mean_command_costs_by_window": [
+              11.270711781791613,
+              11.072860998226318,
+              10.776476121373268,
+              10.56127663884111
+            ],
+            "late_cost_share": 0.6093156022831293
+          },
+          "known_inverse": {
+            "evaluation_seeds": [
+              63000,
+              63001
+            ],
+            "returns": [
+              -54.43002425897233,
+              -52.24832654716018
+            ],
+            "state_costs_by_window": [
+              [
+                8.674830095718992,
+                0.23897788337465614,
+                0.06137872569847476,
+                0.046507664502999806
+              ],
+              [
+                7.547719835265495,
+                0.03867223542619728,
+                0.029018459209235264,
+                0.05006482025913272
+              ]
+            ],
+            "command_costs_by_window": [
+              [
+                11.893823868755788,
+                12.027190472429403,
+                10.860270879707405,
+                10.627044668784634
+              ],
+              [
+                12.562510471831965,
+                10.519628385808982,
+                10.772119948757883,
+                10.7285923906013
+              ]
+            ],
+            "maximum_physical_state_norms": [
+              1.3479120998155898,
+              1.032901731332313
+            ],
+            "saturated_component_fractions": [
+              0.0,
+              0.0
+            ],
+            "force_rms": [
+              2.489971572637562,
+              2.439494792206542
+            ],
+            "maximum_load_components": [
+              4.0,
+              4.0
+            ],
+            "force_change_counts": [
+              14.0,
+              25.0
+            ],
+            "mean_cost": 53.33917540306626,
+            "mean_state_costs_by_window": [
+              8.111274965492242,
+              0.13882505940042672,
+              0.04519859245385501,
+              0.04828624238106626
+            ],
+            "mean_command_costs_by_window": [
+              12.228167170293876,
+              11.273409429119193,
+              10.816195414232645,
+              10.677818529692967
+            ],
+            "late_cost_share": 0.6186772295955503
+          }
+        },
+        "inverse_minus_local": {
+          "mean_total_cost_change": -5.358539138388945,
+          "better_paths": 2,
+          "per_path_cost_changes": [
+            -4.858140371138241,
+            -5.85893790563965
+          ],
+          "evaluation_seeds": [
+            63000,
+            63001
+          ],
+          "mean_state_cost_change": 0.19887970817935965,
+          "mean_command_cost_change": -5.55741884656826
+        },
+        "initial_jacobians": {
+          "states": 2,
+          "controls": {
+            "fitted_local": {
+              "mean_output_force_load_jacobian": [
+                [
+                  -0.8939645734596895,
+                  0.0
+                ],
+                [
+                  0.0,
+                  -1.3030350529136485
+                ]
+              ],
+              "load_cancellation_jacobian_residual_sq": 0.2519725208054323
+            },
+            "fitted_inverse": {
+              "mean_output_force_load_jacobian": [
+                [
+                  -0.746441021441649,
+                  0.0
+                ],
+                [
+                  0.0,
+                  -0.918706223287423
+                ]
+              ],
+              "load_cancellation_jacobian_residual_sq": 0.11100125286766069
+            }
+          },
+          "action_jacobian_difference_sq": 0.21536296483312445
+        }
+      }
+    }
+  },
+  "new_evaluation_episodes": 36,
+  "reproduction_episodes": 24,
+  "evaluation_interactions": 12000,
+  "optimizer_updates": 0,
+  "new_training_interactions": 0,
+  "new_identification_interactions": 0,
+  "checkpoint_access": false,
+  "elapsed_seconds": 0.9757649200037122
+}

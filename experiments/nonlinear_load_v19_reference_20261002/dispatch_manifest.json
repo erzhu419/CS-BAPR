@@ -1,0 +1,299 @@
+{
+  "revision": "nonlinear_load_v19_reference",
+  "source_revision": "nonlinear_load_v18_identification",
+  "source_study": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v18_identification_20261002",
+  "source_actor_revision": "nonlinear_load_v17_reset_jacobian",
+  "status": "completed_hold",
+  "formal_validation": "passed: task exits, budgets, runtime, matched identification, paired controls and cost decompositions",
+  "formal_result_json_bytes": 6336453,
+  "completion_observations": "results/nonlinear_load_v19_reference/task_observations.json",
+  "summary": "results/nonlinear_load_v19_reference/summary.json",
+  "decision": {
+    "reference_repair_passed": false,
+    "small_radius_retention_passed": true,
+    "all_radius_own_fitted_added_value_passed": false,
+    "ready_for_learner_replication": false,
+    "historical_v13_v15_v17_hold_unchanged": true
+  },
+  "v18_prerequisite": "passed all three frozen gates",
+  "method": "csbapr-centered-mlp-jacobian-only-no-target-shift",
+  "training_seeds": [
+    13,
+    14
+  ],
+  "references": [
+    "linear",
+    "cubic-local"
+  ],
+  "config": {
+    "env_name": "NonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.01,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "NonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "runtime_requirement": {
+    "torch": "2.5.1+cu121",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "pysindy": "2.1.0",
+    "sklearn": "1.7.2",
+    "python_minor_versions": [
+      "3.10",
+      "3.11"
+    ]
+  },
+  "radii": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "severities": [
+    1,
+    50
+  ],
+  "reset_cycle": [
+    0.2,
+    0.5,
+    1.0
+  ],
+  "sampler_seed_offset": 100000,
+  "reset_sample_fraction": 0.5,
+  "evaluation_seed_start": 60000,
+  "evaluation_episodes_per_severity": 100,
+  "checkpoint_selection": "last",
+  "identification_reset_radius": 0.2,
+  "placement": "idle compatible Linux GPU; no node/GPU preference, pin or allowlist; no Windows",
+  "historical_v13_v15_v17_gate": "HOLD",
+  "decision_rules": {
+    "radius1_repair": "each seed and both loads: lower total and first50-step state cost than matched linear-reference actor",
+    "radius0.2_retention": "each seed and both loads: total cost <= matched linear-reference actor, zero margin",
+    "own_fitted": "both seeds and both loads: lower total cost than own reference, separately each radius",
+    "next": "learner-comparator replication only if all three gates pass"
+  },
+  "tests": {
+    "local": "23 focused tests passed",
+    "frozen_runtime": "23 focused tests passed",
+    "launcher_syntax": "passed"
+  },
+  "preflight_tasks": [
+    {
+      "id": "t126894",
+      "reference": "linear",
+      "seed": 13,
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v19.sh --reference linear --seed 13 --ckpt-dir ../preflight_checkpoints/linear/seed13 --result-dir ../preflight_outputs/linear/seed13 --device cuda --threads 2 --preflight-only",
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v19_reference_20261002/preflight_checkpoints/linear/seed13",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v19_reference_20261002/preflight_outputs/linear/seed13",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v19_reference/preflight/linear/seed13",
+      "validation": "passed",
+      "node": "jtl311linux",
+      "gpu": 0,
+      "exit_code": 0,
+      "cuda_checkpoint_restore_observed": true,
+      "result_bytes": 121651
+    },
+    {
+      "id": "t126895",
+      "reference": "cubic-local",
+      "seed": 13,
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v19.sh --reference cubic-local --seed 13 --ckpt-dir ../preflight_checkpoints/cubic-local/seed13 --result-dir ../preflight_outputs/cubic-local/seed13 --device cuda --threads 2 --preflight-only",
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v19_reference_20261002/preflight_checkpoints/cubic-local/seed13",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v19_reference_20261002/preflight_outputs/cubic-local/seed13",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v19_reference/preflight/cubic-local/seed13",
+      "validation": "passed",
+      "node": "jtl311linux",
+      "gpu": 1,
+      "exit_code": 0,
+      "cuda_checkpoint_restore_observed": true,
+      "result_bytes": 121249
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t126897",
+      "reference": "linear",
+      "seed": 13,
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v19.sh --reference linear --seed 13 --ckpt-dir ../checkpoints/linear/seed13 --result-dir ../outputs/linear/seed13 --device cuda --threads 2",
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v19_reference_20261002/checkpoints/linear/seed13",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v19_reference_20261002/outputs/linear/seed13",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v19_reference/linear/seed13",
+      "node_preference": null,
+      "gpu_preference": null,
+      "resume_flag": "--resume",
+      "allow_initial_resume_scan_error": true
+    },
+    {
+      "id": "t126898",
+      "reference": "cubic-local",
+      "seed": 13,
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v19.sh --reference cubic-local --seed 13 --ckpt-dir ../checkpoints/cubic-local/seed13 --result-dir ../outputs/cubic-local/seed13 --device cuda --threads 2",
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v19_reference_20261002/checkpoints/cubic-local/seed13",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v19_reference_20261002/outputs/cubic-local/seed13",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v19_reference/cubic-local/seed13",
+      "node_preference": null,
+      "gpu_preference": null,
+      "resume_flag": "--resume",
+      "allow_initial_resume_scan_error": true
+    },
+    {
+      "id": "t126899",
+      "reference": "linear",
+      "seed": 14,
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v19.sh --reference linear --seed 14 --ckpt-dir ../checkpoints/linear/seed14 --result-dir ../outputs/linear/seed14 --device cuda --threads 2",
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v19_reference_20261002/checkpoints/linear/seed14",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v19_reference_20261002/outputs/linear/seed14",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v19_reference/linear/seed14",
+      "node_preference": null,
+      "gpu_preference": null,
+      "resume_flag": "--resume",
+      "allow_initial_resume_scan_error": true
+    },
+    {
+      "id": "t126900",
+      "reference": "cubic-local",
+      "seed": 14,
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v19.sh --reference cubic-local --seed 14 --ckpt-dir ../checkpoints/cubic-local/seed14 --result-dir ../outputs/cubic-local/seed14 --device cuda --threads 2",
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v19_reference_20261002/checkpoints/cubic-local/seed14",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v19_reference_20261002/outputs/cubic-local/seed14",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v19_reference/cubic-local/seed14",
+      "node_preference": null,
+      "gpu_preference": null,
+      "resume_flag": "--resume",
+      "allow_initial_resume_scan_error": true
+    }
+  ],
+  "scheduler_source_inspection": "--allow-no-resume bypasses static wrapper inspection only; real --ckpt-dir/--resume-flag=--resume and full-state tests retained",
+  "preflight_validation": "passed: budgets, native CUDA resume, sampling counters, matched identification/warmup/direct controls, runtime and cost conservation",
+  "preflight_result_json_bytes": 242900,
+  "manual_preflight_pull_bytes": 242900,
+  "startup_observations": [
+    {
+      "id": "t126897",
+      "status": "running",
+      "node": "jtl311linux",
+      "gpu_idx": 0,
+      "started_at": 1790951069.3809865,
+      "log_path": "/tmp/sched_t126897.log"
+    },
+    {
+      "id": "t126898",
+      "status": "running",
+      "node": "jtl311linux",
+      "gpu_idx": 1,
+      "started_at": 1790951069.4832292,
+      "log_path": "/tmp/sched_t126898.log"
+    },
+    {
+      "id": "t126899",
+      "status": "running",
+      "node": "jtl110gpu2",
+      "gpu_idx": 0,
+      "started_at": 1790951101.6888433,
+      "log_path": "/tmp/sched_t126899.log"
+    },
+    {
+      "id": "t126900",
+      "status": "running",
+      "node": "jtl110gpu2",
+      "gpu_idx": 1,
+      "started_at": 1790951101.6389518,
+      "log_path": "/tmp/sched_t126900.log"
+    }
+  ]
+}

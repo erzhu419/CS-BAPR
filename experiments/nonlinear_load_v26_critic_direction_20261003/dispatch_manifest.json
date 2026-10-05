@@ -1,0 +1,333 @@
+{
+  "revision": "nonlinear_load_v26_critic_direction_diagnostic",
+  "source_revision": "nonlinear_load_v25_critic_replay",
+  "status": "complete",
+  "training_seeds": [
+    19,
+    20
+  ],
+  "modes": [
+    "uniform",
+    "early"
+  ],
+  "config": {
+    "env_name": "NonlinearLoad-v0",
+    "state_dim": 6,
+    "action_dim": 2,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0003,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 1000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.0,
+    "actor_type": "centered-tanh-mlp",
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": false,
+    "context_ema_alpha": 0.2,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 2.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.01,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.001,
+    "sindy_lib_degree": 1,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 50,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.0,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": false,
+    "device": "cuda"
+  },
+  "environment_settings": {
+    "initial_amplitude": 0.2,
+    "base_force_cap": 0.05,
+    "refresh_probability": 0.1,
+    "base_storm_probability": 0.05,
+    "storm_probability_rule": "base_probability * sqrt(severity)",
+    "tail_shape": 1.5,
+    "tail_rule": "min(1, 0.1 * (1 + Pareto(tail_shape)))",
+    "background_rule": "Uniform(-0.1, 0.1) * force_cap",
+    "action_force_scale": 5.0,
+    "episode_length": 200,
+    "observation": [
+      "x",
+      "y",
+      "vx",
+      "vy",
+      "current_force_x",
+      "current_force_y"
+    ],
+    "environment": "NonlinearLoad-v0",
+    "actuator_rule": "5 * (0.5 * u + 0.5 * u^3), componentwise",
+    "linear_share": 0.5,
+    "local_force_gain": 2.5,
+    "maximum_force": 5.0,
+    "cost_rule": "s_physical^T Q s_physical + (5*u)^T R (5*u)",
+    "state_cost_diagonal": [
+      1.0,
+      1.0,
+      0.1,
+      0.1
+    ],
+    "command_force_cost_diagonal": [
+      0.01,
+      0.01
+    ]
+  },
+  "runtime_requirement": {
+    "torch": "2.5.1+cu121",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3",
+    "pysindy": "2.1.0",
+    "sklearn": "1.7.2",
+    "python_minor_versions": [
+      "3.10",
+      "3.11"
+    ]
+  },
+  "source_tasks": {
+    "19": {
+      "id": "t129046",
+      "seed": 19,
+      "node": "node007",
+      "gpu_idx": 0,
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v25_critic_replay_20261003/checkpoints/seed19",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v25_critic_replay_20261003/outputs/seed19",
+      "status": "done",
+      "exit_code": 0
+    },
+    "20": {
+      "id": "t129047",
+      "seed": 20,
+      "node": "node007",
+      "gpu_idx": 1,
+      "ckpt_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v25_critic_replay_20261003/checkpoints/seed20",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v25_critic_replay_20261003/outputs/seed20",
+      "status": "done",
+      "exit_code": 0
+    }
+  },
+  "radii": [
+    0.2,
+    1.0
+  ],
+  "severities": [
+    1,
+    50
+  ],
+  "finite_difference_steps": [
+    0.01,
+    0.005
+  ],
+  "noise_seeds": [
+    92000,
+    92001,
+    92002,
+    92003,
+    92004,
+    92005,
+    92006,
+    92007
+  ],
+  "gamma": 0.99,
+  "evaluation_seed_start": 60000,
+  "evaluation_episodes_per_block": 100,
+  "formal_controller_episodes": 64000,
+  "formal_deterministic_reproduction_episodes": 1600,
+  "preflight_controller_episodes": 40,
+  "preflight_deterministic_reproduction_episodes": 4,
+  "optimizer_updates": 0,
+  "fitting_interactions": 0,
+  "diagnostic_only": true,
+  "historical_hold_unchanged": true,
+  "placement": "one automatically selected compatible Linux GPU per paired seed; no preferences, pins, allowlist or Windows",
+  "raw_evidence_policy": "full draw/path matrices stay remote; compact JSON only in result directories",
+  "preflight_tasks": [
+    {
+      "id": "t130077",
+      "signature": "CS-BAPR/nonlinear_load_v26/preflight/seed19",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v26.sh --seed 19 --input-dir ../inputs --result-dir ../preflight_outputs/seed19 --raw-dir ../preflight_raw_outputs/seed19 --device cuda --threads 2 --preflight-only",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v26_critic_direction_20261003",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v26_critic_direction_20261003/preflight_outputs/seed19",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v26_critic_direction_diagnostic/preflight/seed19",
+      "status": "done",
+      "node": "node007",
+      "gpu_idx": 3,
+      "started_at": 1791019187.354383,
+      "finished_at": 1791019282.9853902,
+      "exit_code": 0,
+      "result_synced_at": 1791019299.1455123,
+      "last_block_reason": null,
+      "result_sync_error": null,
+      "seed": 19
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t130081",
+      "signature": "CS-BAPR/nonlinear_load_v26/formal/seed19",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v26.sh --seed 19 --input-dir ../inputs --result-dir ../outputs/seed19 --raw-dir ../raw_outputs/seed19 --device cuda --threads 2",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v26_critic_direction_20261003",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v26_critic_direction_20261003/outputs/seed19",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v26_critic_direction_diagnostic/seed19",
+      "status": "done",
+      "node": "node007",
+      "gpu_idx": 3,
+      "started_at": 1791019483.2465918,
+      "finished_at": 1791019884.6048307,
+      "exit_code": 0,
+      "result_synced_at": 1791019894.4671972,
+      "last_block_reason": null,
+      "result_sync_error": null,
+      "seed": 19,
+      "elapsed_seconds": 401.3582389354706
+    },
+    {
+      "id": "t130082",
+      "signature": "CS-BAPR/nonlinear_load_v26/formal/seed20",
+      "cmd": "bash runtime/scripts/run_nonlinear_load_v26.sh --seed 20 --input-dir ../inputs --result-dir ../outputs/seed20 --raw-dir ../raw_outputs/seed20 --device cuda --threads 2",
+      "cwd": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v26_critic_direction_20261003",
+      "result_dir": "/home/erzhu419/mine_code/CS-BAPR/experiments/nonlinear_load_v26_critic_direction_20261003/outputs/seed20",
+      "local_result_dir": "/home/erzhu419/mine_code/CS-BAPR/results/nonlinear_load_v26_critic_direction_diagnostic/seed20",
+      "status": "done",
+      "node": "node007",
+      "gpu_idx": 0,
+      "started_at": 1791019483.2297108,
+      "finished_at": 1791019951.8170772,
+      "exit_code": 0,
+      "result_synced_at": 1791019967.5817423,
+      "last_block_reason": null,
+      "result_sync_error": null,
+      "seed": 20,
+      "elapsed_seconds": 468.58736634254456
+    }
+  ],
+  "protocol_document": "docs/nonlinear_load_v26_critic_direction_protocol.md",
+  "training_tasks_submitted": 0,
+  "formal_results_pending": false,
+  "input_files": {
+    "early_seed19.json": {
+      "bytes": 699514,
+      "source_node": "node007"
+    },
+    "uniform_seed20.json": {
+      "bytes": 697576,
+      "source_node": "node007"
+    },
+    "uniform_seed19.json": {
+      "bytes": 697658,
+      "source_node": "node007"
+    },
+    "early_seed20.json": {
+      "bytes": 698584,
+      "source_node": "node007"
+    }
+  },
+  "tests": {
+    "focused_and_v24_regression": "8 passed in 6.11s",
+    "launcher_syntax": "passed",
+    "scheduler_doctor": "ok; no issues"
+  },
+  "input_validation": "passed for all four frozen v25 models",
+  "local_runtime": "existing pinned Python3.11 environment reused by hardlinks; runtime/.runtime excluded from remote staging",
+  "preflight_validation": {
+    "passed": true,
+    "task_id": "t130077",
+    "exit_code": 0,
+    "result_bytes": 30387,
+    "controller_episodes": 40,
+    "deterministic_reproduction_episodes": 4,
+    "optimizer_updates": 0,
+    "parameters_unchanged": true,
+    "model_own_scales_and_soft_return_decompositions": "passed",
+    "deterministic_reproduction": {
+      "uniform": {
+        "passed": true,
+        "maximum_absolute_cost_gaps": {
+          "total_cost": 3.545427329498807e-07,
+          "state_cost": 3.9085143299644187e-07,
+          "command_cost": 7.164228588152355e-08,
+          "early_state_cost": 3.955844114500451e-07,
+          "late_state_cost": 1.4929574784772193e-08
+        }
+      },
+      "early": {
+        "passed": true,
+        "maximum_absolute_cost_gaps": {
+          "total_cost": 1.7551118425274126e-07,
+          "state_cost": 1.2450172537370463e-07,
+          "command_cost": 5.100945532632295e-08,
+          "early_state_cost": 1.321608706916777e-07,
+          "late_state_cost": 1.441785076050639e-08
+        }
+      }
+    },
+    "raw_files_remained_remote": [
+      {
+        "path": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/nonlinear_load_v26_critic_direction_20261003/preflight_raw_outputs/seed19/radius1.0_load50.json",
+        "bytes": 19784
+      }
+    ]
+  },
+  "results_document": "docs/nonlinear_load_v26_critic_direction_results.md",
+  "formal_validation": {
+    "passed": true,
+    "completed_task_ids": [
+      "t130081",
+      "t130082"
+    ],
+    "result_json_bytes": 3538064,
+    "controller_episodes": 64000,
+    "deterministic_reproduction_episodes": 1600,
+    "optimizer_updates": 0,
+    "fitting_interactions": 0,
+    "parameters_unchanged": true,
+    "model_own_scales_and_soft_return_decompositions": "passed",
+    "common_initial_states_paths_and_action_noise": "passed",
+    "raw_evidence_bytes_remaining_remote": 23744591,
+    "maximum_deterministic_reproduction_cost_gap": 1.6601303665098044e-14
+  },
+  "posthoc_comparison_tests": "5 focused tests passed in 4.15s",
+  "follow_on_tasks_submitted": 0,
+  "decision": "retain early sampling; local Q ordering improved, actor-score/small-radius discrepancies remain; v25 gate and historical HOLD unchanged",
+  "next_step": "proposed frozen early-actor critic-only direction calibration from independent ID paths; source seeds19/20 only, 50x evaluation-only; not submitted"
+}

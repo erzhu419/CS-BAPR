@@ -10,6 +10,7 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
+\usepackage{mathrsfs}
 \usepackage{bbold}
 \usepackage{graphicx}
 \usepackage[export]{adjustbox}
@@ -44,7 +45,7 @@
 
 \graphicspath{ {./} }
 
-\title{CS-BAPR: Formal OOD Extrapolation Bounds for Reinforcement Learning via Neural Arithmetic Units\footnote{Code available at \url{https://github.com/erzhu419/CS-BAPR}. The acronym ``CS-BAPR'' is retained for continuity with the authors' prior work and repository; the primary mechanism in this paper is the NAU/NMU actor head, while the causal-symbolic components (SINDy + IRM) are presented as optional framework extensions with a deliberately narrower empirical scope (see \Cref{sec:scope}).}}
+\title{Arithmetic Actor Heads and Training Stabilization for Out-of-Distribution Reinforcement Learning}
 
 \author{
   Yifan Zhang\thanks{Central South University, \href{mailto:erzhu419@gmail.com}{erzhu419@gmail.com}, \href{mailto:204201048@csu.edu.cn}{204201048@csu.edu.cn}} \and
@@ -74,799 +75,576 @@
 
 
 \begin{abstract}
-Standard reinforcement learning policies trained on bounded state regions fail catastrophically when deployed in out-of-distribution (OOD) regimes. A key yet underexplored source of this failure is \emph{architectural}: ReLU-based policy networks exhibit derivative discontinuities that permit unbounded error growth in extrapolation regions---a structural deficiency that no amount of data can remedy.
+Reinforcement learning (RL) policies can deteriorate under out-of-distribution (OOD) magnitude shifts. Starting from soft actor-critic (SAC) and its Bayesian Amnesic Piecewise-Robust (BAPR) predecessor, we study the causal-symbolic BAPR (CS-BAPR) family. The practical method combines six training-stabilization settings with alternative actor heads: a Neural Addition Unit (NAU) with a Neural Multiplication Unit (NMU)-inspired quadratic correction, a Kolmogorov-Arnold Network (KAN), or a multilayer perceptron (MLP) with rectified linear unit (ReLU) or hyperbolic-tangent activations.
 
-We propose \textbf{CS-BAPR}, a framework that extends BAPR~\cite{Zhang2025BAPR} along two axes: (i)~a set of \emph{six training-stabilization techniques}---four CS-BAPR base fixes (min-$Q$ ensemble target, running-EMA reward normalization, entropy-temperature floor, and disabling the BAPR-inherited behavioural-cloning anchor for constrained heads) plus two ports of BAPR v10/v14 (the v10 BOCD-warmup-and-penalty-scale recipe, and the v14 rollout-based one-sided surprise reform; \Cref{sec:training_fixes} details all six)---that jointly prevent late-training collapse of SAC ensembles in sparse-reward transit control; and (ii)~a choice of \emph{actor-head architecture}---Neural Arithmetic Unit (NAU/NMU), Kolmogorov-Arnold Network (KAN), or plain MLP-with-tanh---with the first two providing finite or zero derivative Lipschitz constants, and thus the architectural foothold for a polynomial OOD bound. We present these as a family of closely-related methods rather than claiming a single architecture dominates; our ablation on a 12-line SUMO-calibrated transit benchmark shows that the six training-stabilization fixes account for the bulk of the improvement over the BAPR baseline, while the architectural choices trade off ID quality, OOD stability, and run-to-run variance in non-uniform ways.
+For a differentiable deterministic policy map $\pi$ and an action-valued reference $\pi_{\mathrm{ref}}$, we prove the conditional bound
+$\|\pi(x_{\mathrm{ood}})-\pi_{\mathrm{ref}}(x_{\mathrm{ood}})\|
+\leq \delta+\varepsilon\|d\|+\tfrac{L_{\mathrm{err}}}{2}\|d\|^2$.
+Here $x_{\mathrm{ood}}$ is a test state, $d=x_{\mathrm{ood}}-x_0$ is displacement from a training reference state $x_0$, $\delta$ and $\varepsilon$ bound the value and derivative errors at $x_0$, and $L_{\mathrm{err}}$ bounds derivative-error growth along the connecting segment. An isolated NAU is linear and has zero derivative curvature, whereas scalar ReLU has a derivative jump. These layer facts do not certify the historical actor, which contains nonlinear features, a quadratic branch, and action squashing. A revised smooth-feature variant admits an explicit whole-policy derivative bound. A separate frozen-operator result preserves BAPR's discounted Bellman contraction.
 
-Our main theoretical result is the \textbf{OOD Extrapolation Stability Bound}: if the policy achieves base accuracy $\delta$ on the training domain, derivative error $\varepsilon$ at the training boundary, and derivative Lipschitz constant $L$, then the OOD prediction error at distance $\|d\|$ from a reference point satisfies $\|\pi(x_{\text{ood}}) - \pi_{\text{ref}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$, where $\pi_{\text{ref}}$ is any differentiable reference function. We further prove that ReLU lacks any finite derivative-Lipschitz constant, establishing a sharp architectural boundary for this specific certificate---ReLU cannot instantiate the derivative-Lipschitz bound, while NAU gives $L = 0$ and NMU gives $L = 2|c|$. The CS-BAPR Bellman operator preserves BAPR's $\gamma$-contraction guarantee. We provide detailed mathematical proofs and formalization-oriented theorem statements for all results.
-
-As \emph{optional framework extensions}, we formalize a SINDy-based Jacobian Consistency pipeline and an IRM causal-filtering step that can tighten the $\varepsilon$ term when the environment admits sparse, invariant dynamics \emph{and} the optimal policy is aligned with the identified dynamics structure. These extensions are \emph{not} required for the core bound, and whether they empirically help is domain-dependent; they are not activated on our primary benchmark (\Cref{sec:scope}). On the LQR auxiliary benchmark, the \emph{action-aware} SINDy variant (jointly identifying $f(x,u) = Ax + Bu$) yields a $66{-}97\%$ improvement over the no-SINDy ablation at mid-OOD ($m{=}5{-}10\times$ initial-state amplitude); this is the first positive empirical case for the SINDy extension and validates the architectural prediction that closed-loop alignment is the operative requirement.
-
-We evaluate on a SUMO-calibrated 12-line transit holding benchmark with demand-magnitude OOD (up to $50{\times}$ in-distribution flow), an abrupt-burst shift protocol (single step change at $t{=}3600$s), and a within-episode piecewise-constant oscillation protocol (multiple switches per episode, peak $20{-}50{\times}$). Across all three protocols, the CS-BAPR variants improve over the clean unstabilized BAPR baseline, with the training-stabilized MLP variant providing the most consistent behavior at the extreme end ($20{\times}{-}50{\times}$), the NAU variant providing the best static mid-range OOD point ($5{\times}$) at the cost of higher run-to-run variance, and the KAN variant providing the best in-distribution accuracy.
+On a 12-line transit benchmark calibrated with Simulation of Urban MObility (SUMO), training uses nominal in-distribution (ID) demand. All four stabilized variants improve reported median returns over the unstabilized BAPR implementation under static, abrupt, and oscillating demand shifts up to $50\times$ nominal flow. Stabilization accounts for most of the gain; the NAU variant is best at the static $5\times$ point, while other heads perform better in several remaining regimes. Optional sparse identification of nonlinear dynamics (SINDy) and invariant risk minimization (IRM)-inspired components are described separately. Auxiliary linear-quadratic regulator (LQR) and Hopper experiments show task-dependent behavior. The evidence supports a transit-focused training recipe and a conditional policy-output analysis.
 \end{abstract}
 
-
-\noindent\textbf{Keywords:} out-of-distribution extrapolation; symbolic regression; neural arithmetic units; causal invariance; formal verification; robust reinforcement learning.
-
+\noindent\textbf{Keywords:} OOD extrapolation; arithmetic actor heads; training stabilization; transit holding; robust RL.
 
 \section{Introduction}
 
-Reinforcement learning (RL) has achieved remarkable success in domains where training and deployment conditions are well-aligned~\cite{Haarnoja2018SAC}. However, real-world applications frequently require policies to operate in regimes far beyond their training distribution---a challenge we term \emph{magnitude extrapolation}. Unlike the interpolation-based generalization studied in domain randomization~\cite{Lee2020ESCP} or the regime-switch adaptation addressed by BAPR~\cite{Zhang2025BAPR}, magnitude extrapolation demands that the agent's output scale correctly to input magnitudes never encountered during training.
+Policies trained under nominal conditions may perform poorly when passenger demand or other exogenous inputs increase beyond the training range. We call this setting \emph{magnitude extrapolation}. SAC provides the underlying continuous-control training framework~\cite{Haarnoja2018SAC}; BAPR supplies change-sensitive adaptation~\cite{Zhang2025BAPR}, and robust ensemble SAC (RE-SAC) supplies the critic ensemble and risk regularization~\cite{Zhang2025RESAC}.
 
-\begin{definition}[Extrapolation Failure]
-    \label{def:extrapolation_failure}
-    Let $\pi_\theta: \mathcal{S} \to \mathcal{A}$ be a policy trained on domain $D_{\text{train}} \subset \mathcal{S}$, and let $\pi_{\text{ref}}: \mathcal{S} \to \mathcal{A}$ be any differentiable reference function used to characterize admissible extrapolation (for example, the policy's own linearization at the training boundary, or a symbolically identified reference when one is available; see Assumption~\ref{assump:reference}). The policy suffers from \emph{extrapolation failure} if there exists a distance threshold $d_0 > 0$ such that for $x_{\text{ood}}$ with $\|x_{\text{ood}} - D_{\text{train}}\| > d_0$:
-    \begin{enumerate}[label=(\roman*)]
-        \item \textbf{Error explosion:} $\|\pi_\theta(x_{\text{ood}}) - \pi_{\text{ref}}(x_{\text{ood}})\|$ grows super-polynomially with distance;
-        \item \textbf{Gradient saturation:} $\|\nabla_x \pi_\theta(x_{\text{ood}})\| \to 0$ or exhibits discontinuous jumps, preventing meaningful response scaling.
-    \end{enumerate}
-    The bound of Theorem~\ref{thm:ood_quad_nD} rules out (i) (giving polynomial rather than super-polynomial growth), and the NAU architecture (\Cref{sec:nau}) rules out (ii) (giving a constant derivative rather than saturating/jumping).
-\end{definition}
+Magnitude extrapolation connects two questions: whether training produces a stable controller, and whether the resulting policy responds appropriately to larger inputs. Arithmetic layers offer a useful inductive bias for numerical extrapolation~\cite{Trask2018NALU,Madsen2020NAU}, but a linear output layer alone does not make a nonlinear policy linear in the original state. We therefore distinguish the layer-level calculation, the conditional whole-policy error bound, and the observed control returns.
 
-This failure mode arises from two orthogonal sources: (a)~\emph{training-time instability} that pushes the actor toward poorly-calibrated Q-value estimates and eventually toward degenerate policies under the SAC objective, and (b)~\emph{architectural} properties of the function class---specifically, the inability of ReLU-based heads to admit polynomial OOD bounds even in principle. CS-BAPR addresses both:
+CS-BAPR combines four base stabilization settings with two recipes ported from BAPR: minimum-ensemble critic targets, reward-scale normalization, an entropy-temperature floor, removal of the behavior cloning (BC) anchor for stabilized variants, change-detection warmup and penalty scaling, and rollout-based one-sided surprise. Bayesian online changepoint detection (BOCD) provides the belief tracker~\cite{Adams2007BOCD}. The architectural variants share this training backbone.
 
-\begin{enumerate}
-    \item \textbf{Training-stabilization fixes.} Extending BAPR's RE-SAC backbone, we introduce four interacting fixes that together keep the ensemble critic and the actor from late-run collapse on the transit benchmark: (i)~a \emph{min-$Q$ ensemble target} to suppress over-optimism during the Q-backup, (ii)~\emph{running-EMA reward normalization} (divide by EMA of batch std, no mean shift) to keep TD magnitudes scale-invariant under late-training reward drift, (iii)~an \emph{entropy-temperature floor} ($\alpha \geq 0.01$) to prevent entropy collapse, and (iv)~disabling the BAPR-inherited behavioural-cloning anchor ($\beta_{\text{bc}} = 0$) for the constrained-head variants, where the architecture itself already bounds policy drift. These fixes are architecture-agnostic and, as our ablation shows, account for the majority of the improvement over the BAPR baseline under demand OOD.
-
-    \item \textbf{Architecturally-varied actor head.} CS-BAPR admits three interchangeable head choices for the actor, each with a different OOD profile:
-    \begin{itemize}
-        \item \emph{NAU/NMU}~\cite{Madsen2020NAU}: constant derivative ($L = 0$ at the head), giving the \emph{tightest} instance of our polynomial OOD bound (\Cref{thm:ood_quad_nD}).
-        \item \emph{KAN}~\cite{Liu2024KAN}: learnable B-spline edges with smooth (bounded-Lipschitz) derivatives, giving a bounded but nonzero $L$ via the spline grid.
-        \item \emph{Plain MLP with tanh head}: simplest baseline; supports the bound under standard spectral-normalization of the feature extractor.
-    \end{itemize}
-    For the ReLU alternative, we prove that no finite derivative-Lipschitz constant $L$ exists, so ReLU policies cannot instantiate the particular certificate $\delta + \varepsilon\|d\| + \tfrac{L}{2}\|d\|^2$ used in this paper (\Cref{thm:relu_impossible}). This does not rule out every possible ReLU extrapolation analysis; it rules out this derivative-Lipschitz route. In our experiments, the architecture choices trade off ID accuracy, mid-OOD stability, and run-to-run variance in non-uniform ways: we present them as a \emph{family} of closely-related methods rather than asserting a single winner.
-
-    \item \textbf{(Optional) Symbolic extensions.} We also formalize a SINDy-based Jacobian Consistency pipeline~\cite{Brunton2016SINDy} and an Invariant Risk Minimization (IRM)~\cite{Arjovsky2019IRM} filtering step for symbolic formula candidates. These tighten the $\varepsilon$ term in the OOD bound when the environment admits sparse, invariant dynamics \emph{and} the optimal policy is structurally aligned with those dynamics. Our primary transit benchmark does not satisfy the alignment condition---transit holding is a counteraction task, not a tracking task---so we do not activate the symbolic extensions on it. They are retained as optional framework components for future benchmarks in the tracking regime (see \Cref{sec:scope}).
-\end{enumerate}
-
-Building upon the robust ensemble framework of RE-SAC~\cite{Zhang2025RESAC} and the Bayesian change-point adaptation of BAPR~\cite{Zhang2025BAPR}, our contributions are:
-
+The contributions are:
 \begin{itemize}
-    \item \textbf{CS-BAPR family of methods.} A practical training recipe (six stabilization fixes: four base CS-BAPR fixes plus two ports of BAPR v10/v14) combined with four evaluated actor-head variants: ReLU-MLP with fixes, NAU, smooth MLP-with-tanh, and KAN. All CS-BAPR variants improve over the clean unstabilized BAPR baseline on the 12-line SUMO-calibrated transit benchmark. The strongest variant depends on the OOD regime: \texttt{csbapr-kan} is best in-distribution and near-OOD ($m{=}1{-}2$), \texttt{csbapr} (NAU) is best at the static $m{=}5{\times}$ point, \texttt{csbapr-no-nau} is best at static $m{=}10{-}20{\times}$ and on the oscillating schedules, and \texttt{csbapr-tanh} is best at static $m{=}50{\times}$.
-
-    \item \textbf{OOD Extrapolation Stability Bound (\Cref{thm:ood_quad_nD}).} Under boundary Jacobian Consistency with a chosen reference ($\varepsilon$) and bounded derivative Lipschitz constant ($L < \infty$), the OOD error satisfies $\|\pi(x_{\text{ood}}) - \pi_{\text{ref}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$. The quadratic coefficient $L/2$ is controlled by architecture: $L = 0$ for NAU, $L = 2|c|$ for NMU, bounded for KAN and spectrally-normalized smooth MLPs, and absent for ReLU under this certificate.
-
-    \item \textbf{ReLU derivative-Lipschitz impossibility (\Cref{thm:relu_impossible}).} ReLU lacks any finite derivative-Lipschitz constant, so it cannot instantiate the certificate above. This is the sharp \emph{structural} boundary between the bound-compatible heads and the BAPR ReLU baseline for this proof route.
-
-    \item \textbf{CS-BAPR Bellman Contraction (\Cref{thm:csbapr_contraction}).} The CS-BAPR operator, extending BAPR with an (optional, frozen) symbolic consistency penalty $\Gamma_{\text{sym}}$, is a $\gamma$-contraction in $L_\infty$. The contraction holds whether or not $\Gamma_{\text{sym}}$ is enabled, as long as it (and $\Gamma_{\text{epi}}$, $\kappa$) are frozen during each backup, and does not depend on the choice of actor head.
-
-    \item \textbf{Formal symbolic extensions (empirically optional).} Mathematical formalization of the SINDy-to-OOD pipeline (\Cref{thm:sindy_pipeline}) and an IRM causal-filtering statement (\Cref{thm:irm_causal}). These are off on the transit benchmark; they are retained as framework-level components for future applications where the policy-dynamics alignment condition holds.
-
-    \item \textbf{Proof transparency.} We give complete paper proofs and explicit formalization tags for the key definitions, assumptions, and theorem dependencies, using standard tools such as the convex Mean Value Theorem and Gr\"onwall-style fencing arguments.
+    \item A transit-focused comparison of four actor-head choices under the same stabilization recipe, against an unstabilized and a legacy BAPR implementation.
+    \item A policy-output extrapolation bound with explicit boundary errors and derivative-growth assumptions (\Cref{thm:ood_quad_nD}), together with layer-level NAU, quadratic-unit, and ReLU calculations (\Cref{sec:nau}).
+    \item A frozen Bellman-operator contraction result (\Cref{thm:csbapr_contraction}) and a counterexample showing how sufficiently strong value-dependent penalties can destroy contraction (\Cref{thm:frozen_sym_necessary}).
+    \item Conditional symbolic-reference results that state the required action-space alignment and cross-environment accuracy explicitly (\Cref{sec:sindy,sec:irm}).
 \end{itemize}
-
+The complete proofs and their dependencies are linked in Appendix~\ref{app:lean_overview}; implementation details appear in Appendices~\ref{app:operator_detail}--\ref{app:hyperparams}.
 
 \section{Related work}
 
-\subsection{OOD generalization in RL}
-Generalization in RL has been studied through domain randomization~\cite{Lee2020ESCP}, distributional robustness~\cite{Panaganti2024RobustF, Zhou2023NaturalActorCritic}, and epistemic uncertainty quantification~\cite{Ghosh2021EpistemicPOMDP}. These approaches provide \emph{interpolation} guarantees within the convex hull of training environments but do not address \emph{extrapolation} to magnitudes beyond the training support. Robust MDPs~\cite{Wiesemann2013RobustMDP, Iyengar2005RobustDP} hedge against worst-case perturbations but with \emph{static} uncertainty sets that become vacuous far from the training distribution. CS-BAPR instead leverages \emph{architectural} structure (NAU's constant-derivative property) to control how much policy response is allowed to drift per unit OOD distance, with an optional symbolic-reference extension for domains where such a reference is meaningful.
+\subsection{Generalization and robust RL}
+Simulation-trained locomotion can generalize to previously unseen terrain~\cite{Lee2020ESCP}. Robust Markov decision processes (MDPs) instead optimize performance over specified transition uncertainty sets~\cite{Wiesemann2013RobustMDP,Iyengar2005RobustDP}. Recent robust actor-critic and fitted-value methods extend such analyses to function approximation and offline or hybrid data~\cite{Zhou2023NaturalActorCritic,Panaganti2024RobustF}. Their guarantees depend on their uncertainty and coverage assumptions; they are not generally restricted to interpolation in a convex hull of training environments. Epistemic partially observable MDPs explain why uncertainty about test conditions can require adaptive behavior even when each individual environment is fully observed~\cite{Ghosh2021EpistemicPOMDP}. Our bound concerns the output of a fixed deterministic policy map along a state-space segment.
 
-\subsection{Neural arithmetic units}
-Neural Arithmetic Logic Units (NALU)~\cite{Trask2018NALU} introduced the idea of discrete-weight arithmetic layers for numerical extrapolation. Neural Arithmetic Units (NAU) and Neural Multiplication Units (NMU)~\cite{Madsen2020NAU} improved stability by separating addition and multiplication paths and using regularization-based weight discretization. These architectures have been applied to function learning tasks~\cite{Sahoo2018LearningEquations} but not to RL policy networks or formal OOD bounds. CS-BAPR provides derivative-Lipschitz guarantees for NAU/NMU architectures and proves that ReLU lacks this property.
+\subsection{Arithmetic networks and equation learning}
+Neural Arithmetic Logic Unit (NALU) networks introduce gated arithmetic computations for numerical extrapolation~\cite{Trask2018NALU}. NAUs and NMUs separate addition and multiplication and use constrained weights with sparsity regularization~\cite{Madsen2020NAU}. The NAU is an addition/subtraction unit; the paper title \emph{Neural Arithmetic Units} denotes the broader family. Equation-learning networks recover analytic relations for extrapolation and control~\cite{Sahoo2018LearningEquations}; this is a distinct architecture rather than an application of NAUs. KANs use learnable spline functions on edges~\cite{Liu2024KAN}. We compare these architectural ideas in one training framework without claiming priority for applying arithmetic structure to control.
 
-\subsection{Symbolic regression and SINDy}
-Sparse Identification of Nonlinear Dynamics (SINDy)~\cite{Brunton2016SINDy} discovers governing equations from data using sparse regression over a candidate function library. SINDy-RL~\cite{Zolman2025SINDyRL} integrates SINDy with model-based RL for interpretable dynamics models. AI Feynman~\cite{Udrescu2020AIFeynman} uses physics-inspired symbolic regression for equation discovery. CS-BAPR formalizes the SINDy identification process and proves that successful identification implies Jacobian Consistency, which in turn implies polynomial OOD bounds.
+\subsection{Symbolic dynamics and invariance}
+SINDy identifies sparse governing dynamics from a candidate library~\cite{Brunton2016SINDy}; SINDy-RL combines interpretable dynamics, reward, and policy models with RL~\cite{Zolman2025SINDyRL}. AI Feynman exploits structural properties of equations for symbolic regression~\cite{Udrescu2020AIFeynman}. These works motivate equation identification but do not imply that a dynamics Jacobian equals an optimal-policy Jacobian.
 
-\subsection{Causal RL and invariant risk minimization}
-Invariant Risk Minimization (IRM)~\cite{Arjovsky2019IRM} seeks predictors whose optimal classifier is invariant across training environments, targeting causal rather than spurious correlations. Causal representation learning~\cite{Scholkopf2021CausalRL} and causal RL surveys~\cite{CausalRLSurvey2023} provide the theoretical foundations. CS-BAPR applies IRM not to the policy directly but to the \emph{symbolic formula selection} stage, filtering SINDy candidates to retain only causally invariant physical laws.
+IRM seeks representations whose optimal predictor is shared across training environments~\cite{Arjovsky2019IRM}. Causal representation learning and causal RL involve additional assumptions about interventions, latent variables, and causal structure~\cite{Scholkopf2021CausalRL,CausalRLSurvey2023}; structural causal models (SCMs) provide a separate formal account~\cite{Peters2017Elements}. Our optional selector is inspired by cross-environment invariance and uses prediction-error variance. Its mathematical results assume the stated derivative accuracy; they do not establish causal discovery from the selector alone.
 
-\subsection{Physics-informed ML and ReLU failures}
-Recent work has identified systematic failures of ReLU activations in physics-informed machine learning~\cite{ReLUFailure2023}, showing that ReLU's piecewise linearity prevents accurate learning of smooth physical solutions. Our ReLU Impossibility Theorem (Theorem~\ref{thm:relu_impossible}) provides the first \emph{formal proof} that this failure extends to derivative Lipschitz continuity---a necessary condition for polynomial OOD bounds within our framework. We emphasize that the impossibility is specific to bounds requiring Lipschitz-continuous derivatives; alternative frameworks (e.g., piecewise-linear extrapolation analysis) may yield different guarantees for ReLU networks.
-
-\subsection{Formal methods in RL}
-Formal verification of RL algorithms remains rare. Our prior work established mechanized contraction proofs for RE-SAC~\cite{Zhang2025RESAC} and BAPR~\cite{Zhang2025BAPR}. CS-BAPR follows the same formal-methods style by making the OOD extrapolation assumptions, architectural impossibility result, and optional SINDy/IRM framework components explicit enough to audit theorem-by-theorem. We emphasize that formal proof is a \emph{design audit tool}, not a replacement for experimental validation: the proofs tell us the bounds hold \emph{given} their assumptions; whether the assumptions hold in a specific domain is an empirical question (\Cref{sec:scope}).
-
+\subsection{Derivative regularity and ensemble stabilization}
+Rowan analyzes ReLU failures in physics-informed objectives, including mis-specified automatic-differentiation gradients of discontinuous fields~\cite{ReLUFailure2023}. That result concerns physics-informed training, rather than a general inability of ReLU networks to approximate smooth functions or extrapolate. Here we use the elementary derivative jump at the scalar ReLU kink to delimit a smooth-derivative certificate. Ensemble pessimism also appears in offline RL~\cite{An2021UncertaintyEnsemble}; this motivates the minimum-ensemble comparison but does not transfer an offline performance guarantee to our online controller. Our Bellman analysis follows the frozen-parameter template of RE-SAC and BAPR~\cite{Zhang2025RESAC,Zhang2025BAPR}.
 
 \section{Scope and applicability}
 \label{sec:scope}
 
-Before introducing the method, we delineate the regimes in which CS-BAPR's components are expected to help. The framework has one \emph{primary} mechanism that applies broadly, and two \emph{optional} symbolic mechanisms whose usefulness is domain-specific.
+The primary empirical setting is transit holding under changes in passenger-demand magnitude. The six stabilization settings and the actor-head choice are evaluated jointly, with symbolic losses disabled. A demand multiplier changes the distribution of visited states; it is not itself the state-space displacement appearing in the theorem.
 
-\paragraph{Primary mechanism (NAU head + training stabilization): always applicable.}
-The NAU/NMU output head provides a finite derivative Lipschitz constant $L$ regardless of domain, and the OOD bound $\|\pi(x_{\text{ood}}) - \pi_{\text{ref}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \tfrac{L}{2}\|d\|^2$ holds for any differentiable reference $\pi_{\text{ref}}$---including the trivial choice $\pi_{\text{ref}}(x) = \pi(x_0) + D\pi(x_0)(x - x_0)$ (the policy's own linear extrapolation from the training boundary). In this NAU-only configuration, $\varepsilon$ is simply the policy's boundary fitting error, and the bound controls \emph{how fast} the policy's output can drift per unit OOD distance. This is the guarantee our primary experiments validate.
+The optional symbolic extension requires an action-valued reference constructed from an identified model or other control information. A sparse dynamics model alone is insufficient: its state-evolution output has different physical units and generally a different dimension from the policy action. Tracking and counteraction tasks can both admit model-based feedback, but each requires an explicit dynamics-to-control construction. The transit results do not validate such a construction.
 
-\paragraph{Optional SINDy extension: applicable when the optimal policy tracks identified dynamics.}
-The SINDy-based symbolic extension sharpens $\varepsilon$ by replacing the trivial reference with a symbolically identified one. It is expected to help when:
-\begin{enumerate}[label=(\roman*)]
-    \item the environment dynamics $\dot{x} = f(x, u)$ admit a sparse representation in a chosen basis library (Assumption~\ref{assump:sindy}), \emph{and}
-    \item the optimal policy is itself expressible, or approximately expressible, in the same basis---equivalently, the task is of the ``policy should scale with physics'' type (e.g., ballistic correction, classical tracking control, energy shaping).
-\end{enumerate}
-It is \emph{not} expected to help, and can hurt, when the optimal policy's job is to \emph{oppose} the identified dynamics (e.g., bus holding control, where the controller's purpose is to counteract demand-driven headway spreading rather than follow its gradient). Our main transit benchmark is an instance of this latter regime, and an earlier variant of CS-BAPR that included $\Gamma_{\text{sym}}$ on this benchmark degraded rather than improved OOD performance. We therefore report the NAU+stabilization pipeline as the primary experimental configuration, with the symbolic extensions presented as formalized but deliberately not activated on this benchmark.
-
-\paragraph{Optional IRM extension: applicable when SINDy is active and multiple environments are available.}
-The IRM filtering step is a sub-extension of the SINDy pipeline: it refines the symbolic reference across multiple training environments to isolate invariant structure. It inherits the same applicability conditions as the SINDy extension, plus the standard IRM requirement of $K \geq 3$ environments with shared invariant structure.
-
-\paragraph{Takeaway.}
-The paper's empirically defended claim is on the primary mechanism. The symbolic extensions are formalized (and formal) so that the framework is complete for domains where they apply, but we do not empirically claim they improve transit holding control, because the framework itself predicts they should not for that type of task.
-
+Cross-environment filtering additionally requires environments that reveal the invariant relation of interest. The configurable three-environment default is an implementation choice, not a universal identifiability threshold from IRM. The empirical and theoretical limits are collected in \Cref{sec:limitations}.
 
 \section{Preliminaries}
+\label{sec:preliminaries}
 
-\subsection{Maximum entropy RL}
-Following SAC~\cite{Haarnoja2018SAC}, the agent maximizes the entropy-augmented objective:
+\paragraph{Notation.}
+Let $E=\mathbb{R}^{d_x}$ and $F=\mathbb{R}^{d_a}$ be the ambient state and action spaces, where $d_x$ and $d_a$ are their dimensions. The admissible spaces are $\mathcal{S}\subseteq E$ and $\mathcal{A}\subseteq F$. We use $x$ for a state, $a$ for an action, $t$ for environment time, and $j$ for a training update. The stochastic actor has density $p_\theta(a\mid x)$, where $\theta$ denotes actor parameters. Its pre-squash Gaussian mean is $\mu_\theta(x)$; $\pi(x)$ denotes the deterministic action map after squashing and scaling. Thus $p_\theta$, $\mu_\theta$, and $\pi$ name different objects.
+
+The training domain is $D_{\mathrm{train}}$; $\Omega\subseteq E$ is the convex analysis domain containing the segment of interest. $\pi_{\mathrm{ref}}:\Omega\to F$ is an action-valued reference. Write $d=x_{\mathrm{ood}}-x_0$ for displacement from a fixed $x_0\in D_{\mathrm{train}}$ to an OOD state $x_{\mathrm{ood}}$. $\mathrm{D}$ denotes the Fr\'echet derivative; vector norms are Euclidean and derivative norms are induced operator norms unless a Frobenius norm $\|\cdot\|_{\mathrm F}$ is specified. $\|Q\|_\infty$ denotes the supremum norm of a state-action value function.
+
+The nonnegative constants $\delta$ and $\varepsilon$ bound reference-value and derivative error at $x_0$. $L_\pi$ and $M$ bound the derivative Lipschitz constants of $\pi$ and $\pi_{\mathrm{ref}}$, and $L_{\mathrm{err}}=L_\pi+M$ bounds their derivative-error growth. A subscript identifies the object whose regularity is bounded; the constant for a generic head $H$ is $L_H$. The operators $\mathbb E$ and $\operatorname{Var}$ denote expectation and variance.
+
+\subsection{Maximum-entropy objective}
+
+Following SAC~\cite{Haarnoja2018SAC}, the stochastic actor maximizes
 \begin{equation}
-    J(\pi) = \mathbb{E}_{\pi, P} \left[ \sum_{t=0}^{\infty} \gamma^t \left( R(s_t, a_t) + \alpha \mathcal{H}(\pi(\cdot|s_t)) \right) \right],
+J_{\mathrm{ent}}(p_\theta)=
+\mathbb{E}_{p_\theta,P}\left[
+\sum_{t=0}^{\infty}\gamma^t
+\bigl(R(x_t,a_t)+\alpha\mathcal{H}(p_\theta(\cdot\mid x_t))\bigr)
+\right].
+\label{eq:max_entropy}
 \end{equation}
-where $\mathcal{H}(\pi(\cdot|s_t))$ is the Shannon entropy and $\alpha$ is the temperature parameter.
+Here $P$ is the transition kernel, $R$ is the one-step reward, $0\leq\gamma<1$ is the discount factor, $\alpha>0$ is the entropy temperature, and $\mathcal{H}(p)=-\int p(a)\log p(a)\,\mathrm d a$ is differential entropy for continuous actions. The experiments report unaugmented episode return, not the objective \eqref{eq:max_entropy}.
 
-\subsection{BAPR framework}
-CS-BAPR builds upon the BAPR framework~\cite{Zhang2025BAPR}, which integrates Bayesian Online Change Detection (BOCD)~\cite{Adams2007BOCD} with robust ensemble RL for piecewise-stationary environments. The BAPR operator is a belief-weighted mixture of mode-conditional Bellman operators:
+\subsection{BAPR backbone}
+
+Let $\mathcal{M}$ be the finite mode set, $\ell\in\mathcal{M}$ a mode, and $\rho(\ell)$ its BOCD-derived belief probability. BAPR uses a frozen mixture of mode-conditional operators~\cite{Zhang2025BAPR},
 \begin{equation}
-    \mathcal{T}^{BAPR}_\rho Q(s,a) = \sum_{m \in \mathcal{M}} \rho(m) \cdot \mathcal{T}_m Q(s,a),
+\mathcal{T}^{\mathrm{BAPR}}_\rho Q(x,a)
+=\sum_{\ell\in\mathcal{M}}\rho(\ell)\mathcal{T}_\ell Q(x,a).
+\label{eq:bapr_operator}
 \end{equation}
-where $\rho$ is a frozen belief distribution over modes derived from the BOCD posterior. Each mode-conditional operator $\mathcal{T}_m$ inherits RE-SAC's disentangled aleatoric ($\kappa$) and epistemic ($\Gamma_{\text{epi}}$) penalties~\cite{Zhang2025RESAC}. The operator is a $\gamma$-contraction when all penalties and beliefs are frozen during each backup~\cite{Zhang2025BAPR}.
-
+RE-SAC supplies aleatoric regularization and epistemic ensemble penalties~\cite{Zhang2025RESAC}. The contraction analysis of the mixture \eqref{eq:bapr_operator} fixes the actor density, entropy temperature, belief, and penalty values while comparing two value functions. It is an operator result for a fixed backup.
 
 \section{Methodology}
 
-\subsection{The OOD extrapolation problem}
+\subsection{The extrapolation comparison}
 \label{sec:ood_problem}
 
-Let $D_{\text{train}} \subset \mathcal{S}$ be the training domain and $x_0 \in D_{\text{train}}$ a reference point. For an OOD test point $x_{\text{ood}} \notin D_{\text{train}}$, we seek to bound $\|\pi(x_{\text{ood}}) - \pi_{\text{ref}}(x_{\text{ood}})\|$ as a function of the distance $d = x_{\text{ood}} - x_0$, where $\pi_{\text{ref}}$ is a differentiable reference chosen as specified in Assumption~\ref{assump:reference}.
+We compare $\pi$ with $\pi_{\mathrm{ref}}$ on the segment joining $x_0$ and $x_{\mathrm{ood}}$. In the default analysis, the reference is the affine tangent
+\begin{equation}
+\pi_{\mathrm{ref}}(x)=\pi(x_0)+\mathrm{D}\pi(x_0)(x-x_0).
+\label{eq:tangent_reference}
+\end{equation}
+The tangent reference \eqref{eq:tangent_reference} gives $\delta=\varepsilon=M=0$ at $x_0$. The resulting bound measures deviation from the policy's own tangent; closeness to an optimal policy requires a separate reference.
 
-\begin{remark}[Choice of reference]
-    \label{rem:choice_of_ref}
-    The bound is stated against a generic $\pi_{\text{ref}}$; its utility depends on the choice:
-    \begin{itemize}
-        \item \textbf{NAU-only (primary, always applicable):} $\pi_{\text{ref}}(x) = \pi(x_0) + D\pi(x_0)(x - x_0)$. Then $\varepsilon = 0$ at $x_0$ by construction, and the bound becomes $\|\pi(x_{\text{ood}}) - \pi_{\text{ref}}(x_{\text{ood}})\| \leq \delta + \tfrac{L}{2}\|d\|^2$, purely a statement about how far the policy's output drifts from its own linear extrapolation---controlled only by $L$. This is the guarantee our empirical results validate.
-        \item \textbf{Symbolic (optional):} $\pi_{\text{ref}} = f_{\text{sym}}$, a SINDy-identified symbolic reference; then $\varepsilon$ is the Jacobian Consistency error between $\pi$ and $f_{\text{sym}}$. This tightens the bound when $f_{\text{sym}}$ is an accurate stand-in for an aligned optimal policy, but we do not claim this regime for the transit benchmark (\Cref{sec:scope}).
-    \end{itemize}
-    In what follows, formulas in the optional SINDy subsections continue to use the symbol $f_{\text{real}}$ (or $f_{\text{sym}}$) in the sense of ``identified dynamics / symbolic reference''; those formulas can be read with $\pi_{\text{ref}} := f_{\text{sym}}$ when the extension is active.
-\end{remark}
-
-We state three structural assumptions under which the CS-BAPR framework operates (one mandatory, two active only when the SINDy extension is enabled):
-
-\begin{assumption}[Reference function]
-    \label{assump:reference}
-    A differentiable reference function $\pi_{\text{ref}}: \mathcal{S} \to \mathcal{A}$ is chosen, against which the policy is regularized (or toward which the policy is compared for bound purposes). Valid choices include: (a) \emph{the policy's own linearization at the training boundary}, $\pi_{\text{ref}}(x) = \pi(x_0) + D\pi(x_0)(x-x_0)$---available for free and used in the NAU-only configuration; (b) \emph{a SINDy-identified symbolic formula} (Assumption~\ref{assump:sindy}, optional)---available when the environment admits sparse dynamics \emph{and} the optimal policy tracks them. The bound in \Cref{sec:main_thm} is stated generically against $\pi_{\text{ref}}$; the specific choice determines which of $\varepsilon, \delta, M$ are controllable by additional mechanisms.
+\begin{assumption}[Reference and boundary accuracy]
+\label{assump:reference}
+The policy and reference are continuously differentiable on a neighborhood of the segment, with
+$\|\pi(x_0)-\pi_{\mathrm{ref}}(x_0)\|\leq\delta$ and
+$\|\mathrm{D}\pi(x_0)-\mathrm{D}\pi_{\mathrm{ref}}(x_0)\|\leq\varepsilon$.
 \end{assumption}
 
-\begin{assumption}[SINDy Identifiability --- \emph{for the optional symbolic extension only}]
-    \label{assump:sindy}
-    \emph{If} the SINDy extension is enabled, the optimal response function $f_{\text{real}}: \mathcal{S} \to \mathcal{A}$ admits a sparse representation in the chosen basis library $\{\varphi_1, \ldots, \varphi_n\}$, such that SINDy can identify it with derivative accuracy $\varepsilon_1 < \varepsilon_{\text{threshold}}$ on the training domain. This assumption is \emph{not} required for the primary NAU-only bound.
+\begin{assumption}[Reference derivative regularity]
+\label{assump:smooth}
+For $x,y\in\Omega$,
+$\|\mathrm{D}\pi_{\mathrm{ref}}(x)-\mathrm{D}\pi_{\mathrm{ref}}(y)\|
+\leq M\|x-y\|$, with finite $M\geq0$.
+An affine reference has $M=0$.
 \end{assumption}
 
-\begin{assumption}[Smooth Reference --- \emph{for the optional symbolic extension only}]
-    \label{assump:smooth}
-    \emph{If} the SINDy extension is enabled, the reference $\pi_{\text{ref}}$ (typically $f_{\text{real}}$) is differentiable on the convex hull of $D_{\text{train}} \cup \{x_{\text{ood}}\}$, and its Fr\'echet derivative is $M$-Lipschitz: $\|D\pi_{\text{ref}}(x_1) - D\pi_{\text{ref}}(x_2)\| \leq M\|x_1 - x_2\|$ for some finite $M \geq 0$. This holds for physical systems governed by smooth differential equations with bounded second derivatives (e.g., rigid-body dynamics, fluid mechanics, ballistic trajectories), but excludes environments with discontinuous transitions (e.g., contact-rich manipulation with Coulomb friction). When the NAU-only linear reference is used instead, $M = 0$ trivially.
+\begin{assumption}[Whole-policy derivative regularity]
+\label{assump:feature_lip}
+For $x,y\in\Omega$,
+$\|\mathrm{D}\pi(x)-\mathrm{D}\pi(y)\|\leq L_\pi\|x-y\|$,
+with finite $L_\pi\geq0$.
+This is a condition on the complete deterministic action map, including its feature extractor and output transformations.
 \end{assumption}
 
-\begin{assumption}[Bounded Feature Extractor]
-    \label{assump:feature_lip}
-    The feature extraction layers of the actor network have a finite Lipschitz constant $L_{\text{feat}} < \infty$, achievable via spectral normalization or weight clamping. Combined with the NAU/NMU output head's derivative Lipschitz constant $L_{\text{head}}$ (0 for NAU, $2|c|$ for NMU), the composed actor has effective derivative Lipschitz constant $L_{\text{pol}} = L_{\text{feat}} \cdot L_{\text{head}} < \infty$. (Formal tag: \texttt{IsFunctionLipschitz} for the feature extractor, \texttt{HasArithmeticInductiveBias} for the output head.)
-\end{assumption}
-
-\begin{remark}[Elimination of pointwise OOD Jacobian Consistency assumption]
-    \label{rem:assumption4_eliminated}
-    An earlier version of this work required a fourth assumption: pointwise Jacobian Consistency along the entire OOD line segment. This assumption was problematic because training only enforces JC on the replay buffer distribution, not in OOD regions.
-
-    We now \emph{derive} the OOD derivative error bound from the three assumptions above, without assuming anything about OOD-segment Jacobian alignment. The key result (Formal tag: \texttt{deriv\_error\_propagation\_nD}, Part~X) shows that for any point $x$ (including OOD):
-    \begin{equation}
-        \|D\pi(x) - Df_{\text{real}}(x)\| \leq \underbrace{\varepsilon}_{\text{training JC}} + \underbrace{(L_{\text{pol}} + M)}_{\text{architecture + physics}} \cdot \|x - x_0\|,
-        \label{eq:deriv_propagation}
-    \end{equation}
-    where the three terms come from:
-    \begin{enumerate}[label=(\roman*)]
-        \item $\varepsilon$: Jacobian Consistency at the training boundary $x_0$ (from the training loss $\mathcal{L}_{\text{AC}}$);
-        \item $L_{\text{pol}} \cdot \|x - x_0\|$: how much $\pi$'s derivative drifts from $x_0$ (bounded by NAU/NMU architecture, Assumption~\ref{assump:feature_lip});
-        \item $M \cdot \|x - x_0\|$: how much $f_{\text{real}}$'s derivative drifts from $x_0$ (bounded by physics smoothness, Assumption~\ref{assump:smooth}).
-    \end{enumerate}
-    This is a strict improvement: Eq.~\eqref{eq:deriv_propagation} is \emph{derived} from training-time quantities and architectural properties, with no OOD-segment assumptions. The generalization from training boundary to population is handled by a standard PAC bound (Formal tag: \texttt{jc\_generalization\_to\_ood}, Part~XIII): $\varepsilon_{\text{pop}} \leq \varepsilon_{\text{emp}} + O(B/\sqrt{N})$.
-\end{remark}
-
-We introduce two key predicates, formalized in formal:
-
-\begin{definition}[Jacobian Consistency]
-    \label{def:jac_consistency}
-    A function $\pi: E \to F$ is \emph{$\varepsilon$-Jacobian Consistent} with a symbolic formula $f_{\text{sym}}: E \to F$ on domain $D$ if:
-    \begin{equation}
-        \forall x \in D,\quad \|D\pi(x) - Df_{\text{sym}}(x)\| \leq \varepsilon,
-    \end{equation}
-    where $D$ denotes the Fr\'echet derivative. (Formal tag: \texttt{IsJacobianConsistent\_nD}.)
+\begin{definition}[Jacobian consistency (JC)]
+\label{def:jac_consistency}
+For an action-valued symbolic reference $\pi_{\mathrm{sym}}:\Omega\to F$ and nonnegative alignment-error bound $\varepsilon_2$, $\pi$ is $\varepsilon_2$-Jacobian consistent on $\Omega$ when
+$\|\mathrm{D}\pi(x)-\mathrm{D}\pi_{\mathrm{sym}}(x)\|\leq\varepsilon_2$
+for every $x\in\Omega$.
 \end{definition}
 
-\begin{definition}[Arithmetic Inductive Bias]
-    \label{def:arith_bias}
-    A function $\pi: E \to F$ has \emph{$L$-Arithmetic Inductive Bias} if its Fr\'echet derivative is $L$-Lipschitz:
-    \begin{equation}
-        \forall x_1, x_2,\quad \|D\pi(x_1) - D\pi(x_2)\| \leq L \cdot \|x_1 - x_2\|.
-    \end{equation}
-    (Formal tag: \texttt{HasArithmeticInductiveBias\_nD}.)
+\begin{definition}[Derivative regularity]
+\label{def:arith_bias}
+A differentiable head $H$ has derivative Lipschitz constant $L_H$ when the norm of its derivative difference is at most $L_H$ times input distance. We use this property to quantify curvature; it is shared by many smooth non-arithmetic maps.
 \end{definition}
 
-
-\subsection{Pillar I (primary): NAU/NMU arithmetic bias}
+\subsection{Arithmetic and alternative actor heads}
 \label{sec:nau}
 
-The primary mechanism replaces the policy's output layers with Neural Arithmetic Units, ensuring finite derivative Lipschitz constants. This is the only pillar that is always active in our experiments.
+\paragraph{NAU.}
+An NAU~\cite{Madsen2020NAU} computes
+$H_{\mathrm{NAU}}(z)=W_{\mathrm{NAU}}z$,
+where $z\in\mathbb{R}^{d_z}$ is a feature vector, $d_z$ is feature dimension, and $W_{\mathrm{NAU}}$ is a fixed weight matrix at evaluation. Training clamps weights to $[-1,1]$ and encourages the entries toward $\{-1,0,1\}$.
 
-\textbf{NAU layer.} A Neural Arithmetic Unit~\cite{Madsen2020NAU} computes $y = \sum_j w_j x_j$ with weights constrained to $\{-1, 0, 1\}$ (realized via clamping and regularization). Since the output is linear in the input, the derivative $\partial y / \partial x_i = w_i$ is \emph{constant}---independent of the input value.
-
-\begin{theorem}[NAU has zero-Lipschitz derivatives]
-    \label{thm:nau_bias}
-    For any integer weight $w \in \mathbb{Z}$, the function $f(x) = wx$ has derivative-Lipschitz constant $0$.
+\begin{theorem}[NAU derivative constancy]
+\label{thm:nau_const}
+For every fixed real matrix $W_{\mathrm{NAU}}$,
+$\mathrm{D}H_{\mathrm{NAU}}(z)=W_{\mathrm{NAU}}$ for all $z$, so
+$L_{H_{\mathrm{NAU}}}=0$.
 \end{theorem}
 \begin{proof}
-    $f'(x) = w$ for all $x$, so $|f'(x_1) - f'(x_2)| = |w - w| = 0 \leq 0 \cdot |x_1 - x_2|$.
+Differentiation of a linear map gives its fixed matrix. The derivative difference between any two feature vectors is zero. Discrete weights are unnecessary for this derivative identity.
 \end{proof}
 
-For multi-dimensional inputs, the NAU derivative constancy extends naturally:
+\paragraph{Simplified quadratic correction.}
+The published NMU multiplies selected input coordinates~\cite{Madsen2020NAU}. Our implementation uses the simpler scalar quadratic map
+$H_{\mathrm{quad}}(z)=c_{\mathrm{quad}}z^2$, with fixed real coefficient $c_{\mathrm{quad}}$, as an NMU-inspired correction.
 
-\begin{theorem}[NAU partial derivatives are constant]
-    \label{thm:nau_const}
-    For an NAU layer with integer weights $w_1, \ldots, w_n \in \mathbb{Z}$ computing $y = \sum_j w_j x_j$, the partial derivative $\partial y / \partial x_i = w_i$ is \emph{constant} everywhere---independent of the input vector. This guarantees that the derivative does not drift in OOD regions.
-\end{theorem}
-
-\textbf{NMU layer.} A Neural Multiplication Unit~\cite{Trask2018NALU} computes $f(x) = c \cdot x^2$ with learnable coefficient $c$. Its derivative $f'(x) = 2cx$ is Lipschitz with constant $L = 2|c|$.
-
-\begin{theorem}[NMU has bounded-Lipschitz derivatives]
-    \label{thm:nmu_bias}
-    For any coefficient $c \in \mathbb{R}$, the map $x \mapsto cx^2$ has derivative-Lipschitz constant $2|c|$.
+\begin{theorem}[Scalar quadratic derivative regularity]
+\label{thm:nmu_bias}
+$H_{\mathrm{quad}}'(z)=2c_{\mathrm{quad}}z$ has derivative Lipschitz constant $2|c_{\mathrm{quad}}|$.
+A subsequent fixed scalar NAU weight $w_{\mathrm{NAU}}$ gives constant $2|w_{\mathrm{NAU}}c_{\mathrm{quad}}|$.
 \end{theorem}
 \begin{proof}
-    $f'(x) = 2cx$, so $|f'(x_1) - f'(x_2)| = |2cx_1 - 2cx_2| = 2|c| \cdot |x_1 - x_2|$.
+$|H_{\mathrm{quad}}'(z_1)-H_{\mathrm{quad}}'(z_2)|
+=2|c_{\mathrm{quad}}||z_1-z_2|$. Multiplication by $w_{\mathrm{NAU}}$ scales both sides by $|w_{\mathrm{NAU}}|$.
 \end{proof}
 
-\begin{corollary}[NAU $\circ$ NMU composition]
-    For weights $w, c \in \mathbb{R}$, $\text{HasArithmeticInductiveBias}(x \mapsto wc \cdot x^2, 2|wc|)$. (Formal tag: \texttt{nau\_nmu\_composition\_bias}.)
-\end{corollary}
-
-\textbf{ReLU impossibility.} In contrast, we prove that ReLU networks cannot satisfy any polynomial OOD bound:
-
-\begin{theorem}[ReLU derivative is not Lipschitz]
-    \label{thm:relu_impossible}
-    $\neg\exists L \in \mathbb{R},\ \text{HasArithmeticInductiveBias}(\text{ReLU}, L)$. (Formal tag: \texttt{relu\_derivative\_not\_lipschitz}.)
+\begin{theorem}[Scalar ReLU derivative jump]
+\label{thm:relu_impossible}
+The scalar map $H_{\mathrm{ReLU}}(z)=\max(0,z)$ has no finite Lipschitz derivative on any interval containing negative and positive inputs.
 \end{theorem}
-
-\begin{proof}[Proof sketch]
-    ReLU$(x) = \max(0, x)$ has derivative 0 for $x < 0$ and 1 for $x > 0$. For any purported $L$:
-    \begin{itemize}
-        \item If $L \leq 0$: take $x_1 = -1, x_2 = 1$. Then $|0 - 1| = 1 \leq L \cdot 2 \leq 0$, contradiction.
-        \item If $L > 0$: take $x_1 = -(4L)^{-1}, x_2 = (4L)^{-1}$. Then $|0 - 1| = 1 \leq L \cdot 2(4L)^{-1} = 1/2$, contradiction.
-    \end{itemize}
-    The proof is written out by explicitly comparing one-sided derivatives around the kink at the origin.
+\begin{proof}
+For $z<0$ the derivative is zero; for $z>0$ it is one. If a finite $L_{H_{\mathrm{ReLU}}}>0$ bounded the derivative difference, taking
+$z_1=-q$ and $z_2=q$ with $0<q<(2L_{H_{\mathrm{ReLU}}})^{-1}$
+would require $1\leq2L_{H_{\mathrm{ReLU}}}q<1$.
+Here $q$ is a positive test offset. $L_{H_{\mathrm{ReLU}}}=0$ is also impossible, and the derivative is undefined at zero.
 \end{proof}
+This statement does not rule out affine ReLU networks, segments staying in one activation region, or piecewise analyses. Smooth MLPs and sufficiently smooth spline networks can satisfy the whole-map condition on a specified domain; the constant also depends on their weights and output transformations.
 
-\begin{remark}[Architectural hierarchy for extrapolation]
-    \label{rem:hierarchy}
-    The formal results establish a sharp hierarchy:
-    \begin{center}
-    \begin{tabular}{lccc}
-    \toprule
-    \textbf{Architecture} & \textbf{$L$} & \textbf{OOD bound} & \textbf{formal tag} \\
-    \midrule
-    NAU ($w \cdot x$) & $0$ & $\delta$ (constant) & \texttt{nau\_has\_arithmetic\_bias\_1d} \\
-    NMU ($c \cdot x^2$) & $2|c|$ & $\delta + \varepsilon\|d\| + |c|\|d\|^2$ & \texttt{nmu\_has\_bounded\_arithmetic\_bias} \\
-    ReLU ($\max(0,x)$) & $\nexists$ & unbounded & \texttt{relu\_derivative\_not\_lipschitz} \\
-    \bottomrule
-    \end{tabular}
-    \end{center}
+\begin{remark}[Composition requires derivative control of the inner map]
+\label{rem:theory_practice}
+Write the deterministic normalized action as
+$\pi=\tanh\circ H_{\mathrm{mix}}\circ G$, where $G:E\to\mathbb R^{d_z}$ is the feature extractor and $H_{\mathrm{mix}}:\mathbb R^{d_z}\to F$ is the mixed arithmetic head.
+If $G$ and a head $H$ are continuously differentiable, their derivative norms are bounded by $K_G,K_H$, and their derivative Lipschitz constants are $L_G,L_H$, then
+\begin{equation}
+L_{H\circ G}\leq L_HK_G^2+K_HL_G.
+\label{eq:composition_rule}
+\end{equation}
+Thus a function-Lipschitz inner map is insufficient. LeakyReLU features have derivative jumps across activation boundaries; a tanh output also introduces curvature and saturation. Appendix~\ref{app:leff} proves \eqref{eq:composition_rule}, gives the action-squashing term in \eqref{eq:complete_composition}, and derives the revised smooth-feature certificate. The isolated NAU constant cannot be substituted for $L_\pi$ of the historical actor.
 \end{remark}
+Appendix~\ref{app:nau_details} gives the architecture and weight regularizer \eqref{eq:nau_regularizer}. In the historical comparison, \texttt{csbapr-tanh} uses smooth MLP activations; \texttt{csbapr-no-nau} retains ReLU hidden activations.
 
-\begin{remark}[Theory-practice gap: composed architecture]
-    \label{rem:theory_practice}
-    The formal proofs establish Lipschitz derivative constants for \emph{isolated} NAU ($L=0$) and NMU ($L=2|c|$) layers. The actual actor is a composition $\pi = \tanh \circ (\alpha \cdot \text{NAU} + (1{-}\alpha) \cdot \text{NMU}) \circ \text{FeatureNet}$. The composed constant satisfies $L_{\text{pol}} \leq L_{\text{feat}} \cdot 2(1{-}\alpha)|c| \cdot 1 < \infty$ (Assumption~\ref{assump:feature_lip}), preserving the quadratic OOD bound.
-
-    \textbf{Two Lipschitz concepts.} This analysis crucially distinguishes:
-    \begin{itemize}
-        \item \emph{Function-Lipschitz}: $|f(x_1) - f(x_2)| \leq K|x_1 - x_2|$ — satisfied by LeakyReLU ($K = 1$), required for the feature extractor.
-        \item \emph{Derivative-Lipschitz}: $|f'(x_1) - f'(x_2)| \leq L|x_1 - x_2|$ — satisfied by NAU ($L = 0$) and NMU ($L = 2|c|$), but \emph{not} by ReLU or LeakyReLU (derivative discontinuity at $x=0$).
-    \end{itemize}
-    The composition rule (Formal tag: \texttt{composed\_deriv\_lipschitz\_simple}, Part~XI) requires function-Lipschitz for the inner function (feature extractor) and derivative-Lipschitz for the outer function (NAU/NMU head). LeakyReLU in hidden layers is acceptable because only function-Lipschitz is needed there; the OOD bound's derivative-Lipschitz requirement applies only to the output head. See Appendix~\ref{app:nau_details} for the full $L_{\text{pol}}$ derivation.
-\end{remark}
-
-\paragraph{Comparison with smooth activations.}
-The ReLU impossibility is not an impossibility for \emph{all} alternatives: smooth activations such as GELU, Softplus, and tanh have bounded second derivatives and therefore finite derivative Lipschitz constants. The full picture is therefore a four-way comparison---NAU, NMU, smooth-activation (GELU/Softplus/tanh), and ReLU---of which our \Cref{thm:relu_impossible} only rules out the last. We compare against three of the four heads in \Cref{sec:experiments}: NAU, KAN (a smooth-activation alternative based on learnable B-splines), and plain MLP-with-tanh (\texttt{csbapr-no-nau}); for the latter two the bound holds with finite $L$. Two reasons motivate NAU over the smooth alternatives in our experiments:
-\begin{enumerate}[label=(\roman*)]
-    \item \emph{Constant vs.\ bounded derivative.} NAU's derivative is not merely Lipschitz ($L$ finite), it is \emph{constant} ($L = 0$). For a state-independent action scaling task (e.g., ``hold time proportional to headway deviation''), NAU extrapolates linearly with zero quadratic-term cost; smooth activations pay an $L\cdot d^2 / 2$ penalty that is bounded but nonzero.
-    \item \emph{Architecturally inspectable $L$.} NAU weights are clamped to $\{-1, 0, 1\}$, so $L$ is computed directly from the weight matrix; for a smooth activation, $L$ depends on the learned weight scale and is not directly inspectable without a separate spectral analysis.
-\end{enumerate}
-We deliberately do \emph{not} include a single GELU or Softplus baseline in the main experiments because plain MLP-with-tanh (the tanh-Gaussian SAC parameterization, exactly the Group~A backbone in \texttt{csbapr-no-nau}) is the most widely-used smooth-activation default in continuous-control RL. \Cref{tab:ood_sweep} shows that \texttt{csbapr-no-nau} is competitive with \texttt{csbapr} at extreme OOD, validating that NAU's advantage over smooth alternatives is task-dependent rather than universal: NAU dominates when the optimal policy is approximately scale-linear-in-state (the bus benchmark's mid-OOD regime); smooth activations are at parity at extreme OOD, where action saturation dominates regardless of head Lipschitz constant; and they outperform NAU in tasks whose optimal policy must structurally re-tune (Hopper-wind, \Cref{sec:aux_benchmarks}).
-
-
-\subsection{Training stabilization for the NAU actor}
+\subsection{Training stabilization}
 \label{sec:training_fixes}
 
-NAU's constrained $\{-1, 0, 1\}$ weight space is less forgiving than an unconstrained MLP: vanilla SAC training on NAU policies is prone to late-stage collapse as the actor's output range shrinks under the architectural clamping, and the BOCD-driven adaptive conservatism inherited from BAPR makes early training even more brittle. We find six minimal architecture-agnostic fixes to the BAPR training loop that jointly recover stable convergence without modifying the core algorithm or the architectural guarantee. The first four are CS-BAPR additions; the last two are ports of fixes from BAPR v10/v14~\cite{Zhang2025BAPR}, validated to also help inside the CS-BAPR family.
+We use six settings in the BAPR training backbone. Exponential moving average (EMA) normalization stabilizes reward scale, while temporal-difference (TD) targets and entropy tuning retain the SAC structure. The stabilized variants also use actor weight decay, with head-specific regularizers where applicable. These settings are evaluated as a package; the tables do not identify an individual setting's causal contribution.
 
-\paragraph{Group A — base CS-BAPR fixes (independent of NAU choice).}
+\paragraph{Four base settings.}
 \begin{enumerate}[label=(A\arabic*),leftmargin=2em]
-    \item \textbf{Min-$Q$ ensemble target.} In BAPR's $Q$-ensemble backup, replace the per-critic target with an elementwise minimum across the ensemble: $y_{\text{target}} = \min_e Q_{\bar\theta_e}(s', a')$. Prevents coordinated $Q$-overestimation from driving the actor into saturated weight configurations. The min operation does not affect contraction (the operator remains $\gamma$-contractive; \Cref{sec:operator}).
-
-    \item \textbf{Running-EMA reward normalization (divide-only).} Rewards are divided by the running standard deviation of batch rewards, updated with EMA coefficient $0.99$: $\sigma^2_{t+1} = 0.99\, \sigma^2_t + 0.01\, \operatorname{Var}(r_{\text{batch}})$. No mean shift, preserving sign. Critical for NAU because the clamped weight space is sensitive to reward-magnitude drift across long training runs.
-
-    \item \textbf{Entropy-temperature floor.} The learned SAC temperature $\alpha$ is floored at $\alpha_{\min} = 0.01$: $\alpha = \max(\exp(\log\alpha), \alpha_{\min})$. Prevents the entropy collapse $\alpha \to 0$ that would lose exploration capacity for the remainder of training.
-
-    \item \textbf{Behavioral-cloning anchor disabled for constrained heads.} The BAPR pipeline includes an optional anchor $\beta_{\text{bc}} \|\mu_\pi - a\|^2$. For NAU and KAN we set $\beta_{\text{bc}} = 0$: the architectural constraint already prevents policy drift, and the BC term over-regularizes the already-constrained output. Plain-MLP variants (\texttt{csbapr-no-nau}) keep $\beta_{\text{bc}} > 0$.
+    \item \textbf{Minimum-ensemble target.} Replace per-critic next-state targets by
+    $Q_{\min}(x',a')=\min_{1\leq k\leq N_{\mathrm{crit}}}Q_{\bar\phi_k}(x',a')$,
+    where $N_{\mathrm{crit}}$ is ensemble size, $\phi_k$ are critic parameters, and $\bar\phi_k$ are target-network parameters. The full target is given in \eqref{eq:critic_target}.
+    \item \textbf{Reward normalization.} At training update $j$, set
+    $\sigma_{r,j+1}^2=0.99\sigma_{r,j}^2+0.01\operatorname{Var}(r_{\mathrm{batch}})$ and divide rewards by $\max(\sigma_{r,j+1},10^{-6})$. Here $\sigma_{r,j}$ is the running reward scale and $r_{\mathrm{batch}}$ is a replay-batch reward vector.
+    \item \textbf{Entropy floor.} Enforce $\alpha\geq\alpha_{\min}=0.01$ during temperature tuning.
+    \item \textbf{BC removal.} In the current transit script, set the BC coefficient $\beta_{\mathrm{bc}}=0$ for all four stabilized variants. The pristine baseline retains $\beta_{\mathrm{bc}}=0.001$. Thus BC removal is part of the stabilization comparison, not a difference between the four stabilized heads.
 \end{enumerate}
 
-\paragraph{Group B — ported from BAPR v10/v14.}
-\begin{enumerate}[label=(B\arabic*),leftmargin=2em,start=5]
-    \item \textbf{BAPR v10 BOCD-stability recipe (P0$+$P1, applied jointly).} Two coupled knobs proposed together in BAPR v10. \emph{P0 — mechanism warmup}: for the first \texttt{bapr\_warmup\_iters}$=100$ training iterations, force the BOCD-derived weighted lambda $\lambda_w$ to zero ($\lambda_w \leftarrow 0$); the actor's adaptive conservatism term $\beta_{\text{eff}} = -2 - \lambda_w \cdot s$ then degenerates to the vanilla RE-SAC value $-2$ during the warmup window. Rationale: at iteration 0 the ensemble $Q$-std is tiny (heads have not diverged) and the surprise EMA has not stabilized, so BOCD's belief is nearly uniform and yields a spurious $\lambda_w \approx 0.3$, which under the original $s = 5$ drove $\beta_{\text{eff}}$ to $-3.5$ (75\%\ more conservative than RE-SAC) from the first gradient step. \emph{P1 — penalty\_scale $5{\to}2$}: the default scale in $\beta_{\text{eff}} = -2 - \lambda_w \cdot s$ is reduced from $5$ to $2$, so after warmup the steady-state $\lambda_w \approx 0.3$ gives $\beta_{\text{eff}} \in [-3.2, -2]$ instead of $[-3.5, -2]$. P0 and P1 are coupled in the sense that fixing only P0 leaves the post-warmup steady-state still over-conservative and fixing only P1 leaves the iteration-0 spike intact; we adopt them together as one logical fix as in the upstream commit.
-
-    \item \textbf{BAPR v14 surprise reform.} Two coupled changes to the BOCD surprise computation. (i)~When the training script supplies a \texttt{recent\_rollout} buffer (the most recent $W$ on-policy transitions, default $W = 256$), the surprise's reward and $Q$-std signals are computed on that on-policy tail rather than on a random replay batch; under non-stationarity the random batch is dominated by stale-regime transitions and masks the new-regime signal. (ii)~The $Q$-std spike component changes from a two-sided ratio $|q_t/q_{t-1} - 1|$ to a one-sided spike $\max(q_t/q_{t-1} - 1, 0)$. The two-sided form fired during ensemble \emph{convergence} (Q-std dropping), polluting BOCD with false positives; the one-sided form keeps only the genuine regime-change signature.
+\paragraph{Two BAPR recipes.}
+\begin{enumerate}[label=(B\arabic*),leftmargin=2em]
+    \item \textbf{Warmup and penalty scaling.} Set the belief-weighted penalty strength $\lambda_w$ to zero during the first 100 updates, then use
+    $\beta_{\mathrm{eff}}=-2-c_{\mathrm{pen}}\lambda_w$
+    with $c_{\mathrm{pen}}=2$ rather than 5. Here $\beta_{\mathrm{eff}}$ is the actor ensemble-pessimism coefficient and $c_{\mathrm{pen}}$ its scale. At $\lambda_w=0.3$, the coefficients are $-2.6$ and $-3.5$, respectively.
+    \item \textbf{Recent-rollout, one-sided surprise.} Compute BOCD surprise on the latest $N_{\mathrm{tail}}=256$ rollout transitions when supplied by the training script. For the ensemble-spread signal $\sigma_{Q,t}$, use
+    $\max(\sigma_{Q,t}/\sigma_{Q,t-1}-1,0)$
+    instead of a two-sided absolute change. The implementation stabilizes the ratio numerically. The scalar surprise is denoted $\chi_t$, reserving symbolic coefficients for equation identification.
 \end{enumerate}
+Table~\ref{tab:hyperparams} in Appendix~\ref{app:hyperparams} lists implementation defaults and overrides, and \Cref{alg:csbapr} shows their place in the training loop.
 
-\medskip
-
-These six settings form the practical NAU training recipe. The base group~(A) is a one-time addition required to make the constrained-head architecture train at all in the BAPR pipeline. Group~(B) was developed independently for the BAPR predecessor framework after a multi-seed analysis revealed that $\sim 75\%$ of seeds were getting stuck in poor optimization basins; we found the same diagnosis applies inside the CS-BAPR pipeline, and porting the fixes reduced the residual NAU-specific crash rate (defined as fraction of seeds with $m{=}20{\times}$ return below $-1{,}500$K) from $30\%$ to $10\%$ on the same 10-seed test set (\Cref{tab:crash}). In our experiments (\Cref{sec:experiments}), the full NAU+6-fix configuration (\texttt{csbapr}) is what achieves the OOD advantage; an ablation variant (\texttt{csbapr-no-nau}) retaining only the same six fixes but with a plain MLP head under-performs at mid-OOD but matches at extreme OOD (\Cref{tab:ood_sweep}), isolating the architectural contribution.
-
-
-\subsection{(Optional) Pillar II: SINDy symbolic discovery}
+\subsection{Optional symbolic-reference extension}
 \label{sec:sindy}
 
-\emph{This subsection describes an optional framework extension that we formalize mathematically but do not activate in our primary experiments. See \Cref{sec:scope} for when to enable it.}
+A dynamics model and a policy reference have different roles. Let
+$f_{\mathrm{dyn}}(x,a)$ be the conditional mean one-step state increment and
+$f_{\mathrm{sym}}(x,a)$ its identified counterpart, both with values in $E$.
+This convention matches the implemented discrete fitting target.
+For a state-only fit, the action argument is absent and the fitted relation describes data collected under the exploration policy.
 
-The SINDy extension uses Sparse Identification of Nonlinear Dynamics (SINDy)~\cite{Brunton2016SINDy} to extract analytic equations from trajectory data, then enforces alignment between the policy's gradient and the discovered law.
+SINDy uses a scalar basis library
+$\boldsymbol{\varphi}=(\varphi_1,\ldots,\varphi_{N_{\mathrm{lib}}})$,
+where $N_{\mathrm{lib}}$ is the number of basis terms. With coefficient matrix $\Xi$,
+$f_{\mathrm{sym}}(x,a)=\Xi\boldsymbol{\varphi}(x,a)$.
+The regression data comprise joint state-action input matrix $\mathsf X$, output matrix $\mathsf Y$, and library design matrix $\boldsymbol{\Phi}(\mathsf X)$. The implementation uses sequentially thresholded least squares (STLSQ)~\cite{Brunton2016SINDy}. The revised fitting and frozen wrapper both consume actions; Appendix~\ref{app:sindy_details} specifies their alignment and state-increment target.
 
-\textbf{Basis library.} We define a library of $n$ differentiable candidate functions $\varphi_1, \ldots, \varphi_n: E \to F$ (e.g., $\{1, x, x^2, \sin x, e^x\}$) where each $\varphi_i$ is differentiable on the domain. The symbolic formula space is the span $\{f_{\text{sym}} = \sum_{i=1}^n \xi_i \varphi_i \mid \xi \in \mathbb{R}^n\}$. (Formal tag: \texttt{BasisLibrary}.)
+\begin{assumption}[Action-valued symbolic reference]
+\label{assump:sindy}
+For the optional theorem, a control construction $\mathcal{C}$ produces an action-valued reference
+$\pi_{\mathrm{sym}}=\mathcal{C}(f_{\mathrm{sym}}):\Omega\to F$.
+Its derivative error relative to $\pi_{\mathrm{ref}}$ is bounded by $\varepsilon_1$ on the stated domain. This condition must be established after the control construction; it does not follow solely from a small dynamics prediction error.
+\end{assumption}
 
-\textbf{SINDy identification.} Given trajectory data, SINDy solves:
-\begin{equation}
-    \xi = \arg\min_{\xi} \|\dot{X} - \Theta(X)\xi\|_2 + \lambda\|\xi\|_1,
-\end{equation}
-where $\Theta(X)$ is the basis function matrix evaluated on data. The reconstructed formula is $f_{\text{sym}}(x) = \sum_i \xi_i \varphi_i(x)$.
+For a homogeneous linear discrete fit, the revised LQR construction uses
+$f_{\mathrm{sym}}(x,a)=(\widehat A-I)x+\widehat B_{\mathrm{in}}a$,
+where $\widehat A$ and $\widehat B_{\mathrm{in}}$ are the identified state and input matrices and $I$ is the identity matrix.
+Given state and normalized-action cost matrices $Q_{\mathrm{cost}}$ and $R_{\mathrm{cost}}$, a discrete algebraic Riccati solver determines feedback gain $\widehat K_{\mathrm{fb}}$.
+The action-valued reference is $\pi_{\mathrm{sym}}(x)=\tanh(-\widehat K_{\mathrm{fb}}x)$, with componentwise tanh.
+It is a smooth bounded reference, rather than the constrained LQR optimum.
+Its derivative Lipschitz constant is at most
+$\frac{4}{3\sqrt3}\|\widehat K_{\mathrm{fb}}\|_{\mathrm{op}}^2$.
+The input matrices come from collected transitions, not from the simulator's true matrices; only the task costs enter the control construction. Symbolic penalties require this action-valued construction and are not applied directly to a state-valued dynamics model.
 
-We formalize successful identification as a predicate on output quality:
-
-\begin{definition}[SINDy Identification Success]
-    \label{def:sindy_id}
-    SINDy identifies the true dynamics $f_{\text{real}}$ with derivative accuracy $\varepsilon_1$ on domain $D$ if there exist sparse coefficients $\xi$ such that:
-    \begin{equation}
-        \forall x \in D,\quad \|Df_{\text{real}}(x) - D(\textstyle\sum_i \xi_i \varphi_i)(x)\| \leq \varepsilon_1.
-    \end{equation}
-    (Formal tag: \texttt{SINDyIdentifies}.)
-\end{definition}
-
-\begin{theorem}[SINDy $\Rightarrow$ Jacobian Consistency]
-    \label{thm:sindy_jac}
-    If SINDy identifies $f_{\text{real}}$ with derivative error $\varepsilon_1$, and the policy $\pi$ is trained to match the SINDy formula with derivative error $\varepsilon_2$, then $\pi$ is $(\varepsilon_1 + \varepsilon_2)$-Jacobian Consistent with $f_{\text{real}}$. (Formal tag: \texttt{sindy\_implies\_jacobian\_consistency\_nD}.)
-\end{theorem}
-
-\begin{proof}[Proof sketch]
-    Triangle inequality: $\|D\pi - Df_{\text{real}}\| \leq \|D\pi - Df_{\text{sym}}\| + \|Df_{\text{sym}} - Df_{\text{real}}\| \leq \varepsilon_2 + \varepsilon_1$.
-\end{proof}
-
-\begin{corollary}[Tight version with same coefficients]
-    \label{cor:sindy_tight}
-    When the policy is trained against the \emph{same} SINDy formula that was identified, i.e., both SINDy error and training error are measured against the same coefficients $\xi$, the Jacobian Consistency follows directly with the same $\varepsilon_1 + \varepsilon_2$ bound. (Formal tag: \texttt{sindy\_implies\_jacobian\_consistency\_tight}.) This is the version actually used in the pipeline proof (Theorem~\ref{thm:sindy_pipeline}).
-\end{corollary}
-
-\textbf{Analytic Consistency Loss.} In training, the Jacobian Consistency is enforced through a gradient-alignment loss:
-\begin{equation}
-    \mathcal{L}_{\text{AC}} = \mathbb{E}_{s \sim \mathcal{D}} \left[ \|\nabla_s \pi_\theta(s) - \nabla_s f_{\text{sym}}(s)\|^2 \right],
-    \label{eq:jac_loss}
-\end{equation}
-where $f_{\text{sym}}$ is the frozen SINDy formula (its gradients are detached to satisfy the frozen-parameter requirement).
-
-\begin{theorem}[Full SINDy-to-OOD Pipeline]
-    \label{thm:sindy_pipeline}
-    If SINDy identifies $f_{\text{real}}$ with derivative error $\varepsilon_1$ globally, the policy is trained with derivative error $\varepsilon_2$ globally, $\|\pi(x_0) - f_{\text{real}}(x_0)\| \leq \delta$, and $\varepsilon_1 + \varepsilon_2 \geq 0$, then:
-    \begin{equation}
-        \|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\| \leq \delta + (\varepsilon_1 + \varepsilon_2)\|x_{\text{ood}} - x_0\|.
-    \end{equation}
-    (Formal tag: \texttt{sindy\_to\_ood\_bound\_nD}.)
-    This linear bound is the special case of the main quadratic result (Theorem~\ref{thm:ood_quad_nD}) when $L = 0$ (pure NAU architecture). When NMU layers are used ($L = 2|c|$), the quadratic term $(L/2)\|d\|^2$ appears.
-\end{theorem}
-\begin{proof}[Proof sketch]
-    By Theorem~\ref{thm:sindy_jac}, $\pi$ is $(\varepsilon_1 + \varepsilon_2)$-Jacobian Consistent with $f_{\text{real}}$. Setting $C = \varepsilon_1 + \varepsilon_2$ in Theorem~\ref{thm:ood_linear_nD} yields the result immediately.
-\end{proof}
-
-
-\subsection{(Optional) Pillar III: IRM invariance filtering}
-\label{sec:irm}
-
-\emph{This subsection describes a sub-extension of the optional SINDy pipeline (\Cref{sec:sindy}). It is active only when the SINDy extension is active and multiple training environments are available. See \Cref{sec:scope}.}
-
-The IRM extension filters symbolic formula candidates using Invariant Risk Minimization~\cite{Arjovsky2019IRM} to retain only \emph{cross-environment invariant} physical laws. We use ``causal'' in the IRM sense of \emph{invariance across environments}~\cite{Arjovsky2019IRM}, not in the structural causal model (SCM) sense of causal discovery~\cite{Peters2017Elements}. A SINDy formula fitted from a single environment may capture \emph{spurious correlations}---statistical associations (e.g., temperature $\leftrightarrow$ air density in ballistic control) that hold in the training environment but break under distribution shift. IRM addresses this by requiring the symbolic formula to maintain accuracy across \emph{multiple} environments with distinct dynamics parameters but shared invariant structure.
-
-\begin{definition}[IRM Consistency]
-    \label{def:irm}
-    A SINDy formula with coefficients $\xi$ is \emph{$\varepsilon$-IRM Consistent} across environments $\{e_1, \ldots, e_K\}$ if:
-    \begin{equation}
-        \forall e \in \{e_1, \ldots, e_K\},\ \forall x \in D_e,\quad \|Df_{\text{real}}^e(x) - Df_{\text{sym}}(x)\| \leq \varepsilon.
-    \end{equation}
-    (Formal tag: \texttt{IRM\_Consistent}.)
-\end{definition}
-
-\begin{theorem}[IRM Tightening]
-    \label{thm:irm_tighten}
-    If formula $\xi_{\text{irm}}$ is $\varepsilon_{\text{irm}}$-IRM Consistent and formula $\xi_{\text{raw}}$ achieves $\varepsilon_{\text{raw}} \geq \varepsilon_{\text{irm}}$ in a single environment, then the IRM-filtered formula yields Jacobian Consistency bound $\varepsilon_{\text{irm}} + \varepsilon_{\text{pol}} \leq \varepsilon_{\text{raw}} + \varepsilon_{\text{pol}}$. (Formal tag: \texttt{irm\_tightens\_jacobian\_consistency}.)
+\begin{theorem}[Symbolic-reference error composition]
+\label{thm:sindy_jac}
+On the same domain and against the same identified reference, if
+$\|\mathrm{D}\pi_{\mathrm{sym}}-\mathrm{D}\pi_{\mathrm{ref}}\|\leq\varepsilon_1$
+and
+$\|\mathrm{D}\pi-\mathrm{D}\pi_{\mathrm{sym}}\|\leq\varepsilon_2$,
+then $\|\mathrm{D}\pi-\mathrm{D}\pi_{\mathrm{ref}}\|\leq\varepsilon_1+\varepsilon_2$.
 \end{theorem}
 \begin{proof}
-    Direct from $\varepsilon_{\text{irm}} \leq \varepsilon_{\text{raw}}$: $\varepsilon_{\text{irm}} + \varepsilon_{\text{pol}} \leq \varepsilon_{\text{raw}} + \varepsilon_{\text{pol}}$.
+Insert $\mathrm{D}\pi_{\mathrm{sym}}$ and apply the triangle inequality. The domain and both codomains must agree.
 \end{proof}
 
-The above theorem is an \emph{if-then} statement; it does not explain \emph{when} IRM achieves $\varepsilon_{\text{irm}} < \varepsilon_{\text{raw}}$. The following result provides a substantive answer via a causal-spurious decomposition:
+To encourage the alignment in \Cref{def:jac_consistency}, the ideal action-valued JC loss is
+\begin{equation}
+\mathcal{L}_{\mathrm{JC}}=
+\mathbb{E}_{x\sim\mathcal{D}}\!
+\left[\|\mathrm{D}\pi(x)-\mathrm{D}\pi_{\mathrm{sym}}(x)\|_{\mathrm F}^{2}\right],
+\label{eq:jac_loss}
+\end{equation}
+where $\mathcal{D}$ denotes the replay sampling distribution. The revised implementation evaluates the full deterministic-action Jacobian, with one row per action coordinate, and uses the squared Frobenius loss in \eqref{eq:jac_loss}. Symbolic Jacobians are detached; the critic uses a detached batch scalar and the actor uses the unclipped loss with gradient-norm clipping. The historical symbolic implementation instead compared summed state-increment gradients with the pre-squash actor mean. Its scalar maps were
+$\psi_{\mathrm{pol}}(x)=\sum_{i_a=1}^{d_a}\mu_{\theta,i_a}(x)$ and
+$\psi_{\mathrm{sym}}(x)=\sum_{i_x=1}^{d_x}f_{\mathrm{sym},i_x}(x)$,
+where $i_a$ and $i_x$ index action and state coordinates, respectively.
+Its historical loss was
+\begin{equation}
+\mathcal{L}_{\mathrm{proj}}=
+\mathbb{E}_{x\sim\mathcal{D}}\!
+\left[\frac{\|\nabla_x\psi_{\mathrm{pol}}(x)
+-\nabla_x\psi_{\mathrm{sym}}(x)\|^2}{d_x}\right].
+\label{eq:projected_loss}
+\end{equation}
+The historical diagnostic \eqref{eq:projected_loss} does not establish full action-valued JC. The revised loss removes coordinate cancellation and matches the action units of the reference. Primary transit runs disable both symbolic weights.
 
-\begin{theorem}[IRM Variance Reduction under Causal Decomposition]
-    \label{thm:irm_causal}
-    Suppose the true dynamics decomposes as $f_{\text{real}}^e(x) = f_{\text{causal}}(x) + f_{\text{spurious}}^e(x)$, where $f_{\text{causal}}$ is invariant across environments and $f_{\text{spurious}}^e$ varies. Let $\varepsilon_c$ be the derivative error of the IRM formula $\xi_{\text{irm}}$ against $f_{\text{causal}}$ alone. Then:
-    \begin{enumerate}[label=(\roman*)]
-        \item \textbf{IRM formula on test env $e'$:} $\|Df_{\text{real}}^{e'}(x) - Df_{\text{sym}}^{\text{irm}}(x)\| \leq \varepsilon_c + \varepsilon_{s}^{e'}$, where $\varepsilon_{s}^{e'} = \|Df_{\text{spurious}}^{e'}(x)\|$ is the irreducible test-env spurious magnitude.
-        \item \textbf{Single-env formula on test env $e'$:} $\|Df_{\text{real}}^{e'}(x) - Df_{\text{sym}}^{\text{single}}(x)\| \leq \varepsilon_c + \varepsilon_{s}^{e_{\text{train}}} + \varepsilon_{s}^{e'}$, with additional spurious contamination $\varepsilon_{s}^{e_{\text{train}}}$ from the training environment.
-    \end{enumerate}
-    The IRM advantage is $\varepsilon_{s}^{e_{\text{train}}}$: the spurious contamination that IRM filtering removes. This is non-trivial whenever the training environment has non-zero spurious features. (Formal tag: \texttt{irm\_vs\_single\_env\_gap}, \texttt{irm\_quantitative\_advantage}, Part~XII.)
+\begin{theorem}[Conditional symbolic-to-OOD pipeline]
+\label{thm:sindy_pipeline}
+Under the two derivative-error bounds in \Cref{thm:sindy_jac} everywhere on the segment and base error at most $\delta$,
+\begin{equation}
+\|\pi(x_{\mathrm{ood}})-\pi_{\mathrm{ref}}(x_{\mathrm{ood}})\|
+\leq\delta+(\varepsilon_1+\varepsilon_2)\|d\|.
+\label{eq:symbolic_linear}
+\end{equation}
+If only the boundary errors are known, the linear guarantee \eqref{eq:symbolic_linear} is replaced by \Cref{thm:ood_quad_nD}, adding the term $L_{\mathrm{err}}\|d\|^2/2$ under its regularity assumptions.
 \end{theorem}
-\begin{proof}[Proof sketch]
-    Since $f_{\text{sym}}^{\text{irm}}$ approximates $f_{\text{causal}}$ (not $f_{\text{causal}} + f_{\text{spurious}}^{e_{\text{train}}}$), its error on test env $e'$ is $(Df_{\text{causal}} - Df_{\text{sym}}^{\text{irm}}) + Df_{\text{spurious}}^{e'}$, bounded by $\varepsilon_c + \varepsilon_s^{e'}$ via triangle inequality. A single-env formula absorbs $f_{\text{spurious}}^{e_{\text{train}}}$ into its coefficients, introducing an extra $\varepsilon_s^{e_{\text{train}}}$ term when evaluated on a different environment.
+The linear result uses uniform segment-wide derivative accuracy; it does not require $L_\pi=0$. Its proof is in Appendix~\ref{app:proof_symbolic}. A replay-average loss alone supplies neither a uniform boundary certificate nor an OOD guarantee.
+
+\subsection{Optional cross-environment filtering}
+\label{sec:irm}
+
+Let $e\in\mathcal{E}_{\mathrm{train}}$ index a training environment, where $N_{\mathrm{env}}=|\mathcal{E}_{\mathrm{train}}|$. Write $\pi_{\mathrm{ref}}^e$ for its action-valued reference. IRM~\cite{Arjovsky2019IRM} motivates looking for relations shared across environments. The current code selects symbolic models using variance of \emph{prediction errors}; it does not implement the gradient-penalty formulation of IRM (IRMv1) in this selector. Appendix~\ref{app:irm_protocol} gives the exact criterion in \eqref{eq:invariance_selector}.
+
+\begin{definition}[Cross-environment derivative accuracy]
+\label{def:irm}
+A shared action-valued reference $\pi_{\mathrm{sym}}$ is
+$\varepsilon_{\mathrm{irm}}$-accurate when
+$\|\mathrm{D}\pi_{\mathrm{ref}}^e(x)-\mathrm{D}\pi_{\mathrm{sym}}(x)\|
+\leq\varepsilon_{\mathrm{irm}}$ on every stated environment domain.
+\end{definition}
+
+\begin{proposition}[Conditional tightening]
+\label{thm:irm_tighten}
+If a selected reference satisfies
+$\varepsilon_{\mathrm{irm}}\leq\varepsilon_{\mathrm{raw}}$,
+where $\varepsilon_{\mathrm{raw}}$ is the corresponding single-environment derivative-error bound, adding the same policy-alignment error $\varepsilon_2$ preserves this ordering. Selection by error variance alone does not imply the premise.
+\end{proposition}
+\begin{proof}
+Add $\varepsilon_2$ to both sides of the assumed inequality.
 \end{proof}
 
-\begin{theorem}[Full IRM-to-OOD Pipeline]
-    \label{thm:irm_pipeline}
-    If formula $\xi_{\text{irm}}$ is $\varepsilon_{\text{irm}}$-IRM Consistent, the policy is trained with derivative error $\varepsilon_{\text{pol}}$ against the IRM formula globally, and $\|\pi(x_0) - f_{\text{real}}(x_0)\| \leq \delta$ in environment $e$, then:
-    \begin{equation}
-        \|\pi(x_{\text{ood}}) - f_{\text{real}}^e(x_{\text{ood}})\| \leq \delta + (\varepsilon_{\text{irm}} + \varepsilon_{\text{pol}})\|x_{\text{ood}} - x_0\|.
-    \end{equation}
-    This is the IRM analogue of the SINDy pipeline (Theorem~\ref{thm:sindy_pipeline}), composing IRM filtering with the $n$-D OOD bound. (Formal tag: \texttt{irm\_to\_ood\_bound\_nD}.)
-\end{theorem}
+\begin{proposition}[Invariant-component decomposition]
+\label{thm:irm_causal}
+Suppose
+$\pi_{\mathrm{ref}}^e=\pi_{\mathrm{inv}}+\pi_{\mathrm{var}}^e$,
+where $\pi_{\mathrm{inv}}$ is the environment-invariant component and
+$\pi_{\mathrm{var}}^e$ is an environment-dependent residual.
+Assume an invariant model $\pi_{\mathrm{sym}}^{\mathrm{inv}}$ approximates $\pi_{\mathrm{inv}}$ with derivative error at most $\varepsilon_{\mathrm{inv}}$ on the test domain.
+Also assume a single-environment model $\pi_{\mathrm{sym}}^{\mathrm{single}}$ approximates
+$\pi_{\mathrm{inv}}+\pi_{\mathrm{var}}^{e_0}$ with the same error bound on that test domain, where $e_0$ is its training environment.
+At test environment $e_\star$, the respective upper bounds are
+\[
+\varepsilon_{\mathrm{inv}}+\varepsilon_{\mathrm{var}}^{e_\star}
+\quad\text{and}\quad
+\varepsilon_{\mathrm{inv}}+
+\varepsilon_{\mathrm{var}}^{e_0}+
+\varepsilon_{\mathrm{var}}^{e_\star},
+\]
+where $\varepsilon_{\mathrm{var}}^e$ bounds
+$\|\mathrm{D}\pi_{\mathrm{var}}^e(x)\|$ on the test domain.
+\end{proposition}
+The difference between these upper bounds is not a lower bound on the realized benefit. The proof and that distinction appear in Appendix~\ref{app:proof_irm}; identifying the invariant component remains an assumption.
 
-\textbf{IRM filtering protocol.} IRM filtering is applied during Phase~0 (pre-training) and requires $K \geq 3$ environments with distinct dynamics parameters (e.g., different gravity levels, friction coefficients, or traffic demand patterns) but shared causal structure:
-\begin{enumerate}
-    \item Collect exploration trajectories from each environment $e_k$;
-    \item Fit SINDy independently on each environment's data;
-    \item Evaluate each candidate formula's derivative error $\varepsilon_k$ across \emph{all} environments;
-    \item Select the coefficient set with the smallest cross-environment derivative variance: $\xi_{\text{irm}} = \arg\min_\xi \text{Var}_k[\varepsilon_k(\xi)]$.
-\end{enumerate}
-The selected formula is frozen for the entirety of Phase~1 training. We note that this cross-environment variance-minimization selector is a \emph{filtering-time} surrogate for IRM; it does not implement the IRMv1 gradient penalty~\cite{Arjovsky2019IRM} and is not equivalent to it. A full IRMv1-style selector is a direct drop-in and is formalized in the formal proof at the level of the invariance predicate; we retain the variance surrogate because it is cheap and because our primary experiments do not activate this pipeline (see \Cref{sec:scope}).
+\begin{corollary}[Conditional filtering-to-OOD pipeline]
+\label{thm:irm_pipeline}
+If \Cref{def:irm} and policy alignment with error $\varepsilon_2$ hold on the whole test segment in environment $e_\star$, then
+$\|\pi(x_{\mathrm{ood}})-\pi_{\mathrm{ref}}^{e_\star}(x_{\mathrm{ood}})\|
+\leq\delta+(\varepsilon_{\mathrm{irm}}+\varepsilon_2)\|d\|$,
+with base error $\delta$ at $x_0$ in the same environment.
+\end{corollary}
+Appendix~\ref{app:proof_irm} supplies the proof. The environment-diversity requirement depends on the model class and interventions; IRM does not imply a universal three-environment sufficiency rule.
 
-\begin{remark}[Environment diversity requirement]
-    \label{rem:irm_envs}
-    IRM filtering depends critically on environment diversity. With too few environments ($K < 3$) or insufficiently diverse dynamics, IRM cannot distinguish causal from spurious features~\cite{Arjovsky2019IRM}. In practice, environments should vary in parameters that \emph{do not} affect the target physical law (e.g., varying friction but holding gravity constant when the target law is ballistic). If only a single environment is available, CS-BAPR degrades gracefully: the IRM step is skipped and the single-environment SINDy formula is used directly, with $\varepsilon_{\text{raw}}$ replacing $\varepsilon_{\text{irm}}$ in the OOD bound.
-\end{remark}
-
-
-\subsection{CS-BAPR Bellman operator}
+\subsection{Frozen Bellman operator}
 \label{sec:operator}
 
-CS-BAPR extends the BAPR operator~\cite{Zhang2025BAPR} with a frozen symbolic consistency penalty $\Gamma_{\text{sym}}$. The mode-conditional operator is:
+Fix a stochastic actor density $p_\theta$ and define
 \begin{equation}
-    \mathcal{T}_h^{CS} Q(s,a) = R_h(s,a) + \gamma \left( \sum_{s'} P_h(s'|s,a) V^Q(s') - \lambda_{\text{epi}} \Gamma_{\text{epi}}^h(s,a) - \lambda_{\text{sym}} \Gamma_{\text{sym}}^h(s,a) - \kappa_{\text{ale}} \right),
-    \label{eq:csbapr_mode}
+V^Q(x)=\int_{\mathcal{A}}p_\theta(a\mid x)
+\bigl(Q(x,a)-\alpha\log p_\theta(a\mid x)\bigr)\,\mathrm d a.
+\label{eq:soft_value}
 \end{equation}
-where $\Gamma_{\text{sym}}^h(s,a) = \|\nabla_s \pi(s) - \nabla_s f_{\text{sym}}(s)\|^2$ captures the Jacobian deviation between the policy and the SINDy formula. The CS-BAPR operator is the belief-weighted mixture:
+Assume its entropy contribution and all frozen reward and penalty terms are bounded. For mode $\ell$, transition kernel $P_\ell$ and reward $R_\ell$, define
 \begin{equation}
-    \mathcal{T}^{CS\text{-}BAPR}_\rho Q(s,a) = \sum_{h \in \mathcal{H}} \rho(h) \cdot \mathcal{T}_h^{CS} Q(s,a).
-    \label{eq:csbapr_operator}
+\begin{split}
+\mathcal{T}^{\mathrm{CS}}_\ell Q(x,a)=R_\ell(x,a)+\gamma\bigg[
+&\int_{\mathcal{S}}V^Q(x')P_\ell(dx'\mid x,a)\\
+&-\lambda_{\mathrm{epi}}\Gamma_{\mathrm{epi}}^\ell(x,a)
+-\lambda_{\mathrm{sym}}\Gamma_{\mathrm{sym}}^\ell(x,a)
+-\kappa_{\mathrm{ale}}^\ell(x,a)\bigg].
+\end{split}
+\label{eq:csbapr_mode}
+\end{equation}
+Here $\lambda_{\mathrm{epi}},\lambda_{\mathrm{sym}}\geq0$ are penalty coefficients;
+$\Gamma_{\mathrm{epi}}^\ell$ is a fixed ensemble uncertainty penalty,
+$\Gamma_{\mathrm{sym}}^\ell$ a fixed symbolic discrepancy,
+and $\kappa_{\mathrm{ale}}^\ell$ a fixed signed aleatoric offset.
+The mixture is
+\begin{equation}
+\mathcal{T}^{\mathrm{CS}}_\rho Q
+=\sum_{\ell\in\mathcal{M}}\rho(\ell)\mathcal{T}^{\mathrm{CS}}_\ell Q.
+\label{eq:csbapr_operator}
 \end{equation}
 
-\begin{theorem}[CS-BAPR Contraction; same template as BAPR]
-    \label{thm:csbapr_contraction}
-    Under frozen belief $\rho \geq 0$ with $\sum_h \rho(h) = 1$, per-mode stochastic transitions, and frozen penalties ($\kappa_{\text{ale}}$, $\Gamma_{\text{epi}}$, $\Gamma_{\text{sym}}$), the operator $\mathcal{T}^{CS\text{-}BAPR}_\rho$ is a $\gamma$-contraction in $L_\infty$ with a unique fixed point. (Formal tag: \texttt{csbapr\_contraction}.)
+\begin{theorem}[Frozen-operator contraction]
+\label{thm:csbapr_contraction}
+For stochastic transition kernels, a fixed probability vector $\rho$, fixed $p_\theta,\alpha$, and fixed bounded penalty fields, the operator \eqref{eq:csbapr_operator}, built from the soft value \eqref{eq:soft_value} and mode backups \eqref{eq:csbapr_mode}, is a $\gamma$-contraction on bounded value functions in the supremum norm, with a unique fixed point.
 \end{theorem}
-
 \begin{proof}[Proof sketch]
-    All three penalty terms ($\Gamma_{\text{epi}}$, $\Gamma_{\text{sym}}$, $\kappa_{\text{ale}}$) are frozen during each backup and therefore cancel in the contraction argument:
-    \begin{align}
-        &|\mathcal{T}^{CS}_h Q_1(s,a) - \mathcal{T}^{CS}_h Q_2(s,a)| \notag \\
-        &\quad = \gamma \left|\sum_{s'} P_h(s'|s,a)(V^{Q_1}(s') - V^{Q_2}(s'))\right| \leq \gamma\varepsilon.
-    \end{align}
-    The mixture over modes preserves contraction since $\rho$ is a probability distribution. The full proof, including Blackwell's sufficiency conditions, is formal.
+The fixed entropy and penalties cancel between backups.
+$|V^{Q_1}(x)-V^{Q_2}(x)|\leq\|Q_1-Q_2\|_\infty$,
+and averaging with probability kernels and $\rho$ preserves the bound.
+Appendix~\ref{app:proof_contraction} gives the full argument.
 \end{proof}
-
-\begin{remark}[Marginal extension over BAPR's contraction]
-    \label{rem:contraction_marginal}
-    \Cref{thm:csbapr_contraction} adds one frozen penalty $\Gamma_{\text{sym}}$ to BAPR's already-frozen penalty stack ($\Gamma_{\text{epi}}, \kappa_{\text{ale}}$); the proof template (frozen-penalty cancellation in $\mathcal{T}(Q_1) - \mathcal{T}(Q_2)$) is identical to BAPR's and to RE-SAC's before that, as we make explicit in \Cref{rem:frozen_unity}. The contribution of this theorem is bookkeeping---the new $\Gamma_{\text{sym}}$ does not break the existing $\gamma$-contraction property, which our formalization verifies---rather than a new mathematical idea. We retain the theorem statement for completeness because the algorithm in \Cref{sec:algorithm} relies on it, but readers familiar with the BAPR contraction can take the result on inspection.
-\end{remark}
 
 \begin{corollary}[Contraction after belief update]
-    If the belief $\rho$ is updated via Bayesian normalization $\rho'(h) = \rho(h) \cdot L(h) / Z$ with non-negative likelihoods and positive normalizer, then $\mathcal{T}^{CS\text{-}BAPR}_{\rho'}$ remains a $\gamma$-contraction. (Formal tag: \texttt{csbapr\_contraction\_after\_update}.)
+\label{cor:belief_update}
+For nonnegative mode likelihoods $\mathscr{L}(\ell)$ and
+$Z_\rho=\sum_\ell\rho(\ell)\mathscr{L}(\ell)>0$,
+the posterior
+$\rho^+(\ell)=\rho(\ell)\mathscr{L}(\ell)/Z_\rho$
+defines another frozen $\gamma$-contractive operator.
 \end{corollary}
+This is a per-operator property; changing the actor or belief between updates changes the operator and possibly its fixed point. Appendix~\ref{app:proof_belief} proves the probability normalization.
 
-\begin{theorem}[Necessity of frozen $\Gamma_{\text{sym}}$: contraction breaks under Q-dependent symbolic penalty]
-    \label{thm:frozen_sym_necessary}
-    Consider the CS-BAPR operator on a single-state single-action MDP where $\Gamma_{\text{sym}}$ depends on $Q$ with coupling sensitivity $\mu \geq 0$, defined as $\mu = |\partial \Gamma_{\text{sym}} / \partial Q|$ evaluated at the relevant stationary point (i.e., $\Gamma_{\text{sym}}(Q) \approx C - \mu Q$ due to online SINDy refinement creating a feedback loop: higher $Q \to$ better policy $\to$ lower Jacobian error $\to$ lower $\Gamma_{\text{sym}}$). Then the effective contraction factor is $\gamma(1 + \lambda_{\text{sym}} \mu)$, and:
-    \begin{enumerate}[label=(\roman*)]
-        \item If $\lambda_{\text{sym}} \mu \geq 1/\gamma - 1$: the operator is \emph{not} a contraction;
-        \item If $\lambda_{\text{sym}} \mu < 1/\gamma - 1$: the operator \emph{is} a contraction with factor $\gamma(1 + \lambda_{\text{sym}} \mu) > \gamma$.
-    \end{enumerate}
-    The boundary $\gamma(1 + \lambda_{\text{sym}} \mu) = 1$ is sharp; \Cref{rem:frozen_unity} gives the shared algebraic template.
+\begin{theorem}[Value-dependent penalty counterexample]
+\label{thm:frozen_sym_necessary}
+On a one-state, one-action MDP with $0<\gamma<1$, let
+$\Gamma_{\mathrm{sym}}(Q)=C_{\mathrm{sym}}-\nu Q$,
+where $C_{\mathrm{sym}}$ is a constant and $\nu\geq0$ is coupling sensitivity.
+The affine backup has Lipschitz factor
+$\gamma(1+\lambda_{\mathrm{sym}}\nu)$.
+It fails to contract when this factor is at least one; below that threshold it remains contractive.
 \end{theorem}
+A constant can make the discrepancy nonnegative on the bounded comparison interval. Appendix~\ref{app:proof_feedback} gives the exact calculation. Freezing is a sufficient way to recover the $\gamma$ template; the counterexample does not prove that every non-frozen design fails.
 
-\begin{proof}[Proof sketch]
-    When $\Gamma_{\text{sym}}(Q) = C - \mu Q$, the penalty term $-\lambda_{\text{sym}}\Gamma_{\text{sym}}(Q)$ contributes $+\lambda_{\text{sym}}\mu Q$ to the operator. The simplified operator becomes $\mathcal{T}_{\text{bad}}(Q) = \gamma(1 + \lambda_{\text{sym}}\mu) \cdot Q + R_0$ for constant $R_0$. Taking witnesses $Q_1 = 1, Q_2 = 0$: $|\mathcal{T}_{\text{bad}}(1) - \mathcal{T}_{\text{bad}}(0)| = \gamma(1 + \lambda_{\text{sym}}\mu) \geq 1$.
-\end{proof}
+The abstract operator retains separate frozen penalties, following BAPR's proof template. In the shared-critic implementation, epistemic spread is penalized in the critic and actor losses; the symbolic term is a detached batch average of \eqref{eq:projected_loss}. Appendix~\ref{app:operator_detail} distinguishes these update equations from the abstract operator.
 
-\begin{remark}[Structural unity of frozen-parameter counterexamples]
-    \label{rem:frozen_unity}
-    All three counterexamples in this paper series share the same algebraic structure:
-    \begin{center}
-    \begin{tabular}{llll}
-    \toprule
-    \textbf{Paper} & \textbf{Non-frozen term} & \textbf{Factor} & \textbf{Counterexample tag} \\
-    \midrule
-    RE-SAC & $\kappa(Q) = \lambda Q$ & $\gamma + \lambda$ & \texttt{resac\_nonfrozen} \\
-    BAPR   & $\rho(Q)$ + reward gap $\Delta$ & $\gamma + \lambda\Delta$ & \texttt{bapr\_nonfrozen} \\
-    CS-BAPR & $\Gamma_{\text{sym}}(Q)$ feedback & $\gamma(1 + \lambda_{\text{sym}}\mu)$ & \texttt{csbapr\_nonfrozen} \\
-    \bottomrule
-    \end{tabular}
-    \end{center}
-    In every case, the frozen penalty cancels exactly in $\mathcal{T}(Q_1) - \mathcal{T}(Q_2)$ (yielding factor $\gamma$), but a Q-dependent version introduces a coupling term that pushes the factor above $\gamma$---and past 1 when the coupling is strong enough. The frozen-parameter design is therefore \emph{necessary} for contraction in all three frameworks.
-\end{remark}
-
-\begin{remark}[Tractable approximation: shared $\Gamma_{\text{sym}}$ across modes]
-    \label{rem:shared_sym}
-    The formal proof indexes $\Gamma_{\text{sym}}$ by mode $h$ (i.e., $\Gamma_{\text{sym}}^h(s,a)$), allowing mode-specific symbolic penalties. In the implementation, we use a \emph{single shared} $\Gamma_{\text{sym}}$ across all modes, since the SINDy formula $f_{\text{sym}}$ is designed to be causally invariant (via IRM filtering) and therefore mode-independent. This is a conservative approximation: the formal proof holds for \emph{arbitrary} values of $\Gamma_{\text{sym}}^h$; using identical values across modes is a strict special case. The approximation affects the quality of the fixed point (how well $\Gamma_{\text{sym}}$ captures mode-specific Jacobian deviations) but not the existence or uniqueness of the fixed point.
-\end{remark}
-
-
-\subsection{Component composition: from pillars to bound hypotheses}
+\subsection{Boundary errors and whole-policy regularity}
 \label{sec:composition}
 
-Before stating the main OOD theorem, we show how the three pillars combine to satisfy its hypothesis---specifically, the linear derivative error growth condition.
-
-\begin{proposition}[Component hypotheses imply derivative bound (generalized)]
-    \label{prop:composition}
-    Under Assumptions~\ref{assump:sindy}--\ref{assump:feature_lip}, if:
-    \begin{enumerate}[label=(\roman*)]
-        \item $f_{\text{real}}$ has $M$-Lipschitz derivatives: $\|Df_{\text{real}}(x_1) - Df_{\text{real}}(x_2)\| \leq M\|x_1 - x_2\|$ (Assumption~\ref{assump:smooth}),
-        \item The policy has $\varepsilon$-Jacobian Consistency at the training boundary $x_0$ (from SINDy + training, Theorem~\ref{thm:sindy_jac}),
-        \item The policy has $L_{\text{pol}}$-Arithmetic Inductive Bias (from NAU/NMU architecture, Assumption~\ref{assump:feature_lip}),
-    \end{enumerate}
-    then for \emph{all} $x$ (including OOD points never seen during training):
-    \begin{equation}
-        \|D\pi(x) - Df_{\text{real}}(x)\| \leq \varepsilon + (L_{\text{pol}} + M) \cdot \|x - x_0\|.
-        \label{eq:deriv_error_propagation}
-    \end{equation}
-    When $M = 0$ (linear physics) and $L_{\text{pol}} = 0$ (pure NAU), this gives the constant bound $\varepsilon$. (Formal tag: \texttt{deriv\_error\_propagation}, \texttt{deriv\_error\_propagation\_nD}, Part~X.)
+\begin{proposition}[Derivative-error propagation]
+\label{prop:composition}
+Under \Cref{assump:reference,assump:smooth,assump:feature_lip}, for $x\in\Omega$,
+\begin{equation}
+\|\mathrm{D}\pi(x)-\mathrm{D}\pi_{\mathrm{ref}}(x)\|
+\leq\varepsilon+L_{\mathrm{err}}\|x-x_0\|,
+\qquad L_{\mathrm{err}}=L_\pi+M.
+\label{eq:deriv_error_propagation}
+\end{equation}
 \end{proposition}
-\begin{proof}[Proof sketch]
-    Triangle inequality on three terms: $\|D\pi(x) - Df_{\text{real}}(x)\| \leq \|D\pi(x) - D\pi(x_0)\| + \|D\pi(x_0) - Df_{\text{real}}(x_0)\| + \|Df_{\text{real}}(x_0) - Df_{\text{real}}(x)\| \leq L_{\text{pol}}\|x - x_0\| + \varepsilon + M\|x - x_0\|$.
+\begin{proof}
+Insert both derivatives at $x_0$ and apply the triangle inequality and the two derivative Lipschitz bounds. Appendix~\ref{app:component_lemma} spells out the three terms.
 \end{proof}
+The smoothness premise covers the OOD segment. This removes the need to assume OOD Jacobian alignment, but it does not remove all OOD-domain assumptions. Applying a constant worst-case segment bound gives the conservative expression
+$\delta+\varepsilon\|d\|+L_{\mathrm{err}}\|d\|^2$;
+integrating the increasing envelope gives the tighter factor $1/2$ below.
 
-\begin{proposition}[$n$-D composition: from pillars to OOD bound (no OOD assumptions)]
-    \label{prop:composition_nD}
-    Under Assumptions~\ref{assump:sindy}--\ref{assump:feature_lip}, if:
-    \begin{enumerate}[label=(\roman*)]
-        \item $\pi$ has $L_{\text{pol}}$-Arithmetic Inductive Bias in the $n$-D sense (Definition~\ref{def:arith_bias}),
-        \item $\pi$ is $\varepsilon$-Jacobian Consistent with $f_{\text{real}}$ \emph{at the training boundary $x_0$} (from training loss $\mathcal{L}_{\text{AC}}$),
-        \item $f_{\text{real}}$ has $M$-Lipschitz Fr\'echet derivatives (Assumption~\ref{assump:smooth}),
-    \end{enumerate}
-    then by Proposition~\ref{prop:composition}, the global derivative error is $\|D\pi(x) - Df_{\text{real}}(x)\| \leq \varepsilon + (L_{\text{pol}} + M)\|x - x_0\|$ for all $x$. Setting $C = \varepsilon + (L_{\text{pol}} + M)\|d\|$ as a global bound on the segment from $x_0$ to $x_{\text{ood}}$, the $n$-D linear OOD bound (Theorem~\ref{thm:ood_linear_nD}) yields:
-    \begin{equation}
-        \|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\| \leq \delta + \big(\varepsilon + (L_{\text{pol}} + M)\|d\|\big) \cdot \|d\|.
-    \end{equation}
-    (Formal tag: \texttt{ood\_bound\_no\_assumption4\_nD}, Part~X.)
-\end{proposition}
-
-\begin{remark}[Relation to Theorem~\ref{thm:ood_1d}]
-    \label{rem:prop_vs_thm}
-    Expanding the bound in Proposition~\ref{prop:composition} yields $\delta + \varepsilon\|d\| + (L_{\text{pol}} + M)\|d\|^2$, where the quadratic coefficient is $(L_{\text{pol}} + M)$.
-    In contrast, the fencing-based Theorem~\ref{thm:ood_1d} obtains $\delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$ with $L = L_{\text{pol}} + M$, giving a tighter factor of $\frac{1}{2}$ on the quadratic term.
-    The difference arises because the Proposition applies the MVT with a \emph{worst-case constant} $C = \varepsilon + (L_{\text{pol}} + M)\|d\|$ over the entire segment, while the Theorem exploits the \emph{linearly growing} derivative error $\varepsilon + L\|x - x_0\|$ via integration, recovering the $\frac{1}{2}$ factor.
-    In experiments (Section~\ref{sec:experiments}), we report both bounds; the Proposition bound serves as a conservative envelope and the Theorem bound as a tighter prediction.
-\end{remark}
-
-This $n$-D composition proposition provides the formal bridge between the three pillars (which supply $\varepsilon$, $L_{\text{eff}}$, and the $M = 0$ idealization) and the path-level hypothesis consumed by the fencing theorems. The causal chain is: \textbf{NAU/NMU} (Pillar~I) provides finite $L_{\text{eff}}$; \textbf{SINDy} (Pillar~II) provides small $\varepsilon = \varepsilon_1 + \varepsilon_2$; \textbf{IRM} (Pillar~III) tightens $\varepsilon$ by replacing $\varepsilon_1^{\text{raw}}$ with $\varepsilon_1^{\text{irm}} \leq \varepsilon_1^{\text{raw}}$; and \textbf{RL training} provides small $\delta$. All four quantities enter the final bound.
-
-\begin{remark}[On the nature of the theoretical contribution]
-    \label{rem:novelty}
-    The algebraic core of the OOD bound is an application of the Mean Value Theorem and Gr\"onwall-type fencing. The theoretical contribution lies not in the calculus but in the \emph{structural design insight}: identifying that the specific combination of NAU/NMU architecture, SINDy alignment, and IRM filtering makes the MVT hypotheses \emph{satisfiable}---and proving that the standard ReLU architecture makes them \emph{provably unsatisfiable}. The formal verification serves as a design audit tool, forcing every structural assumption to be explicit, much as it did for the frozen-parameter requirement in BAPR~\cite{Zhang2025BAPR}.
-\end{remark}
-
-
-\subsection{Main theorem: OOD extrapolation stability}
+\subsection{Policy-output extrapolation bound}
 \label{sec:main_thm}
 
-We now state the main theoretical result, beginning with the key building blocks. The mathematical content of this section is a careful instantiation of two textbook calculus tools---the convex Mean Value Theorem and a Gr\"onwall-style fencing argument for $F$-valued curves---specialized to the policy-vs-reference error function with the explicit $(\delta, \varepsilon, L, d)$ dependence required for the architectural argument in \Cref{sec:nau}. We do not claim the calculus underlying the bound is itself novel; the contribution is in identifying the dependence structure that lets a $\{\text{NAU}, \text{NMU}, \text{KAN}, \text{tanh-MLP}, \text{ReLU}\}$-typed comparison fall out of one inequality.
+All maps in this subsection are continuously differentiable on a neighborhood of the relevant closed segment, and all error-bound constants are nonnegative. The arguments use the mean value theorem (MVT) and integration of a derivative envelope.
 
-\begin{lemma}[Linear error growth via MVT]
-    \label{lem:error_linear}
-    Let $\pi, f_{\text{real}}: \mathbb{R} \to \mathbb{R}$ be differentiable, and suppose $\|\pi'(x) - f_{\text{real}}'(x)\| \leq C$ for all $x \in [a, b)$. Then $\|(\pi(b) - f_{\text{real}}(b)) - (\pi(a) - f_{\text{real}}(a))\| \leq C \cdot (b - a)$.
+\begin{lemma}[Scalar linear error growth]
+\label{lem:error_linear}
+For scalar policy and reference on an interval $[b_-,b_+]$ with $b_-\leq b_+$, if
+$|\pi'(x)-\pi_{\mathrm{ref}}'(x)|\leq C_{\mathrm{der}}$
+throughout the interval, then the change in $\pi-\pi_{\mathrm{ref}}$ between endpoints is at most
+$C_{\mathrm{der}}(b_+-b_-)$.
+Here $b_-,b_+$ are interval endpoints and $C_{\mathrm{der}}$ is a uniform derivative-error bound.
 \end{lemma}
+Appendix~\ref{app:proof_linear} proves the scalar and vector-valued versions.
 
-This fundamental lemma establishes that bounded derivative error implies bounded error growth. Combined with the base accuracy $\delta$, it gives the linear OOD bound. The quadratic generalization below replaces the constant $C$ with a \emph{growing} derivative error $\varepsilon + L(x - a)$.
-
-\begin{theorem}[1D OOD Extrapolation Stability Bound]
-    \label{thm:ood_1d}
-    Let $\pi, f_{\text{real}}: \mathbb{R} \to \mathbb{R}$ be differentiable. If:
-    \begin{enumerate}[label=(\roman*)]
-        \item $\|\pi(a) - f_{\text{real}}(a)\| \leq \delta$ \quad (base accuracy),
-        \item $\forall x \in [a,b),\ \|\pi'(x) - f_{\text{real}}'(x)\| \leq \varepsilon + L(x - a)$ \quad (growing derivative error),
-    \end{enumerate}
-    then: $\|\pi(b) - f_{\text{real}}(b)\| \leq \delta + \varepsilon(b-a) + \frac{L}{2}(b-a)^2$. \\
-    This is the one-dimensional fencing bound used by the $n$-D theorem below.
+\begin{theorem}[Scalar quadratic error bound]
+\label{thm:ood_1d}
+If $|\pi(b_-)-\pi_{\mathrm{ref}}(b_-)|\leq\delta$ and
+$|\pi'(x)-\pi_{\mathrm{ref}}'(x)|\leq\varepsilon+
+L_{\mathrm{err}}(x-b_-)$ on $[b_-,b_+]$, then
+$|\pi(b_+)-\pi_{\mathrm{ref}}(b_+)|
+\leq\delta+\varepsilon(b_+-b_-)+
+L_{\mathrm{err}}(b_+-b_-)^2/2$.
 \end{theorem}
-\begin{proof}[Proof sketch]
-    Define the error function $e(x) = \pi(x) - f_{\text{real}}(x)$. Since $\|e(a)\| \leq \delta$ and $\|e'(x)\| \leq \varepsilon + L(x-a)$ for $x \in [a,b)$, apply the Gr\"onwall-style fencing lemma with envelope $g(x) = \delta + \varepsilon(x-a) + \frac{L}{2}(x-a)^2$. Verify: $g(a) = \delta \geq \|e(a)\|$ and $g'(x) = \varepsilon + L(x-a) \geq \|e'(x)\|$. The conclusion $\|e(b)\| \leq g(b)$ gives the bound.
-\end{proof}
+The full proof is in Appendix~\ref{app:proof_scalar}.
 
-\begin{theorem}[$n$-D Linear OOD Bound]
-    \label{thm:ood_linear_nD}
-    For $\pi, f_{\text{real}}: E \to F$ in normed spaces, if $\|\pi(x_0) - f_{\text{real}}(x_0)\| \leq \delta$ and $\forall z,\ \|D\pi(z) - Df_{\text{real}}(z)\| \leq C$, then:
-    \begin{equation}
-        \|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\| \leq \delta + C\|x_{\text{ood}} - x_0\|.
-    \end{equation}
-    (Formal tag: \texttt{scbapr\_ood\_linear\_nD}. Proof uses Mathlib's convex Mean Value Theorem.)
+\begin{theorem}[Vector-valued linear error bound]
+\label{thm:ood_linear_nD}
+If the base error is at most $\delta$ and
+$\|\mathrm{D}\pi(x)-\mathrm{D}\pi_{\mathrm{ref}}(x)\|
+\leq C_{\mathrm{der}}$ on the segment, then
+$\|\pi(x_{\mathrm{ood}})-\pi_{\mathrm{ref}}(x_{\mathrm{ood}})\|
+\leq\delta+C_{\mathrm{der}}\|d\|$.
 \end{theorem}
-\begin{proof}[Proof sketch]
-    Define $e(x) = \pi(x) - f_{\text{real}}(x)$, so $De(x) = D\pi(x) - Df_{\text{real}}(x)$ with $\|De(x)\| \leq C$. Apply Mathlib's convex MVT (\texttt{Convex.norm\_image\_sub\_le\_of\_norm\_fderiv\_le}): $\|e(x_{\text{ood}}) - e(x_0)\| \leq C\|x_{\text{ood}} - x_0\|$. Triangle inequality: $\|e(x_{\text{ood}})\| \leq \|e(x_0)\| + C\|x_{\text{ood}} - x_0\| \leq \delta + C\|d\|$.
-\end{proof}
+This is the result used by the uniform symbolic pipelines; see Appendix~\ref{app:proof_linear}.
 
-\begin{lemma}[Path-level fencing theorem]
-    \label{lem:path_fencing}
-    Let $e_{\text{path}}: \mathbb{R} \to F$ be the error function along a line segment $[0,1]$ (typically $e_{\text{path}}(t) = \pi(x_0 + t \cdot d) - f_{\text{real}}(x_0 + t \cdot d)$). If $\|e_{\text{path}}(0)\| \leq \delta$ and $\|e_{\text{path}}'(t)\| \leq \varepsilon_d + L_d \cdot t$ for $t \in [0,1)$, then:
-    $\|e_{\text{path}}(1)\| \leq \delta + \varepsilon_d + L_d/2$.
-    This is the $F$-valued generalization of the 1D bound (Theorem~\ref{thm:ood_1d}), applied to the composed path. (Formal tag: \texttt{scbapr\_ood\_quadratic\_path}.)
+\begin{lemma}[Path-envelope bound]
+\label{lem:path_fencing}
+Let $\upsilon\in[0,1]$ parameterize the segment
+$\zeta(\upsilon)=x_0+\upsilon d$, and set
+$e_{\mathrm{path}}(\upsilon)=\pi(\zeta(\upsilon))-
+\pi_{\mathrm{ref}}(\zeta(\upsilon))$.
+If $\|e_{\mathrm{path}}(0)\|\leq\delta$ and
+$\|e_{\mathrm{path}}'(\upsilon)\|\leq
+\varepsilon\|d\|+L_{\mathrm{err}}\|d\|^2\upsilon$, then
+$\|e_{\mathrm{path}}(1)\|\leq
+\delta+\varepsilon\|d\|+L_{\mathrm{err}}\|d\|^2/2$.
 \end{lemma}
+Its integration proof appears in Appendix~\ref{app:proof_path}.
 
-The proof chain is: \textbf{1D fencing} (Theorem~\ref{thm:ood_1d}) $\to$ \textbf{path-level fencing} (Lemma~\ref{lem:path_fencing}) $\to$ \textbf{$n$-D bound} (Theorem~\ref{thm:ood_quad_nD} below), where the final step substitutes $\varepsilon_d = \varepsilon\|d\|$ and $L_d = L\|d\|^2$.
-
-\begin{theorem}[$n$-D Quadratic OOD Bound (Main Result)]
-    \label{thm:ood_quad_nD}
-    For $\pi, f_{\text{real}}: E \to F$, if along the line segment from $x_0$ to $x_{\text{ood}}$:
-    \begin{enumerate}[label=(\roman*)]
-        \item $\|\pi(x_0) - f_{\text{real}}(x_0)\| \leq \delta$,
-        \item The derivative error grows linearly: $\|e'(t)\| \leq \varepsilon\|d\| + L\|d\|^2 \cdot t$ for $t \in [0,1)$,
-    \end{enumerate}
-    where $d = x_{\text{ood}} - x_0$, then:
-    \begin{equation}
-        \|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2.
-        \label{eq:ood_bound}
-    \end{equation}
-    (Formal tag: \texttt{scbapr\_ood\_quadratic\_nD}.)
+\begin{theorem}[Quadratic OOD bound]
+\label{thm:ood_quad_nD}
+Under \Cref{assump:reference,assump:smooth,assump:feature_lip},
+\begin{equation}
+\|\pi(x_{\mathrm{ood}})-\pi_{\mathrm{ref}}(x_{\mathrm{ood}})\|
+\leq\delta+\varepsilon\|d\|+
+\frac{L_{\mathrm{err}}}{2}\|d\|^2.
+\label{eq:ood_bound}
+\end{equation}
 \end{theorem}
 \begin{proof}[Proof sketch]
-    Parametrize the line segment as $\gamma(t) = x_0 + t \cdot d$ for $t \in [0,1]$ and define $e_{\text{path}}(t) = \pi(\gamma(t)) - f_{\text{real}}(\gamma(t))$. Then $\|e_{\text{path}}(0)\| \leq \delta$ and $\|e_{\text{path}}'(t)\| \leq \varepsilon\|d\| + L\|d\|^2 t$ by hypothesis~(ii).
-    Apply the path-level fencing lemma (Lemma~\ref{lem:path_fencing}) with $\varepsilon_d = \varepsilon\|d\|$ and $L_d = L\|d\|^2$:
-    $\|e_{\text{path}}(1)\| \leq \delta + \varepsilon_d + L_d/2 = \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$.
-    Since $\gamma(1) = x_{\text{ood}}$, this gives $\|\pi(x_{\text{ood}}) - f_{\text{real}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \frac{L}{2}\|d\|^2$. Full proof in Appendix~\ref{app:proof_main}.
+Use \eqref{eq:deriv_error_propagation} along $\zeta(\upsilon)$, apply the chain rule to $e_{\mathrm{path}}$, and invoke \Cref{lem:path_fencing}. Appendix~\ref{app:proof_main} gives the complete proof.
 \end{proof}
 
-\begin{remark}[Engineering interpretation]
-    The bound~\eqref{eq:ood_bound} decomposes OOD error into three controllable terms, each addressed by a specific CS-BAPR component:
-    \begin{center}
-    \begin{tabular}{lll}
-    \toprule
-    \textbf{Term} & \textbf{Meaning} & \textbf{Controlled by} \\
-    \midrule
-    $\delta$ & Training-domain accuracy & Standard RL training \\
-    $\varepsilon\|d\|$ & SINDy quality $\times$ distance & Pillar II (SINDy) + III (IRM) \\
-    $\frac{L}{2}\|d\|^2$ & Architectural extrapolation & Pillar I (NAU: $L{=}0$, NMU: $L{=}2|c|$) \\
-    \bottomrule
-    \end{tabular}
-    \end{center}
-    With NAU ($L=0$), the bound is \emph{linear} in distance. With NMU, it is \emph{quadratic}. With ReLU, no finite $L$ exists within this framework (Theorem~\ref{thm:relu_impossible}), so the bound cannot be instantiated. This hierarchy provides a principled criterion for architecture selection: the trade-off is expressiveness (NMU can represent quadratic functions that NAU cannot) vs.\ extrapolation tightness ($L=0$ for NAU vs.\ $L=2|c|$ for NMU).
-\end{remark}
+The three terms describe boundary value error, boundary derivative mismatch, and subsequent derivative drift. They are conditional properties of the compared maps. An affine action map with an affine reference has $L_{\mathrm{err}}=0$; a linear feature-space head inside the implemented actor does not establish that case. SAC return optimization alone also does not certify $\delta$ against an arbitrary reference.
 
-\begin{remark}[Theoretical role vs.\ empirical contribution of each pillar]
-    \label{rem:pillar_necessity}
-    Each pillar plays a distinct \emph{theoretical} role in the bound, but their empirical contributions in our experiments differ markedly:
-    \begin{itemize}
-        \item \textbf{Pillar~I (NAU/NMU output head):} controls $L$ in the quadratic term. ReLU gives $L = \infty$ (\Cref{thm:relu_impossible}), so the bound becomes vacuous; smooth activations (GELU, Softplus, tanh) admit finite $L$ but pay a non-zero quadratic-term penalty that NAU avoids by construction. \emph{Empirically:} Pillar I helps in mid-range OOD on the bus benchmark and on tasks whose optimal policy is approximately scale-linear-in-state, but is neutral or harmful on tasks whose optimal policy must structurally re-tune (\Cref{sec:aux_benchmarks}).
-        \item \textbf{Pillar~II (SINDy-based Jacobian Consistency):} \emph{theoretically} tightens the linear-term coefficient $\varepsilon$ by replacing the policy's own linear extrapolation with an identified symbolic reference. \emph{Empirically:} the action-aware SINDy configuration (\texttt{sindy\_with\_control = True}, fitting $\dot x = Ax + Bu$ jointly) on the LQR benchmark gives the symbolic alignment a $66{-}97\%$ mid-OOD improvement over the no-SINDy ablation (\Cref{tab:lqr})---the first positive empirical case we have found. The earlier state-only configuration (default $n_\text{control}=0$) was a negative result on the same benchmark, because the symbolic reference encoded the open-loop $A$ rather than the closed-loop $A - BK$ that the optimal policy implements; the action-aware fit moves the reference into the regime in which $K$ is representable. The full closed-loop alignment ($\nabla \pi \approx -K$ via Riccati-solving $K$ post-Phase-0) is a tighter formulation flagged for the next paper revision. The transit benchmark itself is outside the SINDy-applicable regime (counteraction task; \Cref{sec:scope}).
-        \item \textbf{Pillar~III (IRM filter):} \emph{theoretically} tightens $\varepsilon$ further via cross-environment filtering; not required for the bound to be finite. \emph{Empirically:} not activated in our primary benchmarks (transit holding has a single regime); demonstration deferred to a multi-regime variant.
-    \end{itemize}
-    The bound itself is \emph{structurally vacuous} only when Pillar~I is removed (since $L \to \infty$ for ReLU). The other two pillars affect $\varepsilon$, which is controlled empirically by training and remains finite without symbolic alignment. The graceful degradation hierarchy (\Cref{rem:degradation}) ensures partial configurations remain usable.
-\end{remark}
-
-
-\subsection{CS-BAPR algorithm}
+\subsection{Implemented training loop}
 \label{sec:algorithm}
 
-The complete CS-BAPR algorithm operates in two phases:
-
-\textbf{Phase 0: SINDy Pre-Identification.} Before RL training begins, the agent collects exploration trajectories using a random policy, fits a SINDy model to discover sparse dynamics, and optionally applies IRM filtering across multiple environments. The resulting symbolic formula $f_{\text{sym}}$ is frozen as a PyTorch module with detached gradients.
-
-\textbf{Phase 1: CS-BAPR Training.} The training loop extends BAPR with two additions: (1) the symbolic consistency penalty $\Gamma_{\text{sym}}$ in the Q-loss (Eq.~\eqref{eq:csbapr_mode}), and (2) the Jacobian Consistency Loss $\mathcal{L}_{\text{AC}}$ (Eq.~\eqref{eq:jac_loss}) in the policy loss.
+\Cref{alg:csbapr} summarizes the primary pipeline. The replay buffer $\mathcal{B}$ supplies sampling distribution $\mathcal{D}$; $N_{\mathrm{upd}}$ is the number of gradient updates per collection step. The optional symbolic loss coefficients are $\lambda_{\mathrm{sym}}$ for the critic target and $\lambda_{\mathrm{JC}}$ for the actor. The primary transit configuration sets both to zero.
 
 \begin{algorithm}[H]
-\caption{CS-BAPR: Causal-Symbolic BAPR}
+\caption{CS-BAPR training with optional symbolic diagnostics}
 \label{alg:csbapr}
-\begin{algorithmic}
-\STATE \textbf{Phase 0: SINDy Pre-Identification}
-\STATE Collect exploration trajectories $\{(s_t, a_t, s_{t+1})\}$ using random policy.
-\STATE Fit SINDy: $\xi = \arg\min \|\dot{X} - \Theta(X)\xi\|_2 + \lambda\|\xi\|_1$.
-\STATE (Optional) IRM filter: select $\xi$ with minimum cross-environment variance.
-\STATE Create frozen PyTorch wrapper: $f_{\text{sym}} \leftarrow \texttt{SINDyTorchWrapper}(\xi)$.
-\STATE
-\STATE \textbf{Phase 1: CS-BAPR Training Loop}
-\STATE \textbf{Initialize:} NAU/NMU Actor $\pi_\theta$, Ensemble critics $\{Q_{\phi_k}\}$, BOCD belief $\rho$.
-\FOR{each training iteration}
-    \STATE Collect transitions; store in $\mathcal{D}$.
-    \STATE Compute surprise $\xi_t$; update BOCD belief $\rho$ (frozen during backup).
-    \STATE Compute $\lambda_w$ and $\beta_{\text{eff}}$ from belief (inherited from BAPR).
-    \FOR{$n = 1, \ldots, N_{\text{updates}}$}
-        \STATE Sample mini-batch from $\mathcal{D}$.
-        \STATE \textit{// Critic update (with $\Gamma_{\text{sym}}$):}
-        \STATE $\Gamma_{\text{sym}} \leftarrow \|\nabla_s \pi_\theta(s') - \nabla_s f_{\text{sym}}(s')\|^2$ \quad (SINDy gradients detached).
-        \STATE $y \leftarrow r + \gamma(\bar{Q}_{\text{target}} - \alpha \log\pi - \lambda_{\text{epi}}\Gamma_{\text{epi}} - \lambda_{\text{sym}}\Gamma_{\text{sym}} - \kappa)$.
-        \STATE Update $\phi_k$ by minimizing $\mathcal{L}_Q + \beta_{\text{ood}}\sigma_{\text{ens}}$.
-        \STATE \textit{// Actor update (with $\mathcal{L}_{\text{AC}}$):}
-        \STATE $\mathcal{L}_\pi \leftarrow -(\bar{Q} + \beta_{\text{eff}}\sigma_{\text{ens}} - \alpha\log\pi) + \mu_{\text{jac}} \cdot \mathcal{L}_{\text{AC}}$.
-        \STATE Update $\theta$ by minimizing $\mathcal{L}_\pi$ (with gradient clipping).
-        \STATE Soft update target networks.
+\begin{algorithmic}[1]
+\STATE Initialize actor parameters $\theta$, critics $\{\phi_k\}$, targets $\{\bar\phi_k\}$, replay buffer $\mathcal{B}$, and BOCD belief $\rho$.
+\IF{symbolic diagnostics are enabled}
+    \STATE Collect exploration transitions; fit $f_{\mathrm{sym}}$; optionally select across environments; freeze its coefficients.
+    \STATE For symbolic penalties, construct and freeze the action-valued reference $\pi_{\mathrm{sym}}=\mathcal C(f_{\mathrm{sym}})$.
+\ENDIF
+\FOR{each collection step}
+    \STATE Collect transitions; append to $\mathcal{B}$ and the recent-rollout tail.
+    \STATE Compute surprise $\chi_t$ and update $\rho$.
+    \FOR{each of $N_{\mathrm{upd}}$ gradient updates}
+        \STATE Sample a replay batch; apply reward normalization and entropy floor.
+        \STATE Compute $\lambda_w$ and warmup-adjusted $\beta_{\mathrm{eff}}$.
+        \STATE Freeze target values, actor sample, belief, and symbolic discrepancy for the critic target.
+        \STATE Compute critic gradients with \eqref{eq:critic_loss} and the minimum-target setting; clip and update critics.
+        \STATE Compute actor gradients with \eqref{eq:actor_loss} and the BC-removal setting.
+        \STATE Clip actor gradients; update the actor; softly update target networks.
     \ENDFOR
 \ENDFOR
 \end{algorithmic}
 \end{algorithm}
-
-\begin{remark}[Frozen-parameter requirements]
-    \label{rem:frozen}
-    CS-BAPR requires four frozen-parameter conditions for contraction:
-    \begin{enumerate}[label=(\roman*)]
-        \item $\kappa_{\text{ale}}$ frozen (from RE-SAC target weights);
-        \item $\Gamma_{\text{epi}}$ frozen (from target Q-ensemble);
-        \item $\rho$ frozen during backup (from BOCD, updated between iterations);
-        \item $\Gamma_{\text{sym}}$ frozen (SINDy coefficients fixed throughout training). \textbf{[CS-BAPR new]}
-    \end{enumerate}
-    Violating any one of these conditions breaks the contraction guarantee, as established by the formal counterexamples in BAPR~\cite{Zhang2025BAPR}, RE-SAC~\cite{Zhang2025RESAC}, and CS-BAPR (Theorem~\ref{thm:frozen_sym_necessary}).
-\end{remark}
-
-\begin{remark}[Graceful degradation]
-    \label{rem:degradation}
-    CS-BAPR is designed to degrade gracefully when its assumptions are not met:
-    \begin{itemize}
-        \item \textbf{SINDy fails} ($\varepsilon_1 > \varepsilon_{\text{threshold}}$): $\Gamma_{\text{sym}}$ and $\mathcal{L}_{\text{AC}}$ are disabled; the algorithm reduces to BAPR with a standard MLP or NAU/NMU actor, retaining all BAPR convergence guarantees.
-        \item \textbf{No multiple environments}: IRM filtering is skipped; single-environment SINDy formula used directly, with $\varepsilon_{\text{raw}}$ replacing $\varepsilon_{\text{irm}}$ in the bound.
-        \item \textbf{NAU/NMU disabled}: The architecture reverts to ReLU; the OOD bound no longer holds, but the Bellman contraction guarantee is unaffected (it depends only on frozen penalties, not on the actor architecture).
-    \end{itemize}
-    This hierarchical fallback ensures that CS-BAPR is never \emph{worse} than BAPR, even when its additional components cannot be applied.
-\end{remark}
-
-\begin{remark}[Computational overhead]
-    \label{rem:overhead}
-    CS-BAPR adds three sources of overhead relative to BAPR:
-    \begin{itemize}
-        \item \textbf{Phase~0 (SINDy, one-time):} 50 exploration episodes + PySINDy fitting, typically $<$5 minutes. Amortized over the full training, this is negligible.
-        \item \textbf{$\mathcal{L}_{\text{AC}}$ (per gradient step):} One additional \texttt{autograd} call to compute $\nabla_s \pi_\theta(s)$. For the action-dimension output ($\dim(\mathcal{A}) \ll \dim(\mathcal{S})$), this is $O(\dim(\mathcal{S}))$ per sample, comparable to a single backward pass.
-        \item \textbf{NAU regularization (per step):} $O(1)$---a scalar penalty on weight magnitudes.
-    \end{itemize}
-    In wall-clock time, CS-BAPR is approximately 15--20\% slower than BAPR (the dominant cost remains the ensemble critic's $K$ forward/backward passes). The Jacobian computation can be further accelerated via JVP with random vectors for high-dimensional state spaces, reducing cost from $O(\dim(\mathcal{S})^2)$ to $O(\dim(\mathcal{S}))$.
-\end{remark}
-
+The target and loss definitions are in Appendix~\ref{app:operator_detail}. Disabling symbolic diagnostics retains this training recipe and the fixed-backup contraction template.
 
 \section{Experiments}
 \label{sec:experiments}
 
-We evaluate the primary NAU+stabilization pipeline on a transit holding control benchmark with magnitude-type OOD. The optional symbolic extensions (SINDy and IRM) are \emph{not} activated in these experiments, for the reason discussed in \Cref{sec:scope}: transit holding is a counteraction task, where the optimal policy opposes the identified dynamics rather than tracking them, and an earlier internal variant that activated $\Gamma_{\text{sym}}$ under-performed the NAU-only configuration. We therefore position this section as a validation of the architectural bound, not of the full framework.
+We evaluate the transit-focused training recipe, with optional symbolic losses disabled. ID operation uses nominal demand. The questions are whether stabilization improves the BAPR implementation, whether the actor-head choice changes OOD performance, and how the behavior transfers to different disturbance axes.
 
-Four questions:
-\textbf{(Q1)} Does the NAU actor beat the ReLU BAPR baseline under in-distribution operation?
-\textbf{(Q2)} Does it beat BAPR under magnitude OOD (demand multipliers $5{-}50{\times}$)?
-\textbf{(Q3)} Is the NAU head necessary, or do the training-stabilization fixes alone explain the advantage?
-\textbf{(Q4)} Is the empirical OOD degradation consistent with the bound $\delta + \varepsilon\|d\| + \tfrac{L}{2}\|d\|^2$?
+\subsection{Transit benchmark and evaluation protocol}
 
-\subsection{Benchmark: SUMO-calibrated 12-line transit holding}
+\paragraph{Environment.}
+\texttt{MultiLineEnv} is an event-driven holding simulator for 12 urban bus lines, using SUMO-calibrated headway and dwell dynamics. The single-agent fleet formulation follows the bus-control setting of Zhang~\cite{Zhang2025SingleAgentBus}. At station arrivals, the normalized action $a\in[-1,1]$ is converted to hold duration $h_{\mathrm{hold}}=30(a+1)$ s, with a maximum of 60 s. This keeps the replay action in normalized coordinates and the physical hold time in seconds. The 15-dimensional state includes headways, load, boarding rate, speed, delay, previous action, and line/station/time descriptors. Poisson passenger arrivals use line-specific nominal rates.
 
-\textbf{Environment.} We use \texttt{MultiLineEnv}, a multi-line transit holding simulator built on SUMO-calibrated headway/dwell dynamics for 12 real urban bus lines (variable route length, station spacing, and schedule). At each station-arrival event, the agent chooses a hold duration for the arriving bus; the environment advances to the next event across the fleet. Passenger arrivals follow a Poisson process with line-specific rates calibrated to operational data. The state is a 15-D continuous vector (preceding/following headway, load, expected boarding rate, upcoming segment speed, cumulative delay, previous action, and categorical descriptors for line / station / time); the action is a 1-D hold-time scalar in $[0, h_{\max}]$ (we set $h_{\max} = 60$\,s).
+\paragraph{Approximate linearity diagnostic.}
+Headway-based control~\cite{daganzo2009headway} and optimal linear schedule-reliability control~\cite{xuan2011dynamic} motivate feedback that is locally linear in timing deviations. The recorded diagnostic for a strong learned controller uses 47,247 decisions over five ID episodes: a 50/50 train/test split gives a held-out coefficient of determination $R^2=0.70$ for an ordinary-least-squares fit from normalized state to hold time. The recorded ID clamp rate is zero. This diagnostic suggests approximate local linearity; it does not establish a globally linear policy or prove that optimal holding scales with demand.
 
-\textbf{Why bus is approximately scale-linear in state.}
-The transit holding task has a structural property that makes it well-matched to NAU's $L = 0$ output head: the strong holding policy maps state to hold time \emph{approximately linearly}. The classical analytic holding controller~\cite{daganzo2009headway, xuan2011dynamic} takes the form $h^* = \alpha (h_{\text{prev}} - h^{\text{target}})^+ + \beta (\text{load deficit})^+$, a piecewise-linear function of state. Empirically, we measured the linear-fit quality on a strong learned controller (the best v14 \texttt{csbapr} checkpoint, run deterministically over five ID episodes for $47{,}247$ decisions): on a $50/50$ train/test split, ordinary least squares regression of hold time on the $15$-D normalized state vector achieves $R^2 = 0.70$ on the held-out half, with $0\%$ of decisions hitting either the $0$\,s or $60$\,s boundary clamps under in-distribution flow. Since the demand multiplier $m$ scales the Poisson rate, which in turn scales boarding-induced dwell, headway deviation, and (in the analytic form above) the optimal hold all roughly linearly with $m$, magnitude OOD on this benchmark is the regime in which a constant-derivative output head can extrapolate at zero second-order cost. Saturation at $h_{\max} = 60$\,s caps the regime in which this argument applies (we observe boundary clamping only at $m \geq 20{\times}$), and the diminishing returns of NAU at $m{=}50{\times}$ in \Cref{tab:ood_sweep} are consistent with this saturation. This is the structural reason NAU helps in the bus benchmark and not in Hopper-wind (\Cref{sec:aux_benchmarks}), where the optimal policy must re-tune the gait rather than scale a state-linear response, nor in LQR after action saturation kicks in (\Cref{sec:aux_benchmarks}).
-
-\textbf{OOD protocol.} We control OOD magnitude via a single demand multiplier $m$ applied to the Poisson arrival rate in the environment's \texttt{\_batch\_passenger\_arrival} routine, with two variants:
+\paragraph{OOD protocols.}
+The demand multiplier $m$ scales the nominal Poisson arrival rate:
 \begin{itemize}
-    \item \textbf{Static sweep:} the multiplier $m \in \{1, 2, 5, 10, 20, 50\}$ is held constant for the full 18{,}000-second episode; $m = 1$ is the in-distribution setting.
-    \item \textbf{Abrupt burst:} $m = 1$ for $t \in [0, 3600)$ s, then $m \in \{5, 10, 20, 50\}$ for $t \geq 3600$ s. This models a sudden surge (mega-event, service disruption) partway through operation.
+    \item \textbf{Static:} $m\in\{1,2,5,10,20,50\}$ for the full 18,000 s episode.
+    \item \textbf{Abrupt:} $m=1$ before $t=3600$ s, followed by one switch to $m\in\{5,10,20,50\}$.
+    \item \textbf{Oscillating:} piecewise-constant within-episode schedules. \texttt{commuter\_day} uses multipliers $(1,10,2,20,5,50)$ at times $(0,3600,7200,10800,14400,16200)$ s. \texttt{square\_wave\_20x} alternates 1 and 20 every 1800 s, starting at 1, for nine switches. \texttt{escalating\_10x} uses $(1,2,5,15,50)$ at $(0,3600,7200,10800,14400)$ s; the name is a configuration identifier.
 \end{itemize}
 
-\textbf{Methods.}
-We compare six training configurations, all sharing the BAPR training loop (BOCD belief tracker, ensemble critic, frozen-penalty contraction) and differing in actor head and stabilization toggles:
-\begin{enumerate}[label=(\roman*)]
-    \item \textbf{\texttt{bapr-pristine}}: ReLU-MLP actor with all six stabilization toggles disabled.
-    \item \textbf{\texttt{bapr}}: legacy BAPR preset, retained for back-compat because some Group-A fixes were already active in the previous code state.
-    \item \textbf{\texttt{csbapr-no-nau}}: ReLU-MLP actor + all six stabilization fixes; this isolates the stabilization contribution.
-    \item \textbf{\texttt{csbapr} (primary)}: NAU actor + all six stabilization fixes.
-    \item \textbf{\texttt{csbapr-tanh}}: smooth MLP-with-tanh + all six stabilization fixes.
-    \item \textbf{\texttt{csbapr-kan}}: KAN actor (learnable B-spline edges) + all six stabilization fixes.
-\end{enumerate}
-The optional symbolic extensions ($\Gamma_{\text{sym}}$, $\mathcal{L}_{\text{AC}}$, IRM) are disabled in all six configurations: \texttt{jac\_weight} $= 0$, \texttt{weight\_sym} $= 0$. For all six configurations we run $n{=}10$ seeds for 500 training episodes per seed on the 12-line benchmark, and evaluate the best checkpoint on the OOD sweep, abrupt-burst, and oscillating protocols described above. Unless stated otherwise, the OOD tables report medians over seeds; \Cref{tab:main} reports mean $\pm$ s.d.
+\paragraph{Configurations.}
+The six reported transit configurations are \texttt{bapr-pristine} (ReLU MLP, six settings disabled), \texttt{bapr} (historical legacy preset), \texttt{csbapr-no-nau} (ReLU MLP with stabilization), \texttt{csbapr} (mixed arithmetic head with stabilization), \texttt{csbapr-tanh} (tanh-hidden MLP with stabilization), and \texttt{csbapr-kan} (KAN with stabilization). The BC coefficient follows \Cref{sec:training_fixes}. Every transit row uses $N_{\mathrm{seed}}=10$ seeds and 500 training episodes per seed, with the selected ID checkpoint evaluated under the OOD protocols. Selection is based on the best ID score rather than an OOD score. Tables report medians across seeds except \Cref{tab:main}, which reports mean and standard deviation. Return-unit suffixes K and M mean $10^3$ and $10^6$; higher return is better. Appendix~\ref{app:hyperparams} documents defaults and overrides.
 
-\subsection{In-distribution convergence (Q1)}
+\subsection{ID convergence}
 \label{sec:id_results}
 
-\Cref{tab:main} reports best-of-training return at $m = 1$ across the six configurations. The NAU actor converges to comparable in-distribution return as the stabilized MLP variants, while KAN gives the strongest in-distribution score. The stabilization fixes alone (\texttt{csbapr-no-nau}) substantially improve over the clean \texttt{bapr-pristine} baseline, as expected.
+\Cref{tab:main} reports ID total return across the 12 lines. The arithmetic actor is comparable to the stabilized ReLU variant, and KAN has the highest mean. Different aggregation explains why these means differ from the medians at $m=1$ in \Cref{tab:ood_sweep}.
 
-\begin{table}[t]
+
+\begin{table}[htbp]
 \centering
-\caption{In-distribution return (per-line eval at $m = 1$). Higher is better. Mean $\pm$ s.d., $n{=}10$ seeds per row.}
+\caption{ID total return across the 12 lines at $m=1$. Higher is better. Mean $\pm$ standard deviation, $N_{\mathrm{seed}}{=}10$ seeds per row.}
 \label{tab:main}
 \begin{tabular}{lcr}
 \toprule
-Method & $n$ seeds & ID total return (K) \\
+Method & $N_{\mathrm{seed}}$ seeds & ID total return (K) \\
 \midrule
 \texttt{bapr-pristine} (ReLU $+$ no fixes)        & 10 & $-850 \pm 37$ \\
-\texttt{bapr} (legacy, Group-A only)              & 10 & $-793 \pm 34$ \\
+\texttt{bapr} (historical legacy)              & 10 & $-793 \pm 34$ \\
 \texttt{csbapr-no-nau} (ReLU-MLP $+$ 6 fixes)     & 10 & $-780 \pm 55$ \\
 \texttt{csbapr} (NAU $+$ 6 fixes)                 & 10 & $-772 \pm 36$ \\
 \texttt{csbapr-tanh} (smooth-MLP $+$ 6 fixes)     & 10 & $-817 \pm 54$ \\
@@ -875,28 +653,25 @@ Method & $n$ seeds & ID total return (K) \\
 \end{tabular}
 \end{table}
 
-\subsection{Magnitude OOD (Q2, Q3)}
+\subsection{Demand OOD and stabilization ablation}
 \label{sec:ood_results}
 
-\Cref{tab:ood_sweep} reports return under the static demand sweep; \Cref{tab:abrupt} under the abrupt burst; \Cref{tab:oscillating} under within-episode oscillation; \Cref{tab:crash} the crash rate at $m{=}20{\times}$. With $n{=}10$ seeds across all six methods we now have a clean ablation. We observe:
-\begin{enumerate}[label=(\roman*)]
-    \item \emph{Six-fix recipe alone is the dominant empirical contribution.} Holding the architecture fixed at ReLU-MLP, the six stabilization toggles take the median ID return from $-861$K (\texttt{bapr-pristine}) to $-770$K (\texttt{csbapr-no-nau})---a $10.6\%$ improvement at $m{=}1$ that opens to $11.9\%$ at $m{=}5$, $19.0\%$ at $m{=}10$, $15.1\%$ at $m{=}20$, and $7.2\%$ at $m{=}50$. The legacy \texttt{bapr} preset (Group-A subset of fixes silently always-on under prior code) sits in between, validating that the gap is a continuum across how many fixes are activated.
-    \item \emph{No single architecture dominates across the OOD axis.} \texttt{csbapr-kan} is best at $m{=}1{-}2$; \texttt{csbapr} (NAU) is best at $m{=}5$; \texttt{csbapr-no-nau} (ReLU-MLP) is best at $m{=}10{-}20$; \texttt{csbapr-tanh} (smooth-MLP) is best at $m{=}50$. We read this as a Pareto trade-off rather than a winner: NAU's $L{=}0$ helps in the mid-OOD regime where action saturation has not yet kicked in, smooth-MLP's bounded $L$ is most useful at extreme OOD where the policy needs gentle non-linearity to absorb saturation, and KAN's spline expressivity gives a small ID/near-OOD edge at the cost of higher gradient variance at $m{\geq}10$.
-    \item Quantitatively, \texttt{csbapr} (NAU $+$ 6 fixes) improves over \texttt{bapr-pristine} by $14.1\%$ at $m{=}1$, $14.0\%$ at $m{=}5$, $16.2\%$ at $m{=}10$, $13.3\%$ at $m{=}20$, and $8.7\%$ at $m{=}50$. The 6-fix component (\texttt{csbapr-no-nau} vs.\ \texttt{bapr-pristine}) accounts for $10.6\%$ at $m{=}1$, $11.9\%$ at $m{=}5$, $19.0\%$ at $m{=}10$, $15.1\%$ at $m{=}20$, and $7.2\%$ at $m{=}50$; the architectural addition (\texttt{csbapr} vs.\ \texttt{csbapr-no-nau}) is small in magnitude and Pareto-trades against \texttt{csbapr-tanh} and \texttt{csbapr-kan} as discussed in (ii).
-    \item \texttt{csbapr-kan}'s $-756$K ID is the best in-distribution number we measure, but the spline derivatives' non-zero $L$ produces visible $L\|d\|^2/2$ widening at $m{\geq}10$ ($-971$K vs.\ \texttt{csbapr-no-nau}'s $-919$K), and one of ten seeds crashes at $-1{,}551$K under $m{=}20$ (\Cref{tab:crash}). NAU's $L{=}0$ avoids both.
-\end{enumerate}
+\Cref{tab:ood_sweep,tab:abrupt,tab:oscillating} report the three demand protocols, and \Cref{tab:crash} reports severe seed outcomes. The stabilization comparison holds the ReLU architecture fixed: relative to \texttt{bapr-pristine}, \texttt{csbapr-no-nau} reduces absolute static return loss by $10.6\%$, $11.9\%$, $19.0\%$, $15.1\%$, and $7.2\%$ at $m=1,5,10,20,50$, respectively. Relative improvement here means the return difference divided by the absolute baseline return.
 
-\begin{table}[t]
+The arithmetic variant's corresponding gains over \texttt{bapr-pristine} are $10.3\%$, $14.1\%$, $16.2\%$, $13.3\%$, and $8.7\%$. Its gain over the stabilized ReLU variant at $m=5$ is about $2.4\%$. The head comparison includes different architectures and head regularizers, rather than an isolated intervention on derivative curvature.
+
+
+\begin{table}[htbp]
 \centering
 \scriptsize
-\caption{Static OOD demand sweep, total episode return (K, higher is better). Median over $n{=}10$ seeds per row. $m=1$ is in-distribution. \texttt{bapr-pristine} disables all six stabilization toggles. \texttt{bapr} is the legacy preset whose Group-A fixes were silently always-on under the prior code state, retained for back-compat. \textbf{Bold}: best in column.}
+\caption{Static OOD demand sweep, total episode return (K, higher is better). Median episode return over $N_{\mathrm{seed}}{=}10$ seeds per row. $m=1$ is ID. \texttt{bapr-pristine} disables all six stabilization settings; \texttt{bapr} is a historical legacy configuration. \textbf{Bold}: best in column.}
 \label{tab:ood_sweep}
 \begin{tabular}{lrrrrrr}
 \toprule
 Method & $m{=}1$ & $m{=}2$ & $m{=}5$ & $m{=}10$ & $m{=}20$ & $m{=}50$ \\
 \midrule
 \texttt{bapr-pristine} (ReLU, no fixes)         & $-861$ & $-862$ & $-939$ & $-1134$ & $-1267$ & $-1416$ \\
-\texttt{bapr} (legacy, Group-A only)            & $-791$ & $-799$ & $-878$ & $-1025$ & $-1196$ & $-1428$ \\
+\texttt{bapr} (historical legacy)            & $-791$ & $-799$ & $-878$ & $-1025$ & $-1196$ & $-1428$ \\
 \texttt{csbapr-no-nau} (ReLU-MLP$+$6 fixes)     & $-770$ & $-776$ & $-827$ & $\mathbf{-919}$ & $\mathbf{-1076}$ & $-1314$ \\
 \texttt{csbapr} (NAU$+$6 fixes)                 & $-772$ & $-778$ & $\mathbf{-807}$ & $-950$ & $-1098$ & $-1293$ \\
 \texttt{csbapr-tanh} (smooth-MLP$+$6 fixes)     & $-786$ & $-824$ & $-897$ & $-986$ & $-1087$ & $\mathbf{-1239}$ \\
@@ -905,10 +680,10 @@ Method & $m{=}1$ & $m{=}2$ & $m{=}5$ & $m{=}10$ & $m{=}20$ & $m{=}50$ \\
 \end{tabular}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \scriptsize
-\caption{Abrupt-burst protocol: $m = 1$ for $t \in [0, 3600)$ s, then abrupt switch to the specified multiplier. Total episode return (K), median over $n{=}10$ seeds.}
+\caption{Abrupt-burst protocol: $m = 1$ for $t \in [0, 3600)$ s, then abrupt switch to the specified multiplier. Total episode return (K), median over $N_{\mathrm{seed}}{=}10$ seeds.}
 \label{tab:abrupt}
 \begin{tabular}{lrrrr}
 \toprule
@@ -924,10 +699,10 @@ Method & burst $5{\times}$ & burst $10{\times}$ & burst $20{\times}$ & burst $50
 \end{tabular}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \scriptsize
-\caption{Oscillating OOD protocol: within-episode piecewise-constant demand schedule. Total episode return (K), median over $n{=}10$ seeds. Schedules: \texttt{commuter\_day} has 5 switches with peak $50{\times}$; \texttt{square\_wave\_20x} has 9 switches with peak $20{\times}$; \texttt{escalating\_10x} has 4 switches with peak $50{\times}$.}
+\caption{Oscillating OOD protocol: within-episode piecewise-constant demand schedule. Total episode return (K), median over $N_{\mathrm{seed}}{=}10$ seeds. Schedules: \texttt{commuter\_day} has 5 switches with peak $50{\times}$; \texttt{square\_wave\_20x} has 9 switches with peak $20{\times}$; \texttt{escalating\_10x} has 4 switches with peak $50{\times}$.}
 \label{tab:oscillating}
 \begin{tabular}{lrrr}
 \toprule
@@ -943,17 +718,18 @@ Method & \texttt{commuter\_day} & \texttt{square\_wave\_20x} & \texttt{escalatin
 \end{tabular}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \scriptsize
-\caption{Crash rate at $m{=}20{\times}$ across multiple severity thresholds. Each cell reports the fraction of seeds whose return at $m{=}20{\times}$ falls below the threshold (lower is better). All six methods use $n{=}10$ seeds. We chose threshold values spanning the BAPR-baseline median so the qualitative ranking is robust to threshold choice; thresholds tighter than $-1{,}200$K are dominated by the level of the per-method ID return.}
+\caption{Crash rate at $m{=}20{\times}$ across multiple severity thresholds. Each cell reports the fraction of seeds whose return at $m{=}20{\times}$ falls below the threshold (lower is better). All six methods use $N_{\mathrm{seed}}{=}10$ seeds. Thresholds show both typical poor performance and severe tail outcomes.}
 \label{tab:crash}
-\begin{tabular}{lccccccc}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcccccc}
 \toprule
-Method & $n$ & $<{-}1{,}200$K & $<{-}1{,}500$K & $<{-}1{,}800$K & $<{-}2{,}000$K & Worst seed (K) \\
+Method & $N_{\mathrm{seed}}$ & $<{-}1{,}200$K & $<{-}1{,}500$K & $<{-}1{,}800$K & $<{-}2{,}000$K & Worst seed (K) \\
 \midrule
 \texttt{bapr-pristine} (ReLU, no fixes)        & 10 & $70\%$ & $0\%$  & $0\%$  & $0\%$ & $-1{,}422$ \\
-\texttt{bapr} (legacy, Group-A only)           & 10 & $50\%$ & $0\%$  & $0\%$  & $0\%$ & $-1{,}367$ \\
+\texttt{bapr} (historical legacy)           & 10 & $50\%$ & $0\%$  & $0\%$  & $0\%$ & $-1{,}367$ \\
 \texttt{csbapr-no-nau} (ReLU-MLP$+$6 fixes)    & 10 & $40\%$ & $0\%$  & $0\%$  & $0\%$ & $-1{,}309$ \\
 \texttt{csbapr} (NAU$+$6 fixes)                & 10 & $\mathbf{20\%}$ & $10\%$ & $10\%$ & $0\%$ & $-1{,}851$ \\
 \texttt{csbapr-tanh} (smooth-MLP$+$6 fixes)    & 10 & $30\%$ & $0\%$  & $0\%$  & $0\%$ & $\mathbf{-1{,}257}$ \\
@@ -962,117 +738,108 @@ Method & $n$ & $<{-}1{,}200$K & $<{-}1{,}500$K & $<{-}1{,}800$K & $<{-}2{,}000$K
 \end{tabular}
 \end{table}
 
-The crash table shows two distinct effects. The tighter $-1{,}200\text{K}$ threshold mostly tracks per-method performance level, where the stabilized methods reduce the fraction of poor seeds relative to \texttt{bapr-pristine}. The deeper thresholds expose rare outliers: \texttt{csbapr} has one severe NAU seed at $-1{,}851$K, \texttt{csbapr-kan} has one seed below $-1{,}500$K, and no method produces a seed below $-2{,}000$K.
+No architecture dominates. KAN has the best static medians at $m=1,2$ and the best burst-$5\times$ value. The arithmetic variant is best at static $m=5$; the stabilized ReLU variant is best at static and burst $m=10,20$ and all three oscillating schedules; the tanh variant is best at static and burst $m=50$. These are rankings of the reported medians, without a significance claim.
 
-\paragraph{Reading the tables.} All four CS-BAPR variants (\texttt{-no-nau}, \texttt{}, \texttt{-tanh}, \texttt{-kan}) improve over the clean \texttt{bapr-pristine} baseline across the primary OOD protocols, but the best variant changes with the OOD regime:
-\begin{itemize}
-    \item \textbf{In-distribution} ($m{=}1$): \texttt{csbapr-kan} is best ($-756$K), with \texttt{csbapr-no-nau} and \texttt{csbapr} close behind ($-770$K and $-772$K). The clean \texttt{bapr-pristine} baseline is worse at $-861$K.
-    \item \textbf{Static mid-range OOD} ($m{=}5$): \texttt{csbapr} (NAU $+$ 6 fixes) is best, matching the regime in which NAU's $L{=}0$ output-head derivative most closely matches the benchmark's linear-in-demand scaling.
-    \item \textbf{Extreme OOD and abrupt bursts}: the MLP variants become more competitive as action saturation dominates. \texttt{csbapr-no-nau} is best at static $m{=}10{-}20$ and burst $10{-}20{\times}$, while \texttt{csbapr-tanh} is best at the $50{\times}$ tail.
-    \item \textbf{Oscillating OOD} (\Cref{tab:oscillating}): \texttt{csbapr-no-nau} is best in all three schedule families, with \texttt{csbapr} consistently close. We read this as evidence that the six stabilization fixes are the robust empirical component, while the architectural head is task- and regime-dependent.
-\end{itemize}
-We read these results as confirming the paper's decomposition: \textbf{the six training-stabilization fixes account for the majority of the BAPR-to-CS-BAPR improvement} (compare \texttt{bapr-pristine} to \texttt{csbapr-no-nau}), \textbf{and the NAU output head adds a smaller, regime-specific benefit at static mid-range OOD with a residual variance cost at extreme OOD} (compare \texttt{csbapr-no-nau} to \texttt{csbapr}). The KAN head is a smooth alternative that trades mid-OOD performance for a small ID/near-OOD edge.
+The crash thresholds distinguish typical performance from severe tails. At $m=20$, the arithmetic variant has one seed at $-1{,}851$K, KAN has one at $-1{,}551$K, and no configuration has a seed below $-2{,}000$K. The arithmetic head therefore does not eliminate severe outcomes. The reported returns cannot establish that an outlier was caused by a particular weight constraint or derivative constant.
 
-\subsection{Theory-experiment alignment (Q4)}
+\subsection{Return degradation diagnostic}
 \label{sec:bound_alignment}
 
-To test whether the empirical degradation matches the theoretical bound, we plot reward degradation $|R_{\text{ID}} - R_{\text{OOD}}|$ as a function of distance $d = m - 1$ for each method, overlaid with the bound
-\[
- \mathrm{err}(d) \;\leq\; \delta + (\varepsilon + (L_{\text{eff}} + M) d)\, d,
-\]
-where $\delta$ and $\varepsilon$ are the measured ID boundary errors, $L_{\text{eff}}$ is the $L_{\text{pol}}$ value derived from the learned NAU weights ($\approx 0$ up to the feature-extractor contribution), and $M = 0$ is used since we compare against the policy's own linear reference (no symbolic extension). The bound forms an envelope over the NAU method; the ReLU baseline escapes the envelope, consistent with its missing $L$.
+\Cref{fig:bound} plots
+$\Delta J(m)=J(1)-J(m)$,
+where $J(m)$ is the static-table median episode return at demand multiplier $m$. Thus the plot is a difference of medians, not a median of paired seed differences. It visualizes degradation of the same reported configurations and data in \Cref{tab:ood_sweep}.
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=0.82\linewidth]{figures/figure1.pdf}
-    \caption{Theory-experiment alignment on the MultiLineEnv benchmark. Markers: measured OOD reward degradation $|R_{\text{ID}} - R_{\text{OOD}}|$ for each method at $d = m - 1 \in \{0, 1, 4, 9, 19, 49\}$, averaged over the available runs used to generate this diagnostic plot (shaded: $\pm$s.d.). Dashed curves: theoretical envelope $\delta + (\varepsilon + L_{\text{eff}} d)\,d$ evaluated with representative $L_{\text{eff}}$ values---$L{=}8$ for \texttt{csbapr} (NAU; the envelope is tight) and $L{=}100$ for \texttt{bapr} (a large stand-in for ``ReLU does not admit a finite $L$ under the derivative-Lipschitz certificate''). The plotted CS-BAPR variants stay below the baseline envelope; BAPR escapes into the wide-variance regime characteristic of unbounded derivative drift. Note that the envelope is relative to the policy's own linear reference (no symbolic extension active in these runs), so $\varepsilon$ is the measured ID boundary error.}
-    \label{fig:bound}
+The demand axis $m$ is not the state displacement $d$ in \eqref{eq:ood_bound}, and return has different units from action-output error. We therefore compare the observed degradation directly, without overlaying an unmeasured policy-output certificate.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\linewidth]{figures/figure1.pdf}
+\caption{Static-demand return degradation relative to each configuration's ID median. Every point is computed from \Cref{tab:ood_sweep}, with $N_{\mathrm{seed}}=10$ for each underlying median. Lower degradation is better relative to that configuration's own ID level. The figure reports a difference of aggregate medians and has no seed-level uncertainty bands.}
+\label{fig:bound}
 \end{figure}
 
-\subsection{Additional benchmarks}
+\FloatBarrier
+
+\subsection{Auxiliary benchmarks}
 \label{sec:aux_benchmarks}
 
-The transit benchmark exercises a single style of OOD: continuous magnitude scaling of an exogenous Poisson rate. To probe how much of the picture from \Crefrange{tab:ood_sweep}{tab:crash} reflects this specific OOD type, we ran two auxiliary benchmarks with different OOD axes and the same four-method comparison.
+\paragraph{Exploratory LQR amplitude sweep.}
+A point-mass double integrator with quadratic cost is a simple reference setting. In the unsaturated discrete linear model, $x_{t+1}=Ax_t+B_{\mathrm{in}}a_t$ and the optimal feedback is $a^*=-K_{\mathrm{fb}}x$, where $A$ is the state-dynamics matrix, $B_{\mathrm{in}}$ the input matrix, and $K_{\mathrm{fb}}$ the feedback gain determined by dynamics and cost. An identified $A$ alone is not that feedback gain. Initial-state radius is multiplied by $m_{\mathrm{amp}}$, and the reported historical cells are shown in \Cref{tab:lqr}.
 
-\paragraph{LQR with state-amplitude OOD: action-aware SINDy as the symbolic positive case.}
-A 2-D point-mass double integrator under quadratic cost was designed as a positive-case stress test for the symbolic extension: dynamics are linear, so SINDy in a degree-1 basis identifies the dynamics jointly with the input matrix $B$ when fit in action-aware mode (\texttt{config.sindy\_with\_control = True}), and the LQR-optimal policy $u^* = -Kx$ is itself linear so NAU's $L{=}0$ output head is structurally compatible. We trained on initial states sampled in the unit ball ($m{=}1$) and evaluated on $m \in \{1, 2, 5, 10, 20, 50\}$ with $m$ scaling the initial-state radius. Results are reported in \Cref{tab:lqr} for the \emph{action-aware} configuration; the state-only configuration (which we ran first) is summarized in the discussion that follows.
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \scriptsize
-\caption{LQR initial-amplitude sweep with \emph{action-aware} SINDy (\texttt{sindy\_with\_control = True}), median episode return over 3 seeds. Smaller absolute value is better; LQR-optimal at $m{=}1$ is approximately $-3$. \textbf{Bold}: best in column.}
+\caption{Exploratory LQR initial-amplitude sweep, median unaugmented episode return over $N_{\mathrm{seed}}=3$ seeds. Higher is better. K and M denote $10^3$ and $10^6$ return units; -- denotes an unreported cell. The symbolic-enabled configurations were labeled with \texttt{SINDY\_WITH\_CONTROL=1}; the implementation limitation is discussed in \Cref{sec:limitations}. \textbf{Bold}: best reported value in the column.}
 \label{tab:lqr}
 \begin{tabular}{lrrrrrr}
 \toprule
-Method & $m{=}1$ & $m{=}2$ & $m{=}5$ & $m{=}10$ & $m{=}20$ & $m{=}50$ \\
+Method & $m_{\mathrm{amp}}{=}1$ & $m_{\mathrm{amp}}{=}2$ & $m_{\mathrm{amp}}{=}5$ & $m_{\mathrm{amp}}{=}10$ & $m_{\mathrm{amp}}{=}20$ & $m_{\mathrm{amp}}{=}50$ \\
 \midrule
-\texttt{bapr} (no SINDy, no NAU)         & $\mathbf{-168}$  & --      & $-138$K & $-1.28$M & --      & $-9.40$M \\
+\texttt{bapr} (no SINDy, no NAU)         & $\mathbf{-168}$  & --      & $-138$K & $-1.28$M & --      & $\mathbf{-9.40}$M \\
 \texttt{csbapr-no-sindy} (NAU, no SINDy) & $-1{,}164$  & --      & $-105$K & $-2.26$M & --      & $-11.85$M \\
-\texttt{csbapr-no-nau} (MLP$+$SINDy)     & $-2{,}301$  & --      & $-18$K  & $-0.94$M & --      & $\mathbf{-9.84}$M \\
+\texttt{csbapr-no-nau} (MLP$+$SINDy)     & $-2{,}301$  & --      & $-18$K  & $-0.94$M & --      & $-9.84$M \\
 \texttt{csbapr} (NAU$+$SINDy, full)      & $-2{,}916$  & --      & $\mathbf{-10}$K  & $\mathbf{-0.90}$M & --      & $-11.45$M \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The action-aware result is markedly different from the state-only first attempt:
-\begin{itemize}[leftmargin=*]
-    \item \emph{State-only SINDy was a negative result.} Our first LQR experiment used the default state-only fit ($\dot x \approx A x$, ignoring $u$), and the SINDy-equipped \texttt{csbapr} configuration came out worst at every amplitude (e.g., $m{=}5$: state-only \texttt{csbapr} $-381$K vs.\ \texttt{bapr} $-36$K). The diagnosis is that the symbolic reference encoded only the open-loop dynamics $A$, not the closed-loop $A - BK$ that the optimal policy implements; pulling $\nabla \pi$ toward $\nabla f_{\text{sym}} = A$ is the wrong target for the linear-feedback-gain regime.
-    \item \emph{Action-aware SINDy turns the result around.} Switching the Phase-0 fit to $\dot x = f(x, u) = Ax + Bu$ (the \texttt{sindy\_with\_control} toggle introduced in this version) shifts the symbolic reference to encode both $A$ and $B$, which lines up the policy's gradient target with the regime in which the LQR-optimal feedback gain $K$ becomes representable. The same training pipeline now gives the SINDy-equipped configurations a clear advantage at mid-OOD: \texttt{csbapr} drops from $-381$K to $-10$K at $m{=}5$ ($-97\%$ vs.\ state-only) and from $-2.65$M to $-0.90$M at $m{=}10$ ($-66\%$); \texttt{csbapr-no-nau} (MLP $+$ action-aware SINDy) shows the same direction with smaller magnitude. \texttt{csbapr-no-sindy} (NAU but no SINDy) remains worse, confirming that the improvement is attributable to the symbolic alignment rather than to the seed draw.
-    \item \emph{Action saturation still dominates at extreme amplitude.} At $m{=}50$, both the bare \texttt{bapr} baseline and \texttt{csbapr-no-nau} are within $20\%$ of \texttt{csbapr}; once $u^* = -Kx$ exceeds the action-space boundary the architectural specifics matter less than the saturation regime. NAU's $L{=}0$ advantage and SINDy's symbolic alignment both lose their grip in the saturated tail.
-\end{itemize}
+Within the reported later sweep, the symbolic-enabled arithmetic configuration improves absolute return loss over \texttt{csbapr-no-sindy} by about $90.5\%$ at $m_{\mathrm{amp}}=5$ ($-10$K versus $-105$K) and $60.2\%$ at $m_{\mathrm{amp}}=10$ ($-0.90$M versus $-2.26$M). The earlier state-only configuration reported $-381$K and $-2.65$M at those amplitudes; comparing the two versions gives $97.4\%$ and $66.0\%$, a different comparison from the no-SINDy ablation. At ID, BAPR is best, and at $m_{\mathrm{amp}}=50$ its $-9.40$M is also the highest reported return. The symbolic-enabled results are retained as exploratory configuration comparisons; the action-input and JC limitations are stated in \Cref{sec:limitations}.
 
-We report the LQR action-aware result as the \emph{first positive empirical case for the SINDy extension} we have found: on a benchmark whose dynamics and optimal policy are linear, with the SINDy fit configured to identify the right reference (open-loop $A$ \emph{and} input matrix $B$), the symbolic alignment delivers a $66{-}97\%$ improvement in mid-OOD return relative to a no-SINDy ablation that shares all other components. We caveat that (a)~the closed-loop alignment $\nabla \pi \approx -K$ is still implemented through the open-loop $\nabla f_{\text{sym}}$; a tighter formulation (Riccati-solve $K$ post-Phase-0 and align $\nabla \pi$ with $-K$ directly) is a clear next step and would presumably tighten the gain further; and (b)~we have not re-derived the Jacobian-Consistency theorem (\Cref{thm:sindy_jac}) for the action-aware setting.
+\paragraph{Hopper-v4 wind.}
+A constant horizontal force acts on the torso:
+\[
+F_{\mathrm{wind}}=\omega m_{\mathrm{torso}}g,
+\]
+where $\omega\in\{0,1,2,5,10,20\}$ is dimensionless wind amplitude, $m_{\mathrm{torso}}$ is torso mass, and $g$ is gravitational acceleration. Training uses $\omega=0$; evaluation sweeps the full range. \Cref{tab:hopper} reports the medians.
 
-\paragraph{Hopper-v4 with wind disturbance.}
-Standard MuJoCo OOD profiles (mass$\times 10$, gravity$\times 5$) cause physically degenerate behaviour and do not yield the continuous, gentle OOD axis the transit benchmark provides. We instead apply a constant horizontal force $F_{\text{wind}} = a \cdot m_{\text{torso}} \cdot g$ on the Hopper torso for the entire episode, with $a \in \{0, 1, 2, 5, 10, 20\}$. Training uses $a = 0$ (no wind); evaluation sweeps the full range. \Cref{tab:hopper} reports the medians.
-\begin{table}[t]
+\begin{table}[htbp]
 \centering
 \scriptsize
-\caption{Hopper-v4 wind-amplitude sweep, median episode return over $n{=}3$ seeds per row except the pre-fix legacy \texttt{bapr}/\texttt{csbapr-relu} row ($n{=}2$, two stuck runs killed). \texttt{bapr-pristine} disables all six stabilization toggles and is the proper (clean) ablation baseline; the legacy \texttt{bapr}/\texttt{csbapr-relu} row reflects an earlier code state in which the four base fixes were silently always-on, so its row is shown for back-compat with prior runs only. \texttt{csbapr-tanh} replaces ReLU with $\tanh$ in the policy MLP and otherwise matches \texttt{csbapr-no-nau}, isolating the smooth-activation contribution.}
+\caption{Hopper-v4 wind sweep, median episode return over $N_{\mathrm{seed}}=3$ seeds except the legacy comparison ($N_{\mathrm{seed}}=2$, interrupted runs excluded). The pristine row disables the six stabilization settings; the legacy row is retained as a historical comparison. Wind amplitude $\omega=0$ is ID. \textbf{Bold}: best in the column.}
 \label{tab:hopper}
 \begin{tabular}{lrrrrrr}
 \toprule
-Method & ID ($a{=}0$) & $a{=}1$ & $a{=}2$ & $a{=}5$ & $a{=}10$ & $a{=}20$ \\
+Method & ID ($\omega{=}0$) & $\omega{=}1$ & $\omega{=}2$ & $\omega{=}5$ & $\omega{=}10$ & $\omega{=}20$ \\
 \midrule
-\texttt{bapr-pristine} (ReLU, no fixes)              & $635$  & $294$           & $276$           & $85$            & $127$           & $197$           \\
-\texttt{bapr}/\texttt{csbapr-relu} (legacy, $n{=}2$)  & $995$  & $216$           & $221$           & $144$           & $99$            & $107$           \\
+\texttt{bapr-pristine} (ReLU, no fixes)              & $635$  & $294$           & $\mathbf{276}$           & $85$            & $127$           & $197$           \\
+\texttt{bapr}/\texttt{csbapr-relu} (legacy, $N_{\mathrm{seed}}{=}2$)  & $995$  & $216$           & $221$           & $144$           & $99$            & $107$           \\
 \texttt{csbapr-tanh} (smooth-MLP$+$6 fixes)           & $975$  & $\mathbf{330}$  & $251$           & $203$           & $239$           & $56$            \\
-\texttt{csbapr-no-nau} (ReLU-MLP$+$6 fixes)           & $\mathbf{1{,}008}$ & $317$           & $\mathbf{270}$  & $\mathbf{255}$  & $\mathbf{256}$  & $\mathbf{224}$  \\
+\texttt{csbapr-no-nau} (ReLU-MLP$+$6 fixes)           & $\mathbf{1{,}008}$ & $317$           & $270$  & $\mathbf{255}$  & $\mathbf{256}$  & $\mathbf{224}$  \\
 \texttt{csbapr} (NAU$+$6 fixes)                       & $990$              & $289$           & $175$           & $62$            & $81$            & $74$            \\
 \bottomrule
 \end{tabular}
 \end{table}
-The Hopper-wind result inverts the bus picture in two complementary ways. \emph{First}, the 6 stabilization fixes alone account for the bulk of the OOD improvement on Hopper: holding the architecture (ReLU-MLP) fixed, removing all six toggles (\texttt{bapr-pristine}) drops the median from $1{,}008$ to $635$ at ID ($-37\%$), from $255$ to $85$ at $a{=}5$ ($-67\%$), and from $224$ to $197$ at $a{=}20$ ($-12\%$); the seed-to-seed standard deviation at ID also balloons from negligible to $358$. \emph{Second}, with all six fixes on, the architectural choice now trades off where the variant excels: \texttt{csbapr-no-nau} (ReLU-MLP) is the most wind-robust, \texttt{csbapr} (NAU) is best only at the in-distribution point and degrades sharply once the wind kicks in, and \texttt{csbapr-tanh} sits between them at mid-OOD but collapses harder at extreme $a{=}20$. The diagnosis is structural: NAU's $L{=}0$ output head encourages the policy to be \emph{the same} linear function of state regardless of the disturbance, which is exactly the wrong response to a body-frame force perturbation that requires gait re-tuning. The MLP head, with no architectural pressure to keep the policy state-linear, learns a wider gait that absorbs the wind better. We additionally observed one of three \texttt{csbapr-tanh} seeds (seed 2) hit a sharp mid-training collapse around episode 375 ($a{=}0$ \texttt{recent\_25}: $932 \to 33.8$ in 25 episodes) before recovering to $928$ by episode 500, illustrating that the 6 fixes \emph{permit} recovery on smooth-activation MLPs but do not rule out the dip; under NAU's $\{-1,0,1\}$ weight constraint, the analogous bad basin is unrecoverable, which we observe as the residual NAU crash rate on the bus benchmark (\Cref{tab:crash}).
 
-\paragraph{Combined takeaway from auxiliary benchmarks.}
-LQR and Hopper-wind tell consistent stories: NAU's $L{=}0$ guarantee is most useful when the optimal policy is itself approximately scale-linear in state (the bus benchmark), and is at best neutral and at worst harmful when the optimal policy needs to bend with structural perturbations (LQR action saturation, Hopper gait adjustment). This refines the contribution claim of \Cref{sec:nau}: the NAU output head is not a universal upgrade over MLP$+$6 fixes; rather, it is the right choice when the OOD axis is a magnitude rescaling of an exogenous input the optimal policy should respond to linearly (transit demand), and the wrong choice when the OOD axis is a structural perturbation requiring policy re-tuning. The 6 training-stabilization fixes are the universal component; the architectural choice is task-specific.
+The stabilized ReLU variant has the highest ID median and is best at $\omega=5,10,20$. The pristine variant is best at $\omega=2$, and tanh is best at $\omega=1$. The arithmetic variant falls from 990 at ID to 62 at $\omega=5$ and 74 at $\omega=20$, so its transit ranking does not transfer to this disturbance axis. Holding ReLU fixed, stabilization raises return from 635 to 1008 at ID, from 85 to 255 at $\omega=5$, and from 197 to 224 at $\omega=20$. This supports a useful training recipe in these evaluated cases, with task-dependent architectural behavior.
 
-\subsection{Additional analysis}
+\FloatBarrier
 
-\textbf{Computational cost.} The NAU head adds negligible computational overhead relative to the MLP baseline ($<$5\% wall-clock). The stabilization fixes are $O(1)$ per update. With 500 episodes per seed-configuration, a full run completes in approximately 4.5 hours per seed-configuration on a single CPU core; a hardware-aware launcher (\texttt{scripts/run\_smart\_CS-BAPR.sh}) parallelizes across seeds and configurations based on detected CPU/GPU resources.
-
-\textbf{What we do \emph{not} claim.} We do not claim, \emph{on the bus benchmark}, that the SINDy or IRM extensions help: the bus benchmark is outside the SINDy assumption set (counteraction, not tracking; discrete arrivals, not smooth ODEs), and an early variant including $\Gamma_{\text{sym}}$ on this benchmark under-performed the simpler NAU-only configuration. On the LQR auxiliary benchmark, the action-aware SINDy variant \emph{does} produce a $66{-}97\%$ mid-OOD improvement over no-SINDy (\Cref{tab:lqr})---the first empirically positive case for the SINDy extension. We caveat that LQR is a setting tailor-made for SINDy (linear dynamics, polynomial-degree-one library, linear optimal feedback), and we do not yet have a positive case on a benchmark with nonlinear-but-sparse dynamics; the IRM extension is similarly unactivated in our experiments. Both extensions remain formal framework components.
-
-
-\section{Conclusion}
+\section{Discussion and conclusion}
 \label{sec:conclusion}
 
-This paper presents CS-BAPR, a \emph{family} of methods for OOD extrapolation in reinforcement learning built around two components: (i)~a set of six training-stabilization fixes---four CS-BAPR base fixes (min-$Q$ ensemble targets, running-EMA reward normalization, entropy-temperature floor, and disabling the BAPR behavioural-cloning anchor for constrained heads) plus two ports of BAPR v10/v14 (BOCD-mechanism warmup, penalty-scale tuning, and rollout-based one-sided surprise; see \Cref{sec:training_fixes})---and (ii)~an architecturally-varied actor head chosen from NAU/NMU, KAN, or plain MLP-with-tanh. The theoretical core is the \emph{OOD Extrapolation Stability Bound} $\|\pi(x_{\text{ood}}) - \pi_{\text{ref}}(x_{\text{ood}})\| \leq \delta + \varepsilon\|d\| + \tfrac{L}{2}\|d\|^2$ (\Cref{thm:ood_quad_nD}) together with the \emph{ReLU derivative-Lipschitz impossibility} $\nexists L,\ \text{HasArithmeticInductiveBias}(\text{ReLU}, L)$ (\Cref{thm:relu_impossible}) and the \emph{CS-BAPR Bellman contraction} (\Cref{thm:csbapr_contraction}). The bound is instantiable by NAU/NMU, KAN, and spectrally-normalized smooth MLP heads, but not by the ReLU baseline through this proof route.
+The strongest empirical finding is that the stabilization recipe improves the evaluated BAPR implementation on the transit demand protocols. Changing the actor head provides smaller, regime-dependent differences: arithmetic is best at static $5\times$ demand, KAN at nominal and near-nominal demand, stabilized ReLU at several mid-to-high demand and switching conditions, and tanh at the $50\times$ tail.
 
-Empirically, on a 12-line SUMO-calibrated transit holding benchmark evaluated under three OOD protocols (static demand sweep to $50{\times}$, abrupt burst at $t{=}3600$s, within-episode piecewise-constant oscillation with up to 9 switches per episode and peak $50{\times}$), all four CS-BAPR variants improve over the clean unstabilized \texttt{bapr-pristine} baseline. The six stabilization fixes are the dominant empirical contributor: \texttt{csbapr-no-nau} improves the static median return from $-861$K to $-770$K at ID and from $-1134$K to $-919$K at $m{=}10{\times}$. The full \texttt{csbapr} configuration (NAU $+$ 6 fixes, $n{=}10$ seeds) is best at the static $m{=}5{\times}$ point, \texttt{csbapr-kan} is best in-distribution and near-OOD, \texttt{csbapr-no-nau} is best on the oscillating schedules and at static $m{=}10{-}20{\times}$, and \texttt{csbapr-tanh} is best at static $m{=}50{\times}$.
+The theoretical finding is the conditional action-output bound \eqref{eq:ood_bound}, whose constants include both policy and reference regularity. The layer calculations in \Cref{thm:nau_const,thm:nmu_bias,thm:relu_impossible} explain one source of curvature control, while the composition analysis identifies the additional assumptions needed for a complete policy certificate. The frozen Bellman analysis retains the predecessor's fixed-backup contraction template. The proof map in Appendix~\ref{app:lean_overview} connects each result to the supplied proof rather than to an unavailable formal artifact.
 
-The symbolic framework extensions (SINDy-based Jacobian Consistency and IRM causal filtering) are formalized mathematically but deliberately not activated on the bus benchmark: transit holding is a counteraction task, not a tracking task, and an early variant including $\Gamma_{\text{sym}}$ under-performed the simpler NAU-only configuration. On the LQR auxiliary benchmark, by contrast, the action-aware SINDy variant produces a clean $66{-}97\%$ mid-OOD improvement over the no-SINDy ablation (\Cref{sec:aux_benchmarks}, \Cref{tab:lqr})---the first positive empirical case we report for the SINDy extension, and consistent with the closed-loop-alignment prediction of the architectural theory.
+\subsection{Limitations}
+\label{sec:limitations}
 
-\textbf{Limitations.}
-\emph{Architectural scope.} The derivative-Lipschitz bound is specific to bounds of the form $\delta + \varepsilon\|d\| + (L/2)\|d\|^2$; alternative frameworks (e.g., piecewise-linear extrapolation analysis) may yield different guarantees for ReLU networks. Smooth activations (GELU, Softplus, tanh) also admit finite $L$ and are compatible with the bound; we exercise tanh as the smooth-activation representative through the \texttt{csbapr-no-nau} variant in the main experiments and find it competitive with NAU at extreme OOD.
-\emph{Training-stabilization fixes carry most of the empirical load.} Our ablation (\texttt{csbapr-no-nau}) isolates the six training-stabilization fixes from the architectural change; the result is that a ReLU-MLP head plus the six fixes already recovers most of the OOD improvement over \texttt{bapr-pristine} (\Cref{tab:ood_sweep}). The architectural $L$-bound guarantees from NAU/NMU/KAN are real but do not reliably dominate the MLP-with-fixes variant in our experiments---they trade off ID quality, mid-OOD peak performance, and variance, and the trade-off is task-dependent (NAU is strongest at the bus benchmark's static $m{=}5$ point; MLP-with-fixes dominates Hopper-wind, \Cref{sec:aux_benchmarks}).
-\emph{Run-to-run variance on NAU.} Even with the v14 surprise reform, $1$ of $10$ NAU seeds landed in a poor optimization basin at $m{=}20$ that the $\{-1,0,1\}$ weight constraint could not escape from. \Cref{tab:crash} reports the residual crash rate across multiple severity thresholds; we flag this as a practical caveat of the constrained-weight architecture.
-\emph{Symbolic extensions: positive case is narrow and architecturally constrained.} The SINDy extension produces a clean improvement on LQR only in its \emph{action-aware} configuration (jointly fitting $f(x,u) = Ax + Bu$); the state-only SINDy variant initially tested actively under-performed the no-SINDy ablation because it identified the open-loop matrix $A$ instead of the closed-loop $A - BK$ that the optimal policy implements. The action-aware fix delivers a $66{-}97\%$ mid-OOD improvement on LQR (\Cref{tab:lqr}), but this is a setting tailor-made for SINDy: linear dynamics, polynomial-degree-one library, and a closed-form linear optimal policy. We do not yet have a positive case on a benchmark with non-trivial structure, and the bus benchmark---where the operative dynamics are discrete bus--passenger arrivals rather than smooth ODEs---falls outside the SINDy assumption set entirely.
-\emph{Single primary benchmark; auxiliary benchmarks limited.} The bus benchmark is one corridor in one city. The primary bus benchmark now uses a uniform $n{=}10$ seed sweep across the six reported methods, but auxiliary LQR and Hopper-wind remain smaller: LQR uses $n{=}3$ seeds per method, Hopper-wind uses $n{=}3$ for \texttt{bapr-pristine}, \texttt{csbapr-tanh}, \texttt{csbapr-no-nau}, and \texttt{csbapr}, and $n{=}2$ for the legacy \texttt{bapr}/\texttt{csbapr-relu} row. Additional environments would tighten the task-specific NAU-vs-MLP trade-off.
-\emph{Standard RL baselines (SAC, domain randomization, RARL) not run.} Our comparison is against the BAPR predecessor framework, which is the closest method in mechanism (BOCD-driven adaptive conservatism + ensemble pessimism). Standard baselines are implemented in our codebase (\texttt{train\_csbapr.py} method presets) but were not run in the main experiments due to compute budget; $1$-seed SAC / DR rows on the bus benchmark would tighten the framing of ``CS-BAPR's improvement is over BAPR-the-predecessor, not over RL methods in general.''
-\emph{Feature-extractor Lipschitz bound is assumed, not enforced.} Assumption~\ref{assump:feature_lip} requires $L_{\text{feat}} < \infty$; our implementation uses weight clamping during training, and a principled use of spectral normalization or LipSDP bounds would both tighten the composed $L$ and make the bound's hypothesis empirically verifiable on the trained policy.
-\emph{Hopper-wind: legacy duplicate row retained for back-compat.} An earlier code revision had the four base CS-BAPR fixes (min-$Q$, reward EMA, entropy floor, no-BC) hardcoded as always-on regardless of the \texttt{bapr}/\texttt{csbapr-relu} method preset; the two presets thus differed only in name and produced identical Hopper numbers. The current code exposes all six fixes through explicit toggles, and the \texttt{bapr-pristine} row in \Cref{tab:hopper} (six toggles off, $n{=}3$) is the proper clean-baseline ablation. The legacy \texttt{bapr}/\texttt{csbapr-relu} row is retained in the table for back-compat with our prior reported runs but should not be read as a clean ``no fixes'' baseline.
+\paragraph{Whole-policy certification and performance.}
+The historical arithmetic actor has LeakyReLU feature layers, a quadratic correction, and tanh squashing. It has not been certified to satisfy \Cref{assump:feature_lip} across the OOD segments; its earlier curvature surrogate was not a valid $L_\pi$. The revised \texttt{smooth-nau} variant uses tanh features and computes a whole deterministic-policy bound, including the quadratic projection and action squash, as detailed in Appendix~\ref{app:leff}. It leaves the historical actor available and reports no finite certificate for that actor or a hard mean clamp. The certificate covers normalized action outputs, not sampled-action distributions, episode return, or deep actor-critic convergence. It can be conservative. The reported tables do not evaluate the new variant.
 
-\textbf{Future work.} (i)~Uniform larger-seed sweeps for the auxiliary benchmarks; (ii)~SAC, DR, and RARL baseline rows on the bus benchmark; (iii)~closed-loop Jacobian alignment $\nabla \pi \approx -K$ on top of the action-aware SINDy fit (the LQR positive case currently regularizes the policy Jacobian only against the open-loop $A$ via the action-aware $f(x,u)$ identification, but does not yet enforce the closed-loop residual; the natural extension is to combine SINDy's $B$ estimate with the Bellman-implied $K$); (iv)~principled Lipschitz enforcement on the feature extractor via spectral normalization or LipSDP, which would tighten the composed $L$ and make the bound's hypothesis empirically verifiable; (v)~additional GELU / Softplus smooth-activation rows to separate ``NAU helps because $L = 0$'' from ``NAU helps because the constrained weight space acts as regularization''; (vi)~online SINDy refinement with formal re-verification of the frozen-parameter condition; and (vii)~integrating the CS-BAPR family with distributional RL for risk-sensitive OOD deployment.
+\paragraph{Symbolic and invariance components.}
+The historical symbolic implementation omitted actions and used the projected loss \eqref{eq:projected_loss}. The revised code supplies actions to fitting and prediction, constructs an LQR feedback reference, and implements \eqref{eq:jac_loss}. These repairs are implementation changes, not retrospective validation of \Cref{tab:lqr}; new performance experiments are needed. Other tasks require their own action-valued control construction. Prediction-error variance can prefer a consistently inaccurate model; the selector neither proves derivative accuracy nor establishes SCM causality. IRM filtering is inactive in the reported primary runs.
+
+\paragraph{Experimental scope and accounting.}
+The 12-line transit simulator is one application setting; LQR and Hopper have three seeds per principal configuration. The legacy Hopper comparison has two completed seeds with interrupted runs excluded, and does not match the pristine baseline. The historical transit \texttt{bapr} row predates later defaults; the current \texttt{bapr} entrypoint inherits those defaults and does not by itself reproduce that older configuration. Actor weight decay and regularizer strengths also belong to the compared recipe, so the pristine comparison is not a six-factor causal ablation. Standard SAC, domain-randomized training, and robust adversarial RL (RARL) are not included in the primary result tables. The comparisons establish improvement over the evaluated predecessor configurations, with no universal claim for the stabilization package or head.
+
+\paragraph{Reproducibility and proof artifacts.}
+The manuscript-level comma-separated values (CSV) file transcribes aggregate table values. It does not replace original seed-level logs, checkpoint-selection records, or traces supporting the linear-fit diagnostic; those historical artifacts are absent from the retained package following storage cleanup. The diagnostics and statistical comparisons cannot be independently reconstructed from this CSV alone. This repository snapshot supplies mathematical proofs but no executable Lean project for the CS-BAPR results. Formalization tags in earlier drafts were not a machine-checking certificate.
+
+The next empirical step is a fresh comparison of the revised smooth actor and action-valued feedback alignment, retaining per-seed returns and checkpoint-selection records. Boundary value and operator-norm derivative errors in \eqref{eq:ood_bound} are measured at the stated boundary point, not inferred from replay-average losses or sample counts. Larger auxiliary seed sweeps and additional standard baselines would then assess transfer beyond transit demand scaling.
+
+\section*{Code and Data Availability}
+Code is available at \url{https://github.com/erzhu419/CS-BAPR}. Aggregate source values for \Cref{tab:main,tab:ood_sweep,tab:abrupt,tab:oscillating,tab:crash,tab:lqr,tab:hopper} are transcribed in \path{paper/source_data/reported_tables.csv}. The figure is regenerated from its static-sweep rows. Original seed-level evidence is not included in the retained manuscript package.
 
 \section*{Acknowledgments}
 This work was supported by the National Natural Science Foundation of China (Grant No. 72371251), the Natural Science Foundation for Distinguished Young Scholars of Hunan Province (Grant No. 2024JJ2080), and the Key Research and Development Program of Hunan Province of China (Grant No. 2024JK2007).
