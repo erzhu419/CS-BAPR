@@ -1,0 +1,1729 @@
+{
+  "revision": "general_ood_v147_randomized_recovery",
+  "training_seed": 6,
+  "training_profile": "randomized-recovery",
+  "smoke": true,
+  "spec": {
+    "revision": "general_ood_v147_randomized_recovery",
+    "profile": "randomized-recovery",
+    "smoke": true,
+    "steps": 512,
+    "block_steps": 256,
+    "checkpoint_interval": 256,
+    "evaluation_interval": 256,
+    "milestones": [
+      256,
+      512
+    ],
+    "bootstrap_mask": "terminated-only",
+    "episode_boundary": "terminated-or-truncated",
+    "training_reset_schedule": "seed*10000 + completed episodes",
+    "settings": {
+      "learning_rate": 0.0003,
+      "buffer_size": 1000000,
+      "learning_starts": 255,
+      "batch_size": 256,
+      "gamma": 0.99,
+      "tau": 0.005,
+      "train_freq": 1,
+      "gradient_steps": 1,
+      "ent_coef": "auto_0.2",
+      "target_entropy": "auto",
+      "use_sde": false,
+      "policy_kwargs": {
+        "net_arch": [
+          256,
+          256
+        ],
+        "n_critics": 2
+      }
+    },
+    "training_pulse": {
+      "probability": 0.5,
+      "gravity": 2.0,
+      "duration": 10,
+      "onset_min": 80,
+      "onset_max": 320
+    },
+    "pulse_rng_seed": "147000 + training seed",
+    "heldout_peak_gravity": 2.6591479484724942,
+    "heldout_durations": [
+      25,
+      50
+    ],
+    "policy_receives_profile_labels": false,
+    "policy_receives_onset_clock": false,
+    "state_resets_at_switch": 0
+  },
+  "config": {
+    "learning_rate": 0.0003,
+    "buffer_size": 1000000,
+    "learning_starts": 255,
+    "batch_size": 256,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "train_freq": 1,
+    "gradient_steps": 1,
+    "ent_coef": "auto_0.2",
+    "target_entropy": "auto",
+    "use_sde": false,
+    "policy_kwargs": {
+      "net_arch": [
+        256,
+        256
+      ],
+      "n_critics": 2
+    }
+  },
+  "environment": "Hopper-v4",
+  "training_device": "cuda",
+  "actual_new_training_interactions": 512,
+  "cumulative_training_interactions": 512,
+  "optimizer_updates": 257,
+  "recovery_coverage": {
+    "episode_resets": 21,
+    "pulse_assigned_episodes": 13,
+    "baseline_steps": 512,
+    "completed_episodes": 20,
+    "physical_failures_without_exposure": 20
+  },
+  "physics": {
+    "body_mass": [
+      0.0,
+      3.6651914291880923,
+      4.057890510886818,
+      2.7813566959781637,
+      5.315574769873931
+    ],
+    "geom_friction": [
+      [
+        1.0,
+        0.005,
+        0.0001
+      ],
+      [
+        0.9,
+        0.005,
+        0.0001
+      ],
+      [
+        0.9,
+        0.005,
+        0.0001
+      ],
+      [
+        0.9,
+        0.005,
+        0.0001
+      ],
+      [
+        2.0,
+        0.005,
+        0.0001
+      ]
+    ],
+    "baseline_gravity": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "active_gravity": [
+      0.0,
+      0.0,
+      -9.81
+    ]
+  },
+  "reward_settings": {
+    "healthy_reward": 1.0,
+    "ctrl_cost_weight": 0.001,
+    "forward_reward_weight": 1.0
+  },
+  "reward_changes": [],
+  "healthy_termination_changes": [],
+  "motor_limit_changes": [],
+  "state_resets_at_switch": 0,
+  "policy_receives_profile_labels": false,
+  "policy_receives_onset_clock": false,
+  "observation_dim": 11,
+  "use_context": false,
+  "use_symbolic_constraints": false,
+  "reward_normalization": false,
+  "snapshots": [
+    {
+      "step": 256,
+      "optimizer_updates": 1,
+      "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v147_randomized_recovery_20261014/runtime/run_checkpoints/smoke_seed6_randomized-recovery/step256.zip",
+      "final_evaluation": {
+        "protocol": {
+          "schedules": [
+            {
+              "name": "no-pulse",
+              "onset": null,
+              "duration": null
+            },
+            {
+              "name": "after100_pulse10",
+              "onset": 100,
+              "duration": 10
+            },
+            {
+              "name": "after100_permanent",
+              "onset": 100,
+              "duration": null
+            }
+          ],
+          "max_steps": 256,
+          "reset_seeds": [
+            154000
+          ],
+          "action_noise_seeds": [
+            137000
+          ],
+          "peak_gravity": 2.6591479484724942,
+          "recovery_steps": 100,
+          "device": "cpu"
+        },
+        "episodes": [
+          {
+            "condition": "no-pulse",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 18,
+            "episode_return": 13.991109905806585,
+            "mean_velocity": -0.22268396786455139,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9814207885000441,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 18
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.1970119902973273,
+              "angle": -0.22747320698128484,
+              "max_abs_qvel": 3.9726457241307425,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "no-pulse",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 9,
+            "episode_return": 6.969305423570168,
+            "mean_velocity": -0.22429934955514297,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9768597682317098,
+            "mean_action_noise_l2": 1.0428440041012235,
+            "profile_counts": {
+              "id": 9
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.2222120814502593,
+              "angle": -0.20034853117919052,
+              "max_abs_qvel": 7.032752613866182,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "after100_pulse10",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 18,
+            "episode_return": 13.991109905806585,
+            "mean_velocity": -0.22268396786455139,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9814207885000441,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 18
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.1970119902973273,
+              "angle": -0.22747320698128484,
+              "max_abs_qvel": 3.9726457241307425,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": 210,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "after100_pulse10",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 9,
+            "episode_return": 6.969305423570168,
+            "mean_velocity": -0.22429934955514297,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9768597682317098,
+            "mean_action_noise_l2": 1.0428440041012235,
+            "profile_counts": {
+              "id": 9
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.2222120814502593,
+              "angle": -0.20034853117919052,
+              "max_abs_qvel": 7.032752613866182,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": 210,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "after100_permanent",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 18,
+            "episode_return": 13.991109905806585,
+            "mean_velocity": -0.22268396786455139,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9814207885000441,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 18
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.1970119902973273,
+              "angle": -0.22747320698128484,
+              "max_abs_qvel": 3.9726457241307425,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "after100_permanent",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 9,
+            "episode_return": 6.969305423570168,
+            "mean_velocity": -0.22429934955514297,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9768597682317098,
+            "mean_action_noise_l2": 1.0428440041012235,
+            "profile_counts": {
+              "id": 9
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.2222120814502593,
+              "angle": -0.20034853117919052,
+              "max_abs_qvel": 7.032752613866182,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          }
+        ],
+        "prefix_pairs_verified": 4,
+        "optimizer_updates": 0,
+        "replay_loaded": false,
+        "device": "cpu",
+        "evaluation_interactions": 81
+      }
+    },
+    {
+      "step": 512,
+      "optimizer_updates": 257,
+      "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v147_randomized_recovery_20261014/runtime/run_checkpoints/smoke_seed6_randomized-recovery/step512.zip",
+      "final_evaluation": {
+        "protocol": {
+          "schedules": [
+            {
+              "name": "no-pulse",
+              "onset": null,
+              "duration": null
+            },
+            {
+              "name": "after100_pulse10",
+              "onset": 100,
+              "duration": 10
+            },
+            {
+              "name": "after100_permanent",
+              "onset": 100,
+              "duration": null
+            }
+          ],
+          "max_steps": 256,
+          "reset_seeds": [
+            154000
+          ],
+          "action_noise_seeds": [
+            137000
+          ],
+          "peak_gravity": 2.6591479484724942,
+          "recovery_steps": 100,
+          "device": "cpu"
+        },
+        "episodes": [
+          {
+            "condition": "no-pulse",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 33,
+            "episode_return": 54.87075449351923,
+            "mean_velocity": 0.6631974920553559,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.8970471132885326,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 33
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.2681928017131614,
+              "angle": 0.21012523425244115,
+              "max_abs_qvel": 1.3326144127040727,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "no-pulse",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 15,
+            "episode_return": 9.993302603815586,
+            "mean_velocity": -0.33248503066840596,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9020871599515279,
+            "mean_action_noise_l2": 1.0862839976946512,
+            "profile_counts": {
+              "id": 15
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.2151972669171334,
+              "angle": -0.20665206390492868,
+              "max_abs_qvel": 2.429619960373238,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "after100_pulse10",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 33,
+            "episode_return": 54.87075449351923,
+            "mean_velocity": 0.6631974920553559,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.8970471132885326,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 33
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.2681928017131614,
+              "angle": 0.21012523425244115,
+              "max_abs_qvel": 1.3326144127040727,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": 210,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "after100_pulse10",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 15,
+            "episode_return": 9.993302603815586,
+            "mean_velocity": -0.33248503066840596,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9020871599515279,
+            "mean_action_noise_l2": 1.0862839976946512,
+            "profile_counts": {
+              "id": 15
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.2151972669171334,
+              "angle": -0.20665206390492868,
+              "max_abs_qvel": 2.429619960373238,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": 210,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "after100_permanent",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 33,
+            "episode_return": 54.87075449351923,
+            "mean_velocity": 0.6631974920553559,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.8970471132885326,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 33
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.2681928017131614,
+              "angle": 0.21012523425244115,
+              "max_abs_qvel": 1.3326144127040727,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "after100_permanent",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 15,
+            "episode_return": 9.993302603815586,
+            "mean_velocity": -0.33248503066840596,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9020871599515279,
+            "mean_action_noise_l2": 1.0862839976946512,
+            "profile_counts": {
+              "id": 15
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.2151972669171334,
+              "angle": -0.20665206390492868,
+              "max_abs_qvel": 2.429619960373238,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          }
+        ],
+        "prefix_pairs_verified": 4,
+        "optimizer_updates": 0,
+        "replay_loaded": false,
+        "device": "cpu",
+        "evaluation_interactions": 144
+      }
+    }
+  ],
+  "training": {
+    "step": 512,
+    "blocks": [
+      {
+        "step": 256,
+        "interactions": 256,
+        "updates": 1,
+        "metrics": {
+          "train/actor_loss": -0.4008959233760834,
+          "train/critic_loss": 1.785014271736145,
+          "train/ent_coef": 0.20000000298023224
+        },
+        "recovery_coverage": {
+          "episode_resets": 11,
+          "pulse_assigned_episodes": 7,
+          "baseline_steps": 256,
+          "completed_episodes": 10,
+          "physical_failures_without_exposure": 10
+        }
+      },
+      {
+        "step": 512,
+        "interactions": 256,
+        "updates": 256,
+        "metrics": {
+          "train/actor_loss": -3.0031960010528564,
+          "train/critic_loss": 0.046240270137786865,
+          "train/ent_coef": 0.18537957966327667
+        },
+        "recovery_coverage": {
+          "episode_resets": 21,
+          "pulse_assigned_episodes": 13,
+          "baseline_steps": 512,
+          "completed_episodes": 20,
+          "physical_failures_without_exposure": 20
+        }
+      }
+    ],
+    "periodic_evaluations": [
+      {
+        "step": 0,
+        "device": "cuda",
+        "episodes": [
+          {
+            "condition": "id",
+            "mode": "deterministic",
+            "reset_seed": 149000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 16,
+            "episode_return": 12.246742616379468,
+            "mean_velocity": -0.2345284020013254,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 1.0012585036456585,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 16
+            },
+            "non_id_steps": 0,
+            "switches": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "final_physical_state": {
+              "height": 1.1994666370005465,
+              "angle": -0.20992556230073908,
+              "max_abs_qvel": 4.102326366432655,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true
+          }
+        ]
+      },
+      {
+        "step": 256,
+        "device": "cuda",
+        "episodes": [
+          {
+            "condition": "id",
+            "mode": "deterministic",
+            "reset_seed": 149000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 17,
+            "episode_return": 13.461792248161899,
+            "mean_velocity": -0.20809703161441218,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.981749226065243,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 17
+            },
+            "non_id_steps": 0,
+            "switches": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "final_physical_state": {
+              "height": 1.1969442217133237,
+              "angle": -0.20775783779496293,
+              "max_abs_qvel": 3.747629168348152,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true
+          }
+        ]
+      }
+    ],
+    "snapshots": [
+      {
+        "step": 256,
+        "optimizer_updates": 1,
+        "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v147_randomized_recovery_20261014/runtime/run_checkpoints/smoke_seed6_randomized-recovery/step256.zip",
+        "final_evaluation": {
+          "protocol": {
+            "schedules": [
+              {
+                "name": "no-pulse",
+                "onset": null,
+                "duration": null
+              },
+              {
+                "name": "after100_pulse10",
+                "onset": 100,
+                "duration": 10
+              },
+              {
+                "name": "after100_permanent",
+                "onset": 100,
+                "duration": null
+              }
+            ],
+            "max_steps": 256,
+            "reset_seeds": [
+              154000
+            ],
+            "action_noise_seeds": [
+              137000
+            ],
+            "peak_gravity": 2.6591479484724942,
+            "recovery_steps": 100,
+            "device": "cpu"
+          },
+          "episodes": [
+            {
+              "condition": "no-pulse",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 18,
+              "episode_return": 13.991109905806585,
+              "mean_velocity": -0.22268396786455139,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9814207885000441,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "id": 18
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.1970119902973273,
+                "angle": -0.22747320698128484,
+                "max_abs_qvel": 3.9726457241307425,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "no-pulse",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 9,
+              "episode_return": 6.969305423570168,
+              "mean_velocity": -0.22429934955514297,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9768597682317098,
+              "mean_action_noise_l2": 1.0428440041012235,
+              "profile_counts": {
+                "id": 9
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.2222120814502593,
+                "angle": -0.20034853117919052,
+                "max_abs_qvel": 7.032752613866182,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "after100_pulse10",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 18,
+              "episode_return": 13.991109905806585,
+              "mean_velocity": -0.22268396786455139,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9814207885000441,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "id": 18
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.1970119902973273,
+                "angle": -0.22747320698128484,
+                "max_abs_qvel": 3.9726457241307425,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": 210,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "after100_pulse10",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 9,
+              "episode_return": 6.969305423570168,
+              "mean_velocity": -0.22429934955514297,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9768597682317098,
+              "mean_action_noise_l2": 1.0428440041012235,
+              "profile_counts": {
+                "id": 9
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.2222120814502593,
+                "angle": -0.20034853117919052,
+                "max_abs_qvel": 7.032752613866182,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": 210,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "after100_permanent",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 18,
+              "episode_return": 13.991109905806585,
+              "mean_velocity": -0.22268396786455139,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9814207885000441,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "id": 18
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.1970119902973273,
+                "angle": -0.22747320698128484,
+                "max_abs_qvel": 3.9726457241307425,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "after100_permanent",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 9,
+              "episode_return": 6.969305423570168,
+              "mean_velocity": -0.22429934955514297,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9768597682317098,
+              "mean_action_noise_l2": 1.0428440041012235,
+              "profile_counts": {
+                "id": 9
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.2222120814502593,
+                "angle": -0.20034853117919052,
+                "max_abs_qvel": 7.032752613866182,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            }
+          ],
+          "prefix_pairs_verified": 4,
+          "optimizer_updates": 0,
+          "replay_loaded": false,
+          "device": "cpu",
+          "evaluation_interactions": 81
+        }
+      },
+      {
+        "step": 512,
+        "optimizer_updates": 257,
+        "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v147_randomized_recovery_20261014/runtime/run_checkpoints/smoke_seed6_randomized-recovery/step512.zip",
+        "final_evaluation": {
+          "protocol": {
+            "schedules": [
+              {
+                "name": "no-pulse",
+                "onset": null,
+                "duration": null
+              },
+              {
+                "name": "after100_pulse10",
+                "onset": 100,
+                "duration": 10
+              },
+              {
+                "name": "after100_permanent",
+                "onset": 100,
+                "duration": null
+              }
+            ],
+            "max_steps": 256,
+            "reset_seeds": [
+              154000
+            ],
+            "action_noise_seeds": [
+              137000
+            ],
+            "peak_gravity": 2.6591479484724942,
+            "recovery_steps": 100,
+            "device": "cpu"
+          },
+          "episodes": [
+            {
+              "condition": "no-pulse",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 33,
+              "episode_return": 54.87075449351923,
+              "mean_velocity": 0.6631974920553559,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.8970471132885326,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "id": 33
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.2681928017131614,
+                "angle": 0.21012523425244115,
+                "max_abs_qvel": 1.3326144127040727,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "no-pulse",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 15,
+              "episode_return": 9.993302603815586,
+              "mean_velocity": -0.33248503066840596,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9020871599515279,
+              "mean_action_noise_l2": 1.0862839976946512,
+              "profile_counts": {
+                "id": 15
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.2151972669171334,
+                "angle": -0.20665206390492868,
+                "max_abs_qvel": 2.429619960373238,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "after100_pulse10",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 33,
+              "episode_return": 54.87075449351923,
+              "mean_velocity": 0.6631974920553559,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.8970471132885326,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "id": 33
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.2681928017131614,
+                "angle": 0.21012523425244115,
+                "max_abs_qvel": 1.3326144127040727,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": 210,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "after100_pulse10",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 15,
+              "episode_return": 9.993302603815586,
+              "mean_velocity": -0.33248503066840596,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9020871599515279,
+              "mean_action_noise_l2": 1.0862839976946512,
+              "profile_counts": {
+                "id": 15
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.2151972669171334,
+                "angle": -0.20665206390492868,
+                "max_abs_qvel": 2.429619960373238,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": 210,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "after100_permanent",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 33,
+              "episode_return": 54.87075449351923,
+              "mean_velocity": 0.6631974920553559,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.8970471132885326,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "id": 33
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.2681928017131614,
+                "angle": 0.21012523425244115,
+                "max_abs_qvel": 1.3326144127040727,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "after100_permanent",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 15,
+              "episode_return": 9.993302603815586,
+              "mean_velocity": -0.33248503066840596,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9020871599515279,
+              "mean_action_noise_l2": 1.0862839976946512,
+              "profile_counts": {
+                "id": 15
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.2151972669171334,
+                "angle": -0.20665206390492868,
+                "max_abs_qvel": 2.429619960373238,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            }
+          ],
+          "prefix_pairs_verified": 4,
+          "optimizer_updates": 0,
+          "replay_loaded": false,
+          "device": "cpu",
+          "evaluation_interactions": 144
+        }
+      }
+    ]
+  },
+  "checkpoint_selection": "predeclared300k600k-not-best",
+  "resumable_checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v147_randomized_recovery_20261014/runtime/run_checkpoints/smoke_seed6_randomized-recovery/latest.pt",
+  "bootstrap_mask": "terminated-only",
+  "replay_handle_timeout_termination": true,
+  "optimizer_updates_during_evaluation": 0,
+  "runtime": {
+    "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+    "torch": "2.5.1+cu121",
+    "numpy": "2.1.3",
+    "gymnasium": "1.2.0",
+    "mujoco": "3.2.7",
+    "stable_baselines3": "2.7.0",
+    "gpu": "NVIDIA GeForce RTX 3080 Ti"
+  },
+  "peak_cuda_allocated_mb": 22.63525390625,
+  "seconds": 9.603744133841246,
+  "scope": "Recovery-state coverage control with unchanged standard SAC, not CS-BAPR mechanism attribution"
+}

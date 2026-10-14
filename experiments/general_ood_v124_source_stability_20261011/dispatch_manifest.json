@@ -1,0 +1,44 @@
+{
+  "revision": "general_ood_v124_source_stability",
+  "status": "complete",
+  "runtime": "/home/erzhu419/mine_code/CS-BAPR/experiments/general_ood_v124_source_stability_20261011/runtime",
+  "source_runtimes": [
+    "/home/erzhu419/mine_code/CS-BAPR/experiments/general_ood_v122_target_l1_20261011/runtime",
+    "/home/erzhu419/mine_code/CS-BAPR/experiments/general_ood_v123_source_extension_20261011/runtime"
+  ],
+  "protocol": "docs/general_ood_v124_source_stability_protocol.md",
+  "training_seeds": [0, 1, 2],
+  "source_steps": [100000, 300000],
+  "new_training_interactions": 0,
+  "optimizer_updates": 0,
+  "planned_formal_evaluation_episodes": 120,
+  "maximum_formal_evaluation_interactions": 120000,
+  "allowed_nodes": ["node007"],
+  "placement_reason": "Full replay states are native here; keep simulator/runtime unchanged.",
+  "preferred_node": null,
+  "preferred_gpu": null,
+  "resource_request": {"cpu": 2, "ram_mb": 4096, "vram_mb": 0},
+  "sync_policy": "Small scalar JSON only; source checkpoints and replay remain native.",
+  "local_tests": {"command": "python3 -m pytest -q tests/test_general_ood_v124.py", "passed": 3, "seconds": 2.05},
+  "smoke": {
+    "task_id": "t142126", "status": "done", "exit_code": 0,
+    "training_seed": 0, "optimizer_updates": 0, "evaluation_interactions": 256,
+    "seconds": 10.450621316209435, "result_bytes": 27869,
+    "result": "results/general_ood_v124_source_stability/smoke/stability.json",
+    "source_ages": [100000, 300000], "gradient_decomposition_passed": true
+  },
+  "formal_shards": [
+    {"training_seed": 0, "task_id": "t142131", "status": "done", "exit_code": 0, "node": "node007", "gpu_idx": null, "started_at": 1791694538.5777037, "finished_at": 1791694570.4123511, "result_sync": "manual scalar-only sync succeeded", "result_bytes": 195179, "evaluation_interactions": 4968, "result": "results/general_ood_v124_source_stability/seed0/stability.json"},
+    {"training_seed": 1, "task_id": "t142132", "status": "done", "exit_code": 0, "node": "node007", "gpu_idx": null, "started_at": 1791694535.5644846, "finished_at": 1791694627.2243552, "result_sync": "manual scalar-only sync succeeded", "result_bytes": 193690, "evaluation_interactions": 18056, "result": "results/general_ood_v124_source_stability/seed1/stability.json"},
+    {"training_seed": 2, "task_id": "t142133", "status": "done", "exit_code": 0, "node": "node007", "gpu_idx": null, "started_at": 1791694535.5647833, "finished_at": 1791694627.2247815, "result_sync": "manual scalar-only sync succeeded", "result_bytes": 191887, "evaluation_interactions": 37760, "result": "results/general_ood_v124_source_stability/seed2/stability.json"}
+  ],
+  "active_tasks": [],
+  "actual_formal_evaluation_episodes": 120,
+  "actual_formal_evaluation_interactions": 60784,
+  "formal_result_bytes": 580756,
+  "summary": "results/general_ood_v124_source_stability/summary.json",
+  "results_note": "docs/general_ood_v124_source_stability_results.md",
+  "decision": "Sampling partially helps seed1 but cannot rescue seed0. Risk gradients materially alter actor direction in both unsuccessful and successful sources; test beta=-2 versus beta=0 with matched continuation budgets before adopting a change.",
+  "next_experiment_plan": {"revision": "v125", "status": "submitted", "manifest": "experiments/general_ood_v125_actor_beta_20261011/dispatch_manifest.json", "source_steps": 300000, "training_seeds": [0, 1, 2], "actor_betas": [-2.0, 0.0], "new_steps_per_arm_seed": 50000, "planned_new_training_interactions": 300000, "checkpoint_selection": "final-not-best", "other_changes": []},
+  "summary_command": "python3 scripts/summarize_general_ood_v124.py --result-dir results/general_ood_v124_source_stability"
+}

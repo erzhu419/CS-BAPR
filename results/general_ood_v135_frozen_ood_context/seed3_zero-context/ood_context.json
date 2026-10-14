@@ -1,0 +1,5406 @@
+{
+  "revision": "general_ood_v135_frozen_ood_context",
+  "spec": {
+    "training_seed": 3,
+    "context_mode": "zero-context",
+    "source_arm": "mse-control",
+    "source_steps": 300000,
+    "smoke": false,
+    "device": "cpu",
+    "profile_family": "structured",
+    "intensity": 50.0,
+    "conditions": [
+      "id",
+      "static/easy_surface",
+      "static/heavy_traffic",
+      "static/mega_event",
+      "static/slippery_rush",
+      "markov"
+    ],
+    "reset_seeds": [
+      152000,
+      152001,
+      152002,
+      152003,
+      152004
+    ],
+    "action_noise_seeds": [
+      135000,
+      135001,
+      135002
+    ],
+    "sampled_noise_scale": 1.0,
+    "switch_every_steps": 50,
+    "switch_probability": 1.0,
+    "max_steps": 1000,
+    "sensor_action_reward_noise": false,
+    "noise_schedule": "v126 CPU torch.Generator; one float32 (1,3) draw per step",
+    "context_protocol": "restore source normalizer, reset EMA; online observes transitions, zero-context supplies zeros",
+    "policy_receives_profile_labels": false,
+    "reward_changes": []
+  },
+  "runtime": {
+    "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+    "torch": "2.5.1+cu121",
+    "numpy": "2.1.3",
+    "gymnasium": "1.2.0",
+    "mujoco": "3.2.7"
+  },
+  "source": {
+    "revision": "general_ood_v133_source_extension",
+    "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v133_source_extension_20261012/runtime/run_checkpoints/seed3_mse-control/final.pt",
+    "config": {
+      "env_name": "Hopper-v4",
+      "state_dim": 11,
+      "action_dim": 3,
+      "max_episodes": 2000,
+      "max_steps_per_episode": 1000,
+      "gamma": 0.99,
+      "tau": 0.005,
+      "alpha": 0.2,
+      "auto_alpha": true,
+      "alpha_cap": null,
+      "lr_actor": 0.0001,
+      "lr_critic": 0.0003,
+      "lr_alpha": 0.0003,
+      "hidden_dim": 256,
+      "num_critics": 5,
+      "buffer_size": 1000000,
+      "batch_size": 256,
+      "warmup_steps": 5000,
+      "max_run_length": 20,
+      "hazard_rate": 0.02,
+      "base_variance": 1.0,
+      "surprise_ema": 0.1,
+      "weight_reg": 0.0,
+      "beta_ood": 0.1,
+      "beta_bc": 0.005,
+      "actor_type": null,
+      "policy_q_std_cap": 0.0,
+      "critic_q_std_cap": 0.0,
+      "critic_q_std_penalty_weight": 0.0,
+      "use_context": true,
+      "context_ema_alpha": 0.05,
+      "context_clip": 5.0,
+      "enable_min_q_target": true,
+      "enable_reward_ema": true,
+      "enable_entropy_floor": true,
+      "entropy_floor": 0.01,
+      "enable_rollout_surprise": true,
+      "surprise_window": 256,
+      "bapr_warmup_iters": 100,
+      "penalty_scale": 0.0,
+      "weight_sym": 0.0,
+      "jac_weight": 0.0,
+      "action_anchor_weight": 0.0,
+      "grad_clip": 1.0,
+      "jac_curriculum_start": 100,
+      "actor_weight_decay": 0.0001,
+      "sindy_with_control": true,
+      "sindy_threshold": 0.1,
+      "sindy_lib_degree": 2,
+      "sindy_discrete_time": true,
+      "sindy_n_explore_episodes": 30,
+      "sindy_epsilon_threshold": 1.0,
+      "use_nau_actor": false,
+      "nau_reg_weight": 0.01,
+      "nau_l_eff_penalty_weight": 0.0,
+      "nau_l_eff_target": 200.0,
+      "actor_mean_clip": 0.0,
+      "irm_penalty_weight": 0.1,
+      "irm_n_envs": 3,
+      "ood_eval_interval": 50,
+      "log_interval": 10,
+      "save_interval": 100,
+      "log_dir": "logs",
+      "track_L_eff": true,
+      "device": "cpu"
+    },
+    "context_count": 300000,
+    "training_steps": 299745,
+    "initial_context_normalizer": {
+      "count": 300000,
+      "mean": [
+        -0.0018425678135827184,
+        3.0489023629343137e-05,
+        -0.004172817338258028,
+        -0.0009178571053780615,
+        -0.002350024413317442,
+        0.012568132020533085,
+        -0.010757863521575928,
+        0.0032544240821152925,
+        -0.0068365135230124,
+        0.0006242813542485237,
+        -0.0022181193344295025,
+        0.008231887593865395,
+        0.0038216414395719767,
+        0.012852102518081665,
+        0.012710785493254662,
+        0.03451086953282356,
+        0.04854971915483475,
+        0.10861232876777649,
+        0.22693602740764618,
+        0.3330182731151581,
+        0.40457746386528015,
+        0.5170584917068481,
+        0.0031467920634895563,
+        0.04435015842318535,
+        -0.29338201880455017,
+        3.3850135803222656,
+        0.9351276755332947,
+        0.7366695404052734
+      ],
+      "m2": [
+        29.238143920898438,
+        9.172223091125488,
+        73.88521575927734,
+        101.63447570800781,
+        618.6898193359375,
+        1411.301025390625,
+        6597.06591796875,
+        28790.302734375,
+        59559.13671875,
+        86548.1171875,
+        254204.984375,
+        9.928502082824707,
+        4.7919721603393555,
+        29.55906867980957,
+        53.437129974365234,
+        263.13262939453125,
+        751.6782836914062,
+        3092.72900390625,
+        13345.3271484375,
+        26309.1171875,
+        37453.94921875,
+        174013.0625,
+        24432.41796875,
+        61015.734375,
+        93662.03125,
+        321547.3125,
+        175745.046875,
+        42730.609375
+      ]
+    }
+  },
+  "evaluations": [
+    {
+      "condition": "id",
+      "mode": "deterministic",
+      "reset_seed": 152000,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.151226980924616,
+      "mean_velocity": -0.31951217933297854,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23730759570995966,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1939382295019276,
+        "angle": -0.22495638256941905,
+        "max_abs_qvel": 7.671232736548326,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.306098750638336,
+      "mean_velocity": -0.30656095720598425,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23738430564602217,
+      "mean_action_noise_l2": 0.20622701911876598,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1959008134263003,
+        "angle": -0.2211007434902073,
+        "max_abs_qvel": 7.605796967965613,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.759482034062062,
+      "mean_velocity": -0.24806251614271968,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23679052178676313,
+      "mean_action_noise_l2": 0.26652984951551145,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 13
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1974766479421954,
+        "angle": -0.21766151850003418,
+        "max_abs_qvel": 6.375957042177165,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.24689786356708,
+      "mean_velocity": -0.31150367105199495,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23677153140306473,
+      "mean_action_noise_l2": 0.2182225862828394,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.194411323049547,
+        "angle": -0.22351194638346591,
+        "max_abs_qvel": 7.675475164999238,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "deterministic",
+      "reset_seed": 152001,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.079729675984407,
+      "mean_velocity": -0.32547547709694086,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23734230175614357,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.194141075511365,
+        "angle": -0.22260296310729086,
+        "max_abs_qvel": 7.6922018734834445,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.25924649635816,
+      "mean_velocity": -0.3104767607784814,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23731411372621855,
+      "mean_action_noise_l2": 0.20757883631934723,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1966149003594124,
+        "angle": -0.21835875673425903,
+        "max_abs_qvel": 7.602087624702221,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.725272817191707,
+      "mean_velocity": -0.25070362861346723,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2368090680012336,
+      "mean_action_noise_l2": 0.26592453110676545,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 13
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1986654351276078,
+        "angle": -0.21441183043140852,
+        "max_abs_qvel": 6.364638419175286,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.196159337243774,
+      "mean_velocity": -0.31574242807949876,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23665915926297507,
+      "mean_action_noise_l2": 0.21871293662115932,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1950974082119328,
+        "angle": -0.22088729030800403,
+        "max_abs_qvel": 7.674623774218384,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "deterministic",
+      "reset_seed": 152002,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.03441108755132,
+      "mean_velocity": -0.32926926579670385,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23659681404630342,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.194523635089852,
+        "angle": -0.22634911532752583,
+        "max_abs_qvel": 8.037869110871219,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.235017025580607,
+      "mean_velocity": -0.3125331491295578,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2364250235259533,
+      "mean_action_noise_l2": 0.213088966285189,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.197378961935921,
+        "angle": -0.2209603374468069,
+        "max_abs_qvel": 7.887485969531035,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.606579939015617,
+      "mean_velocity": -0.2598610432741204,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23568620016941658,
+      "mean_action_noise_l2": 0.2771799684717105,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 13
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1976787638392128,
+        "angle": -0.22049958112210172,
+        "max_abs_qvel": 6.7289279704005,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.152223592065377,
+      "mean_velocity": -0.31939414954879236,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23589040587345758,
+      "mean_action_noise_l2": 0.21747752698138356,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1954244384654766,
+        "angle": -0.22424261366990555,
+        "max_abs_qvel": 7.993766646084535,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "deterministic",
+      "reset_seed": 152003,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 7.860298747808111,
+      "mean_velocity": -0.34375274149593155,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23908138399322829,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.19076832200634,
+        "angle": -0.2218424004627043,
+        "max_abs_qvel": 8.072895962539178,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.036551361889263,
+      "mean_velocity": -0.3290250911971352,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23850756511092186,
+      "mean_action_noise_l2": 0.2066899739826719,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.193094724114538,
+        "angle": -0.21839816992211195,
+        "max_abs_qvel": 7.973961972505183,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.45917014355416,
+      "mean_velocity": -0.2711746204901497,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23755861360293168,
+      "mean_action_noise_l2": 0.2735440650811562,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 13
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1943749393219707,
+        "angle": -0.21545188641928756,
+        "max_abs_qvel": 6.722389747996547,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 7.947881051678348,
+      "mean_velocity": -0.3363945190560657,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23884384582440057,
+      "mean_action_noise_l2": 0.21948517936592302,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.191423960891323,
+        "angle": -0.2208714278607573,
+        "max_abs_qvel": 8.042756926244293,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "deterministic",
+      "reset_seed": 152004,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.1659642069826,
+      "mean_velocity": -0.31830369473906767,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23696083078781763,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1957335246541567,
+        "angle": -0.22729800836755937,
+        "max_abs_qvel": 7.944910308603641,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.330248187357359,
+      "mean_velocity": -0.30459089935634714,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23699103047450384,
+      "mean_action_noise_l2": 0.2120084653918942,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.198007228884706,
+        "angle": -0.22287445191994146,
+        "max_abs_qvel": 7.858357278802542,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.776977419012653,
+      "mean_velocity": -0.24674551174815057,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23615880081286797,
+      "mean_action_noise_l2": 0.2750874918240767,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 13
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.199587669535019,
+        "angle": -0.22053256547015554,
+        "max_abs_qvel": 6.61307261985975,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.288626378696799,
+      "mean_velocity": -0.30802991663676865,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2360980361700058,
+      "mean_action_noise_l2": 0.21705551523094377,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1966896985622253,
+        "angle": -0.22494537058210812,
+        "max_abs_qvel": 7.893922711240161,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "deterministic",
+      "reset_seed": 152000,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.465603571962852,
+      "mean_velocity": -0.29347996710603214,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23643503213922182,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1968589733546737,
+        "angle": -0.2101551707444605,
+        "max_abs_qvel": 8.030499303097566,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.513823719164561,
+      "mean_velocity": -0.28938302216370587,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23611874505877495,
+      "mean_action_noise_l2": 0.236486057129999,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1978080707689769,
+        "angle": -0.21063156094475216,
+        "max_abs_qvel": 8.185988780986799,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.675838369635759,
+      "mean_velocity": -0.25464404067261825,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23412083089351654,
+      "mean_action_noise_l2": 0.29137622049221623,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 13
+      },
+      "non_id_steps": 13,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1958798935040744,
+        "angle": -0.21168193947538327,
+        "max_abs_qvel": 7.3552082449767076,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.504693948107834,
+      "mean_velocity": -0.2901739200002385,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23514681681990623,
+      "mean_action_noise_l2": 0.2332572330099841,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1968182318604663,
+        "angle": -0.21087692501092586,
+        "max_abs_qvel": 8.221740598844619,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "deterministic",
+      "reset_seed": 152001,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.376611284780509,
+      "mean_velocity": -0.30089877108913626,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23642453054587045,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1969826333750906,
+        "angle": -0.20832508555219806,
+        "max_abs_qvel": 8.08210616399636,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.429593198025888,
+      "mean_velocity": -0.29640730107386976,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2360933224360148,
+      "mean_action_noise_l2": 0.2372175045311451,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1979633556738614,
+        "angle": -0.20880673023325927,
+        "max_abs_qvel": 8.234123798980832,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.578467090261093,
+      "mean_velocity": -0.2621370232890849,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2342134198317161,
+      "mean_action_noise_l2": 0.2916253936978487,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 13
+      },
+      "non_id_steps": 13,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1959403367586794,
+        "angle": -0.20984867530414797,
+        "max_abs_qvel": 7.413706339972681,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.428909382594767,
+      "mean_velocity": -0.29649302335859434,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23506271342436472,
+      "mean_action_noise_l2": 0.2333748242817819,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1972006625701441,
+        "angle": -0.20888943409920419,
+        "max_abs_qvel": 8.250474028933949,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "deterministic",
+      "reset_seed": 152002,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.55146461343258,
+      "mean_velocity": -0.2863572635087531,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23507233833273253,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2005377747447263,
+        "angle": -0.2065778691277677,
+        "max_abs_qvel": 8.024375729152514,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.61352112980179,
+      "mean_velocity": -0.2811212128842471,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23507773006955782,
+      "mean_action_noise_l2": 0.24155336897820234,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.201396506671807,
+        "angle": -0.20543448722600496,
+        "max_abs_qvel": 8.219515468031648,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.772177909235298,
+      "mean_velocity": -0.24726626367219964,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2327930606328524,
+      "mean_action_noise_l2": 0.2927566904288072,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 13
+      },
+      "non_id_steps": 13,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1987291957219979,
+        "angle": -0.20710556441811515,
+        "max_abs_qvel": 7.490913098154284,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.61710891407085,
+      "mean_velocity": -0.2808267002982636,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23315522074699402,
+      "mean_action_noise_l2": 0.23053927595416704,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2009125864613779,
+        "angle": -0.20672585405704305,
+        "max_abs_qvel": 8.2432426792581,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "deterministic",
+      "reset_seed": 152003,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.359908046086417,
+      "mean_velocity": -0.3022926815318171,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2375626489520073,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.196699770019025,
+        "angle": -0.20159893012284508,
+        "max_abs_qvel": 8.022819868257324,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.423285432962837,
+      "mean_velocity": -0.29693063186135077,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23727882405122122,
+      "mean_action_noise_l2": 0.23371391743421555,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1974941730898763,
+        "angle": -0.2014912954453486,
+        "max_abs_qvel": 8.215329265998765,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.547458384797395,
+      "mean_velocity": -0.264547936974276,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23519495588082534,
+      "mean_action_noise_l2": 0.2965063596001038,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 13
+      },
+      "non_id_steps": 13,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1950865527692693,
+        "angle": -0.20329329516543604,
+        "max_abs_qvel": 7.5440607168625045,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.367523037586068,
+      "mean_velocity": -0.30160742186206363,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23630642890930176,
+      "mean_action_noise_l2": 0.23677281321336827,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1967145152321275,
+        "angle": -0.2038398603839045,
+        "max_abs_qvel": 8.275461113450898,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "deterministic",
+      "reset_seed": 152004,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.64483706496754,
+      "mean_velocity": -0.2785699646428265,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23530245075623193,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2011397880951584,
+        "angle": -0.20908781715103827,
+        "max_abs_qvel": 8.051863758080001,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.707981691634258,
+      "mean_velocity": -0.27324384585302514,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2352757602930069,
+      "mean_action_noise_l2": 0.24064428576578697,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2019661953600878,
+        "angle": -0.20793170873367273,
+        "max_abs_qvel": 8.234513663384574,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.890552186264932,
+      "mean_velocity": -0.23815230994074857,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23316953503168547,
+      "mean_action_noise_l2": 0.29168613312336117,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 13
+      },
+      "non_id_steps": 13,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1995632385384989,
+        "angle": -0.20896255038050443,
+        "max_abs_qvel": 7.426564624652298,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/easy_surface",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.724282141093585,
+      "mean_velocity": -0.27188788056909474,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23342782134811083,
+      "mean_action_noise_l2": 0.2296486427076161,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "easy_surface": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "easy_surface",
+          "actual_multipliers": {
+            "body_mass": 0.5244087739130784,
+            "gravity": 0.613237563517304,
+            "friction": 1.6306894089533097
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2013836626052394,
+        "angle": -0.2082994665356713,
+        "max_abs_qvel": 8.215565873824753,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "deterministic",
+      "reset_seed": 152000,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 11,
+      "episode_return": 7.706347085612762,
+      "mean_velocity": -0.2979725693832632,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23907119577581232,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1965089108166909,
+        "angle": -0.2044820971987958,
+        "max_abs_qvel": 7.862599502700807,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.769934905508184,
+      "mean_velocity": -0.2921461424302119,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23982344974171033,
+      "mean_action_noise_l2": 0.16630607267672365,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1979796509457985,
+        "angle": -0.20375185489658346,
+        "max_abs_qvel": 7.80739475014009,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 9.048700798569614,
+      "mean_velocity": -0.24447809587299538,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2393688845137755,
+      "mean_action_noise_l2": 0.22182865099360546,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1967013867416019,
+        "angle": -0.21139352442964954,
+        "max_abs_qvel": 7.005000501718642,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.762117182797544,
+      "mean_velocity": -0.29289033429368844,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2388027703220194,
+      "mean_action_noise_l2": 0.19580659795213828,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1970199084968276,
+        "angle": -0.2045745552386832,
+        "max_abs_qvel": 7.733482713009353,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "deterministic",
+      "reset_seed": 152001,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 11,
+      "episode_return": 7.690481291837264,
+      "mean_velocity": -0.2994351932442222,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2388854812492024,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1978013558143963,
+        "angle": -0.20143651817724756,
+        "max_abs_qvel": 7.795673320444492,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.7153299792610825,
+      "mean_velocity": -0.29711856596140723,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23988054828210312,
+      "mean_action_noise_l2": 0.16714621995660392,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1982200362638888,
+        "angle": -0.20118209914468377,
+        "max_abs_qvel": 7.808125417072214,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 9.011758766860087,
+      "mean_velocity": -0.24757259163296627,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2394598349928856,
+      "mean_action_noise_l2": 0.22277511532107988,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1975038344853999,
+        "angle": -0.20825179955021458,
+        "max_abs_qvel": 6.988656751218475,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.704064956542448,
+      "mean_velocity": -0.2981752431293298,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23888525502248245,
+      "mean_action_noise_l2": 0.19621398875659163,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1972321283555594,
+        "angle": -0.20206691005962849,
+        "max_abs_qvel": 7.74357145468343,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "deterministic",
+      "reset_seed": 152002,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 11,
+      "episode_return": 7.572847860210253,
+      "mean_velocity": -0.31011076744737665,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23807490142908963,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1972665380067415,
+        "angle": -0.20683147964255683,
+        "max_abs_qvel": 8.119763538965753,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.6657466770772436,
+      "mean_velocity": -0.3016403330793217,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23862095989964224,
+      "mean_action_noise_l2": 0.16215167838064107,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.198578476225087,
+        "angle": -0.20414387001730366,
+        "max_abs_qvel": 8.02837057326222,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.899129716253455,
+      "mean_velocity": -0.25693657067952935,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23856965824961662,
+      "mean_action_noise_l2": 0.2237047596524159,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1976297054180691,
+        "angle": -0.21396518026564315,
+        "max_abs_qvel": 7.201550360800219,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.634920650497296,
+      "mean_velocity": -0.3044523130638581,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23814662749117071,
+      "mean_action_noise_l2": 0.20124086466702548,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.197828752649418,
+        "angle": -0.2064351534591375,
+        "max_abs_qvel": 7.968179484009501,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "deterministic",
+      "reset_seed": 152003,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.31635560264525,
+      "mean_velocity": -0.30548500860909844,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.24168890217940012,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1881818389295078,
+        "angle": -0.22751226982231948,
+        "max_abs_qvel": 7.602147448727003,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.429090820467612,
+      "mean_velocity": -0.296085180017744,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.24159854153792062,
+      "mean_action_noise_l2": 0.1696704273733,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1901497634864764,
+        "angle": -0.22556877275129034,
+        "max_abs_qvel": 7.531437935377179,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.800465704682,
+      "mean_velocity": -0.2651457679277755,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23995494842529297,
+      "mean_action_noise_l2": 0.22138691724588475,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.19373567422391,
+        "angle": -0.20815479237980347,
+        "max_abs_qvel": 7.292837533167677,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.391140738450341,
+      "mean_velocity": -0.29924019619594516,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.24146374687552452,
+      "mean_action_noise_l2": 0.19622009557982287,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1888676574662047,
+        "angle": -0.2266550392517077,
+        "max_abs_qvel": 7.513347197367725,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "deterministic",
+      "reset_seed": 152004,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 11,
+      "episode_return": 7.670293601873451,
+      "mean_velocity": -0.3012491665639889,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23860674961046738,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.198449340063076,
+        "angle": -0.20857782297828015,
+        "max_abs_qvel": 8.057570936208394,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.736838499883631,
+      "mean_velocity": -0.2951733519612326,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23918583718213168,
+      "mean_action_noise_l2": 0.16079009595242413,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1991509826077709,
+        "angle": -0.2063895495818145,
+        "max_abs_qvel": 8.022903364612555,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.992854649341446,
+      "mean_velocity": -0.24912166571005834,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23907412588596344,
+      "mean_action_noise_l2": 0.22333721444010735,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.198466060731623,
+        "angle": -0.2154677280503426,
+        "max_abs_qvel": 7.172883877411239,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/heavy_traffic",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.713352644211009,
+      "mean_velocity": -0.29731705665416064,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23863663321191614,
+      "mean_action_noise_l2": 0.2001199092377316,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "heavy_traffic": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "heavy_traffic",
+          "actual_multipliers": {
+            "body_mass": 1.906909361066014,
+            "gravity": 1.6306894089533097,
+            "friction": 0.613237563517304
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1984505262134064,
+        "angle": -0.20810687570977235,
+        "max_abs_qvel": 7.936225340946503,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "deterministic",
+      "reset_seed": 152000,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 11,
+      "episode_return": 7.765584101759517,
+      "mean_velocity": -0.2921337314205189,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.239883768287572,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1795396298213383,
+        "angle": -0.22111123933238475,
+        "max_abs_qvel": 8.51441425359648,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.665798057776026,
+      "mean_velocity": -0.30123842693043296,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.241894009438428,
+      "mean_action_noise_l2": 0.16194403611800887,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1789345853766617,
+        "angle": -0.22564167148803357,
+        "max_abs_qvel": 8.8152849338158,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.965408694751535,
+      "mean_velocity": -0.27401536218966166,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23909542235461148,
+      "mean_action_noise_l2": 0.13897554423998704,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1814608407903016,
+        "angle": -0.21292572633387286,
+        "max_abs_qvel": 8.40837008851984,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.773033901792763,
+      "mean_velocity": -0.2914324694715443,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23956956511194055,
+      "mean_action_noise_l2": 0.09686166894706813,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1795956084061048,
+        "angle": -0.22237798115332813,
+        "max_abs_qvel": 8.485901104531232,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "deterministic",
+      "reset_seed": 152001,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 11,
+      "episode_return": 7.706483690686683,
+      "mean_velocity": -0.29751329693018963,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23992535336451096,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1797880390224484,
+        "angle": -0.2187873069135571,
+        "max_abs_qvel": 8.523948385118668,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.604665392840182,
+      "mean_velocity": -0.30680032231566456,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2420111136002974,
+      "mean_action_noise_l2": 0.1622236208482222,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1791751955220888,
+        "angle": -0.22321879117569307,
+        "max_abs_qvel": 8.826209894823682,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.906607762414151,
+      "mean_velocity": -0.27936679929434516,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23925689269195904,
+      "mean_action_noise_l2": 0.14030556143684822,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1816841644263492,
+        "angle": -0.2105552823133467,
+        "max_abs_qvel": 8.419599158973394,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.714518465751858,
+      "mean_velocity": -0.29675855529299155,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23972370001402768,
+      "mean_action_noise_l2": 0.09838677256960761,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.179854230201443,
+        "angle": -0.21992589133057333,
+        "max_abs_qvel": 8.500217798427329,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "deterministic",
+      "reset_seed": 152002,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 11,
+      "episode_return": 7.66587483998251,
+      "mean_velocity": -0.301171575229401,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23932131312110208,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1810992610764537,
+        "angle": -0.22314208931448576,
+        "max_abs_qvel": 8.650757540806175,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.5488803689015755,
+      "mean_velocity": -0.31183762307895424,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.24143485183065588,
+      "mean_action_noise_l2": 0.15476553175937047,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.180322588135596,
+        "angle": -0.2279518664613283,
+        "max_abs_qvel": 8.971938816864107,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.869779918326907,
+      "mean_velocity": -0.28270393241849606,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23877633701671253,
+      "mean_action_noise_l2": 0.1372167132794857,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1830185264788011,
+        "angle": -0.214302928212353,
+        "max_abs_qvel": 8.537507609720807,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.661828683513402,
+      "mean_velocity": -0.3015346647061407,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23950448361310092,
+      "mean_action_noise_l2": 0.09638638625090773,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.181018817504504,
+        "angle": -0.22349262054165234,
+        "max_abs_qvel": 8.642292789475784,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "deterministic",
+      "reset_seed": 152003,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 11,
+      "episode_return": 7.681637017086274,
+      "mean_velocity": -0.2997736822342047,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.24106219004500995,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1778447675295798,
+        "angle": -0.21378097091741596,
+        "max_abs_qvel": 8.679993427587927,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.552476858001831,
+      "mean_velocity": -0.31153670199057304,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2435113096779043,
+      "mean_action_noise_l2": 0.15364328873428432,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1769732676376308,
+        "angle": -0.2193919754046209,
+        "max_abs_qvel": 8.994371313782654,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.898403544527907,
+      "mean_velocity": -0.2801224393906021,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23979794437235052,
+      "mean_action_noise_l2": 0.13540075042031027,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.179895003465231,
+        "angle": -0.20534147392751553,
+        "max_abs_qvel": 8.546144845565072,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.674553048202121,
+      "mean_velocity": -0.30038667208927383,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.24089410630139438,
+      "mean_action_noise_l2": 0.09440687832168558,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1777949753945516,
+        "angle": -0.21567815336433757,
+        "max_abs_qvel": 8.657207056926579,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "deterministic",
+      "reset_seed": 152004,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 11,
+      "episode_return": 7.709574152349378,
+      "mean_velocity": -0.2971947931128406,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23976731977679513,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1815224003553575,
+        "angle": -0.22569707015005983,
+        "max_abs_qvel": 8.65641570086347,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.592628658290471,
+      "mean_velocity": -0.3078552524404698,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2419929802417755,
+      "mean_action_noise_l2": 0.15335304594852708,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1807416437088925,
+        "angle": -0.2303363202470527,
+        "max_abs_qvel": 8.97754755967106,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.92632493882465,
+      "mean_velocity": -0.2775589473160095,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2390938550233841,
+      "mean_action_noise_l2": 0.1374840990386226,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1835735683653519,
+        "angle": -0.21620129032553564,
+        "max_abs_qvel": 8.536001317238629,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/mega_event",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.690975904648594,
+      "mean_velocity": -0.29886205625022405,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23993266306140207,
+      "mean_action_noise_l2": 0.09427700615064664,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "mega_event": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "mega_event",
+          "actual_multipliers": {
+            "body_mass": 3.636303311321192,
+            "gravity": 2.6591479484724942,
+            "friction": 0.3760603093086394
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1809690340748549,
+        "angle": -0.2268509198987843,
+        "max_abs_qvel": 8.684669184113394,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "deterministic",
+      "reset_seed": 152000,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.873259947936965,
+      "mean_velocity": -0.2591537210043378,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2385452687740326,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.200578267651971,
+        "angle": -0.22200600297490952,
+        "max_abs_qvel": 6.665270450870978,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.87013317126508,
+      "mean_velocity": -0.2593965772491204,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23941967512170473,
+      "mean_action_noise_l2": 0.19067039294168353,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2010863238478913,
+        "angle": -0.2229255597115694,
+        "max_abs_qvel": 6.771615072804943,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 9.381203727849856,
+      "mean_velocity": -0.2168555485214957,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23861808329820633,
+      "mean_action_noise_l2": 0.22772358544170856,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.205932835863432,
+        "angle": -0.20071506331112426,
+        "max_abs_qvel": 6.353917019736143,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.849817853874072,
+      "mean_velocity": -0.26109438990153433,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23866000274817148,
+      "mean_action_noise_l2": 0.18884358291203776,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1997518350977614,
+        "angle": -0.223775526975646,
+        "max_abs_qvel": 6.754122303860733,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "deterministic",
+      "reset_seed": 152001,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.80750561770524,
+      "mean_velocity": -0.2646395466022603,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23864020655552545,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2008800679770262,
+        "angle": -0.219618909452238,
+        "max_abs_qvel": 6.673760956601796,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.813802884626774,
+      "mean_velocity": -0.2640996944709826,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23951312899589539,
+      "mean_action_noise_l2": 0.19135429803282022,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2014903494092861,
+        "angle": -0.22026207762494268,
+        "max_abs_qvel": 6.778206155359686,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 10.388302146878136,
+      "mean_velocity": -0.1995245631406623,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23954848715892205,
+      "mean_action_noise_l2": 0.2308129109442234,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 13
+      },
+      "non_id_steps": 13,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.203074087564412,
+        "angle": -0.21724926222559415,
+        "max_abs_qvel": 5.773219574062896,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.840829666816154,
+      "mean_velocity": -0.26186968818885203,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.238401980449756,
+      "mean_action_noise_l2": 0.1892980601017674,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2011634873067616,
+        "angle": -0.2201274936829964,
+        "max_abs_qvel": 6.740781409469819,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "deterministic",
+      "reset_seed": 152002,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 11,
+      "episode_return": 7.763972252756564,
+      "mean_velocity": -0.2927714601097525,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23672223632985895,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2046290158556572,
+        "angle": -0.2022048500022539,
+        "max_abs_qvel": 7.528248258151397,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.76742414724016,
+      "mean_velocity": -0.2679768575169694,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23844911406437555,
+      "mean_action_noise_l2": 0.1853944167184333,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2021736507032783,
+        "angle": -0.22353756692941468,
+        "max_abs_qvel": 6.898045343733228,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 9.199162336013817,
+      "mean_velocity": -0.23201288004397447,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2378787361085415,
+      "mean_action_noise_l2": 0.2283770383025209,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2063138385580818,
+        "angle": -0.2043095640655491,
+        "max_abs_qvel": 6.550216491537286,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.816760132792773,
+      "mean_velocity": -0.28796243499812973,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23664537614042108,
+      "mean_action_noise_l2": 0.19540059447965838,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2051646182318767,
+        "angle": -0.20217325729364302,
+        "max_abs_qvel": 7.4040710270569265,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "deterministic",
+      "reset_seed": 152003,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.54307940842374,
+      "mean_velocity": -0.2866299859342983,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.24004057546456656,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1961771460004178,
+        "angle": -0.220750449279398,
+        "max_abs_qvel": 7.012132441839643,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.657272974542163,
+      "mean_velocity": -0.2771212053542796,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.24017110342780748,
+      "mean_action_noise_l2": 0.17832230450585485,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1980953429313883,
+        "angle": -0.21864691258806795,
+        "max_abs_qvel": 6.962912920446979,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 10.09598446058681,
+      "mean_velocity": -0.22195998354233673,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2400214970111847,
+      "mean_action_noise_l2": 0.22689102561427996,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 13
+      },
+      "non_id_steps": 13,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1981643575522682,
+        "angle": -0.22037436754169074,
+        "max_abs_qvel": 6.012044600803163,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.595325660254026,
+      "mean_velocity": -0.2822797147040906,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23990307499965033,
+      "mean_action_noise_l2": 0.19184360606595874,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.19665705763196,
+        "angle": -0.2201281905164674,
+        "max_abs_qvel": 6.997115045178103,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "deterministic",
+      "reset_seed": 152004,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 11,
+      "episode_return": 7.846111853922418,
+      "mean_velocity": -0.2853002121956784,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23733747682788156,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.205331678038908,
+        "angle": -0.20397559138465182,
+        "max_abs_qvel": 7.50328659869189,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.959019121630231,
+      "mean_velocity": -0.2750290742283583,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23779436404054816,
+      "mean_action_noise_l2": 0.17172276618128474,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2071534245006181,
+        "angle": -0.20115375320410023,
+        "max_abs_qvel": 7.411347854878073,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 9.303186772063764,
+      "mean_velocity": -0.22334124104539566,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23836474741498628,
+      "mean_action_noise_l2": 0.22843060611436763,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 12
+      },
+      "non_id_steps": 12,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2072972164281457,
+        "angle": -0.2054971799560025,
+        "max_abs_qvel": 6.516288910921202,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "static/slippery_rush",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 11,
+      "episode_return": 7.899770169020957,
+      "mean_velocity": -0.2804119734239298,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23711128803816708,
+      "mean_action_noise_l2": 0.19456898810511286,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "slippery_rush": 11
+      },
+      "non_id_steps": 11,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "slippery_rush",
+          "actual_multipliers": {
+            "body_mass": 1.6306894089533097,
+            "gravity": 1.4787576366283137,
+            "friction": 0.27500456215701824
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.2058733481278638,
+        "angle": -0.20381834295061133,
+        "max_abs_qvel": 7.3727354082772605,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "deterministic",
+      "reset_seed": 152000,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.151226980924616,
+      "mean_velocity": -0.31951217933297854,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23730759570995966,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1939382295019276,
+        "angle": -0.22495638256941905,
+        "max_abs_qvel": 7.671232736548326,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.306098750638336,
+      "mean_velocity": -0.30656095720598425,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23738430564602217,
+      "mean_action_noise_l2": 0.20622701911876598,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1959008134263003,
+        "angle": -0.2211007434902073,
+        "max_abs_qvel": 7.605796967965613,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.759482034062062,
+      "mean_velocity": -0.24806251614271968,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23679052178676313,
+      "mean_action_noise_l2": 0.26652984951551145,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 13
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1974766479421954,
+        "angle": -0.21766151850003418,
+        "max_abs_qvel": 6.375957042177165,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152000,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.24689786356708,
+      "mean_velocity": -0.31150367105199495,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23677153140306473,
+      "mean_action_noise_l2": 0.2182225862828394,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.194411323049547,
+        "angle": -0.22351194638346591,
+        "max_abs_qvel": 7.675475164999238,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "deterministic",
+      "reset_seed": 152001,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.079729675984407,
+      "mean_velocity": -0.32547547709694086,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23734230175614357,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.194141075511365,
+        "angle": -0.22260296310729086,
+        "max_abs_qvel": 7.6922018734834445,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.25924649635816,
+      "mean_velocity": -0.3104767607784814,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23731411372621855,
+      "mean_action_noise_l2": 0.20757883631934723,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1966149003594124,
+        "angle": -0.21835875673425903,
+        "max_abs_qvel": 7.602087624702221,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.725272817191707,
+      "mean_velocity": -0.25070362861346723,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2368090680012336,
+      "mean_action_noise_l2": 0.26592453110676545,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 13
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1986654351276078,
+        "angle": -0.21441183043140852,
+        "max_abs_qvel": 6.364638419175286,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152001,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.196159337243774,
+      "mean_velocity": -0.31574242807949876,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23665915926297507,
+      "mean_action_noise_l2": 0.21871293662115932,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1950974082119328,
+        "angle": -0.22088729030800403,
+        "max_abs_qvel": 7.674623774218384,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "deterministic",
+      "reset_seed": 152002,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.03441108755132,
+      "mean_velocity": -0.32926926579670385,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23659681404630342,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.194523635089852,
+        "angle": -0.22634911532752583,
+        "max_abs_qvel": 8.037869110871219,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.235017025580607,
+      "mean_velocity": -0.3125331491295578,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2364250235259533,
+      "mean_action_noise_l2": 0.213088966285189,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.197378961935921,
+        "angle": -0.2209603374468069,
+        "max_abs_qvel": 7.887485969531035,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.606579939015617,
+      "mean_velocity": -0.2598610432741204,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23568620016941658,
+      "mean_action_noise_l2": 0.2771799684717105,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 13
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1976787638392128,
+        "angle": -0.22049958112210172,
+        "max_abs_qvel": 6.7289279704005,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152002,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.152223592065377,
+      "mean_velocity": -0.31939414954879236,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23589040587345758,
+      "mean_action_noise_l2": 0.21747752698138356,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1954244384654766,
+        "angle": -0.22424261366990555,
+        "max_abs_qvel": 7.993766646084535,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "deterministic",
+      "reset_seed": 152003,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 7.860298747808111,
+      "mean_velocity": -0.34375274149593155,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23908138399322829,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.19076832200634,
+        "angle": -0.2218424004627043,
+        "max_abs_qvel": 8.072895962539178,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.036551361889263,
+      "mean_velocity": -0.3290250911971352,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23850756511092186,
+      "mean_action_noise_l2": 0.2066899739826719,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.193094724114538,
+        "angle": -0.21839816992211195,
+        "max_abs_qvel": 7.973961972505183,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.45917014355416,
+      "mean_velocity": -0.2711746204901497,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23755861360293168,
+      "mean_action_noise_l2": 0.2735440650811562,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 13
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1943749393219707,
+        "angle": -0.21545188641928756,
+        "max_abs_qvel": 6.722389747996547,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152003,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 7.947881051678348,
+      "mean_velocity": -0.3363945190560657,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23884384582440057,
+      "mean_action_noise_l2": 0.21948517936592302,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.191423960891323,
+        "angle": -0.2208714278607573,
+        "max_abs_qvel": 8.042756926244293,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "deterministic",
+      "reset_seed": 152004,
+      "noise_seed": null,
+      "context_mode": "zero-context",
+      "noise_scale": 0.0,
+      "length": 12,
+      "episode_return": 8.1659642069826,
+      "mean_velocity": -0.31830369473906767,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23696083078781763,
+      "mean_action_noise_l2": 0.0,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1957335246541567,
+        "angle": -0.22729800836755937,
+        "max_abs_qvel": 7.944910308603641,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135000,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.330248187357359,
+      "mean_velocity": -0.30459089935634714,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23699103047450384,
+      "mean_action_noise_l2": 0.2120084653918942,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.198007228884706,
+        "angle": -0.22287445191994146,
+        "max_abs_qvel": 7.858357278802542,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135001,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 13,
+      "episode_return": 9.776977419012653,
+      "mean_velocity": -0.24674551174815057,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.23615880081286797,
+      "mean_action_noise_l2": 0.2750874918240767,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 13
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.199587669535019,
+        "angle": -0.22053256547015554,
+        "max_abs_qvel": 6.61307261985975,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    },
+    {
+      "condition": "markov",
+      "mode": "sampled",
+      "reset_seed": 152004,
+      "noise_seed": 135002,
+      "context_mode": "zero-context",
+      "noise_scale": 1.0,
+      "length": 12,
+      "episode_return": 8.288626378696799,
+      "mean_velocity": -0.30802991663676865,
+      "physical_termination": true,
+      "time_limit_truncation": false,
+      "diagnostic_cutoff": false,
+      "mean_policy_std": 0.2360980361700058,
+      "mean_action_noise_l2": 0.21705551523094377,
+      "mean_context_l2": 0.0,
+      "context_updates": 0,
+      "profile_counts": {
+        "id": 12
+      },
+      "non_id_steps": 0,
+      "profile_events": [
+        {
+          "step": 1,
+          "profile": "id",
+          "actual_multipliers": {
+            "body_mass": 1.0,
+            "gravity": 1.0,
+            "friction": 1.0
+          }
+        }
+      ],
+      "switches": 0,
+      "final_physical_state": {
+        "height": 1.1966896985622253,
+        "angle": -0.22494537058210812,
+        "max_abs_qvel": 7.893922711240161,
+        "unhealthy_conditions": [
+          "angle"
+        ]
+      },
+      "native_reward_verified": true
+    }
+  ],
+  "training_seed": 3,
+  "context_mode": "zero-context",
+  "smoke": false,
+  "profiles": [
+    {
+      "name": "id",
+      "latent_load": 1.0,
+      "obs_scale": 1.0,
+      "action_scale": 1.0
+    },
+    {
+      "name": "easy_surface",
+      "latent_load": 0.1414213562373095,
+      "obs_scale": 1.0,
+      "action_scale": 1.0,
+      "body_mass": 0.5244087739130784,
+      "gravity": 0.613237563517304,
+      "friction": 1.6306894089533097
+    },
+    {
+      "name": "heavy_traffic",
+      "latent_load": 7.0710678118654755,
+      "obs_scale": 1.0,
+      "action_scale": 1.0,
+      "body_mass": 1.9069093610660137,
+      "gravity": 1.6306894089533097,
+      "friction": 0.613237563517304
+    },
+    {
+      "name": "mega_event",
+      "latent_load": 50.0,
+      "obs_scale": 1.0,
+      "action_scale": 1.0,
+      "body_mass": 3.636303311321192,
+      "gravity": 2.6591479484724942,
+      "friction": 0.3760603093086394
+    },
+    {
+      "name": "slippery_rush",
+      "latent_load": 7.0710678118654755,
+      "obs_scale": 1.0,
+      "action_scale": 1.0,
+      "body_mass": 1.6306894089533097,
+      "gravity": 1.4787576366283137,
+      "friction": 0.27500456215701824
+    }
+  ],
+  "evaluation_device": "cpu",
+  "cuda_initialized": false,
+  "optimizer_updates": 0,
+  "new_training_interactions": 0,
+  "replay_loaded": false,
+  "source_readout_refitted": false,
+  "checkpoint_selection": "predeclared-final-only",
+  "reward_changes": [],
+  "policy_receives_profile_labels": false,
+  "ablation_scope": "inference context, not training representation",
+  "seconds": 3.5103468922898173,
+  "evaluation_interactions": 1420
+}

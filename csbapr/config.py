@@ -38,7 +38,7 @@ class CSBAPRConfig:
     batch_size: int = 256
     warmup_steps: int = 1000      # random exploration before learning
 
-    # ===== BA-PR Inherited (不变) =====
+    # ===== BA-PR Components =====
     max_run_length: int = 20      # BOCD max run length
     hazard_rate: float = 0.02     # BOCD hazard rate
     base_variance: float = 1.0    # BOCD base variance

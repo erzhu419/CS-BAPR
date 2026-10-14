@@ -1,0 +1,71 @@
+"""Native CPU OOD probes with task-local source metadata and scalar publication."""
+import argparse
+import json
+from pathlib import Path
+import shlex
+import subprocess
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import run_general_ood_v134_multinode as v134
+
+transport = v134.transport
+RUNTIME_REL = Path("experiments/general_ood_v135_frozen_ood_context_20261012/runtime")
+CONTEXT_MODES = ("online", "zero-context")
+
+
+def stage_source(seed, context_mode):
+    path = v134.source_path(seed, "mse-control")
+    response = subprocess.run([*transport.ssh_args(), transport.PEER, "cat "+shlex.quote(str(path))],
+                              check=True, capture_output=True, text=True)
+    row = json.loads(response.stdout)
+    assert (row["revision"], row["training_seed"], row["arm"], row["smoke"]) == (
+        "general_ood_v133_source_extension", seed, "mse-control", False)
+    row["checkpoint"] = str(transport.copy_artifact(row["checkpoint"]))
+    destination = transport.LOCAL_PROJECT/RUNTIME_REL/f"source_inputs/seed{seed}_{context_mode}/source.json"
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = destination.with_suffix(".tmp")
+    temporary.write_text(json.dumps(row, indent=2, allow_nan=False)+"\n")
+    temporary.replace(destination)
+    return destination
+
+
+def publish(args):
+    path = args.result_dir/"ood_context.json"
+    row = json.loads(path.read_text())
+    row["source"]["checkpoint"] = str(transport.CENTRAL_PROJECT/Path(row["source"]["checkpoint"]).relative_to(transport.LOCAL_PROJECT))
+    path.write_text(json.dumps(row, indent=2, allow_nan=False)+"\n")
+    destination = transport.CENTRAL_PROJECT/path.relative_to(transport.LOCAL_PROJECT)
+    subprocess.run([*transport.ssh_args(), transport.PEER, "mkdir -p "+shlex.quote(str(destination.parent))], check=True)
+    subprocess.run(["rsync", "-a", "-e", shlex.join(transport.ssh_args()), str(path), f"{transport.PEER}:{destination}"], check=True)
+
+
+def run(args):
+    central = Path(__file__).resolve().is_relative_to(transport.CENTRAL_PROJECT)
+    source = v134.source_path(args.seed, "mse-control") if central else stage_source(args.seed, args.context_mode)
+    command = [sys.executable, str(Path(__file__).resolve().parent/"analyze_general_ood_v135_ood_context.py"),
+        "--seed", str(args.seed), "--context-mode", args.context_mode, "--source-json", str(source),
+        "--checkpoint-dir", str(args.checkpoint_dir), "--result-dir", str(args.result_dir)]
+    if args.resume_from:
+        command += ["--resume-from", str(args.resume_from)]
+    if args.smoke:
+        command.append("--smoke")
+    subprocess.run(command, check=True, env=transport.native_environment())
+    if not central:
+        publish(args)
+    print(f"[PUBLISHED] seed{args.seed} {args.context_mode}: frozen OOD scalars ready", flush=True)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--seed", type=int, choices=(3, 4), required=True)
+    parser.add_argument("--context-mode", choices=CONTEXT_MODES, required=True)
+    parser.add_argument("--checkpoint-dir", type=Path, required=True)
+    parser.add_argument("--result-dir", type=Path, required=True)
+    parser.add_argument("--resume-from", type=Path)
+    parser.add_argument("--smoke", action="store_true")
+    run(parser.parse_args())
+
+
+if __name__ == "__main__":
+    main()

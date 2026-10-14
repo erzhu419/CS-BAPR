@@ -1,0 +1,218 @@
+{
+  "revision": "general_ood_v38_belief",
+  "stage": "preflight",
+  "environment": "Pendulum-v1",
+  "variant": "legacy-belief",
+  "training_seed": 0,
+  "config": {
+    "env_name": "Pendulum-v1",
+    "state_dim": 3,
+    "action_dim": 1,
+    "max_episodes": 500,
+    "max_steps_per_episode": 200,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0001,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 64,
+    "num_critics": 3,
+    "buffer_size": 1000000,
+    "batch_size": 128,
+    "warmup_steps": 500,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.01,
+    "beta_ood": 0.1,
+    "beta_bc": 0.005,
+    "actor_type": null,
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": true,
+    "context_ema_alpha": 0.05,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 1.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.0,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.01,
+    "sindy_lib_degree": 2,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 10,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.01,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": true,
+    "device": "cuda"
+  },
+  "checkpoint": "general_ood_v38_belief_Pendulum-v1_legacy-belief_seed0_final.pt",
+  "checkpoint_selection": "final",
+  "loaded_training_context_count": 512,
+  "restore_training_context_before_each_evaluation_block": true,
+  "training_budget": 512,
+  "training": {
+    "interactions": 512,
+    "optimizer_update_steps": 385,
+    "episode_segments": 3,
+    "last_segment_terminated": false,
+    "recent_completed_episode_returns": [
+      -1034.3881536218528,
+      -837.5408260155523
+    ],
+    "mode_events": [
+      {
+        "step": 0,
+        "mode": "normal"
+      }
+    ],
+    "diagnostic_blocks": [
+      {
+        "step": 512,
+        "updates": 385,
+        "surprise": 11.212728468567933,
+        "belief_reset_probability": 0.0708287821811137,
+        "belief_effective_window": 10.523683859346049,
+        "weighted_lambda_effective": 0.3419998293573206,
+        "effective_beta": -2.3419998293573205,
+        "q_std": 0.26042217269733353,
+        "alpha": 0.9442070507383966,
+        "policy_loss": -7.1557279869527015,
+        "q_loss": 3.6444483439159856
+      }
+    ],
+    "seconds": 9.983352452050894
+  },
+  "training_switch_steps": 5000,
+  "evaluation_seed_start": 80000,
+  "evaluation_episodes": 2,
+  "fixed_profile_episodes": 1,
+  "ood_intensity": 50.0,
+  "ood_profile_family": "structured",
+  "ood_schedule": "markov",
+  "ood_switch_probability": 1.0,
+  "ood_switch_steps": 50,
+  "evaluation_only": true,
+  "optimizer_updates_during_evaluation": 0,
+  "results": {
+    "id": {
+      "mean": -1168.7223880014508,
+      "std": 186.8283012537646,
+      "rewards": [
+        -981.8940867476861,
+        -1355.5506892552153
+      ],
+      "lengths": [
+        200,
+        200
+      ],
+      "profile_counts": {}
+    },
+    "markov_50x": {
+      "mean": -1394.6049284160508,
+      "std": 17.558146262383957,
+      "rewards": [
+        -1412.163074678435,
+        -1377.046782153667
+      ],
+      "lengths": [
+        200,
+        200
+      ],
+      "profile_counts": {
+        "id": 102,
+        "rush_load": 100,
+        "recovery_aftershock": 50,
+        "mega_event": 50,
+        "low_load": 100
+      }
+    }
+  },
+  "fixed_profile_results": {
+    "low_load": {
+      "mean": -1452.2380682502578,
+      "std": 0.0,
+      "rewards": [
+        -1452.2380682502578
+      ],
+      "lengths": [
+        200
+      ],
+      "profile_counts": {
+        "low_load": 201
+      }
+    },
+    "rush_load": {
+      "mean": -1510.5005249623296,
+      "std": 0.0,
+      "rewards": [
+        -1510.5005249623296
+      ],
+      "lengths": [
+        200
+      ],
+      "profile_counts": {
+        "rush_load": 201
+      }
+    },
+    "mega_event": {
+      "mean": -1630.848671067704,
+      "std": 0.0,
+      "rewards": [
+        -1630.848671067704
+      ],
+      "lengths": [
+        200
+      ],
+      "profile_counts": {
+        "mega_event": 201
+      }
+    },
+    "recovery_aftershock": {
+      "mean": -1874.9610278475568,
+      "std": 0.0,
+      "rewards": [
+        -1874.9610278475568
+      ],
+      "lengths": [
+        200
+      ],
+      "profile_counts": {
+        "recovery_aftershock": 201
+      }
+    }
+  },
+  "runtime": {
+    "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+    "torch": "2.5.1+cu121",
+    "numpy": "2.1.3",
+    "gymnasium": "1.2.0",
+    "mujoco": "3.2.7",
+    "gpu": "NVIDIA GeForce RTX 2080 Ti"
+  }
+}

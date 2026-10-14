@@ -1,0 +1,68 @@
+{
+  "revision": "general_ood_v59_normal_attribution",
+  "protocol": "docs/general_ood_v59_normal_attribution_protocol.md",
+  "frozen_source": "experiments/general_ood_v59_normal_attribution_20261008/runtime",
+  "inherited_runtime": "experiments/general_ood_v58_closed_loop_20261008/runtime",
+  "source_checkpoint": "experiments/general_ood_v40_strength_20261006/runtime/run_checkpoints/formal/Hopper-v4/seed1/general_ood_v40_strength_Hopper-v4_fixed-minus2_seed1_final.pt",
+  "shared_input": "experiments/general_ood_v52_matched_continuation_20261006/runtime/run_shared/preflight/shared.pt",
+  "dynamics_checkpoint": "experiments/general_ood_v53_behavior_coverage_20261006/runtime/run_checkpoints/preflight/preflight_latest.pt",
+  "reference_checkpoint": "experiments/general_ood_v57_phase_calibration_20261007/runtime/run_checkpoints/formal/formal_latest.pt",
+  "arms": ["normal-frozen", "normal-updating"],
+  "continuation_seeds": [116000, 116001],
+  "seed_role": "deliberately paired v58 normal-only counterfactuals, not new independent confirmation",
+  "interactions_per_branch": 6000,
+  "added_interactions": 24000,
+  "added_optimizer_updates": 12000,
+  "mode": "normal-only",
+  "beta": -2.0,
+  "readout_controls_actor": false,
+  "reference_frozen": true,
+  "bins": 250,
+  "windows": ["first800", "full", "last1000", "last64"],
+  "allowed_nodes": ["node007"],
+  "placement_reason": "Server-only inputs read in place; no GPU preference or Windows",
+  "stage_excludes": ["run_shared", "run_checkpoints", "run_results"],
+  "stage_input_paths": ["scripts"],
+  "resource_family": "CS-BAPR-v59-normal-attribution",
+  "resource_request": {"cpu": 2, "ram_mb": 4096, "vram_mb": 768},
+  "artifact_policy": "Scalar JSON/logs only; raw traces/replay/checkpoints remain server-side",
+  "local_verification": {
+    "test_file": "tests/test_general_ood_v59.py",
+    "frozen_runtime_tested": true,
+    "passed": 4,
+    "failed": 0,
+    "coverage": "Online/offline curves, v58 optimizer trajectory, exact native interrupted continuation, budget/seed roles and complete worker with uninitialized reward EMA"
+  },
+  "failed_startup": {
+    "tasks": ["t136524", "t136525"],
+    "reason": "Diagnostic directly read reward EMA before lazy initialization; corrected to the existing v58 default1 read",
+    "interactions": 0,
+    "optimizer_updates": 0
+  },
+  "tasks": [
+    {"id": "t136532", "seed": 116000},
+    {"id": "t136533", "seed": 116001}
+  ],
+  "startup": {
+    "node": "node007",
+    "gpu_by_task": {"t136532": 3, "t136533": 0},
+    "normal_frozen_sampled_steps_observed": {"116000": 4500, "116001": 3968},
+    "initial_source_replay_context_config_reward_default_and_reference_checks_passed": true,
+    "normal_frozen_completed_both_seeds": true,
+    "frozen_first_transitions_match_v58": true,
+    "normal_updating_steps_observed": {"116000": 2425, "116001": 1366}
+  },
+  "completion": {
+    "done": 2,
+    "exit_code": 0,
+    "cells": 4,
+    "interactions": 24000,
+    "optimizer_updates": 12000,
+    "scalar_json_bytes": 89222,
+    "paired_initial_transitions_references_and_bin_summaries_match": true,
+    "phase_normal_updating_last1000": [0.4521009665508896, 0.42101220436783443],
+    "phase_normal_updating_last64": [0.799182356377024, 0.8123213038145976],
+    "report": "docs/general_ood_v59_normal_attribution_results.md"
+  },
+  "status": "complete-normal-learning-drift-reproduced-hold"
+}

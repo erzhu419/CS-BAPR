@@ -1,0 +1,428 @@
+{
+  "revision": "general_ood_v138_physics_components",
+  "training_driver_revision": "general_ood_v132_source_stability",
+  "training_seed": 3,
+  "training_profile": "mass-only",
+  "arm": "mse-control",
+  "smoke": true,
+  "spec": {
+    "steps": 512,
+    "checkpoint_interval": 256,
+    "diagnostic_interval": 256,
+    "evaluation_interval": 256,
+    "evaluation_episodes": 1,
+    "final_evaluation_episodes": 1,
+    "evaluation_max_steps": 64,
+    "evaluation_seed": 149000,
+    "final_evaluation_seed": 150000,
+    "random_action_warmup_steps": 0,
+    "study_revision": "general_ood_v138_physics_components",
+    "arm": "mse-control",
+    "bootstrap_mask": "terminated-only",
+    "episode_boundary": "terminated-or-truncated",
+    "huber_delta": 10.0,
+    "critic_td_objective": "mse",
+    "training_profile": "mass-only",
+    "profile_family": "structured-component",
+    "intensity": 50.0,
+    "training_mode": "fixed-profile-from-scratch",
+    "effective_beta": -2.0,
+    "reward_changes": [],
+    "policy_receives_profile_labels": false,
+    "source_profile_family": "structured",
+    "source_profile": "mega_event",
+    "active_factor": "body_mass",
+    "physics_factors": {
+      "body_mass": 3.636303311321192,
+      "gravity": 1.0,
+      "friction": 1.0
+    }
+  },
+  "config": {
+    "env_name": "Hopper-v4",
+    "state_dim": 11,
+    "action_dim": 3,
+    "max_episodes": 2000,
+    "max_steps_per_episode": 1000,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "alpha": 0.2,
+    "auto_alpha": true,
+    "alpha_cap": null,
+    "lr_actor": 0.0001,
+    "lr_critic": 0.0003,
+    "lr_alpha": 0.0003,
+    "hidden_dim": 256,
+    "num_critics": 5,
+    "buffer_size": 1000000,
+    "batch_size": 256,
+    "warmup_steps": 5000,
+    "max_run_length": 20,
+    "hazard_rate": 0.02,
+    "base_variance": 1.0,
+    "surprise_ema": 0.1,
+    "weight_reg": 0.0,
+    "beta_ood": 0.1,
+    "beta_bc": 0.005,
+    "actor_type": null,
+    "policy_q_std_cap": 0.0,
+    "critic_q_std_cap": 0.0,
+    "critic_q_std_penalty_weight": 0.0,
+    "use_context": true,
+    "context_ema_alpha": 0.05,
+    "context_clip": 5.0,
+    "enable_min_q_target": true,
+    "enable_reward_ema": true,
+    "enable_entropy_floor": true,
+    "entropy_floor": 0.01,
+    "enable_rollout_surprise": true,
+    "surprise_window": 256,
+    "bapr_warmup_iters": 100,
+    "penalty_scale": 0.0,
+    "weight_sym": 0.0,
+    "jac_weight": 0.0,
+    "action_anchor_weight": 0.0,
+    "grad_clip": 1.0,
+    "jac_curriculum_start": 100,
+    "actor_weight_decay": 0.0001,
+    "sindy_with_control": true,
+    "sindy_threshold": 0.1,
+    "sindy_lib_degree": 2,
+    "sindy_discrete_time": true,
+    "sindy_n_explore_episodes": 30,
+    "sindy_epsilon_threshold": 1.0,
+    "use_nau_actor": false,
+    "nau_reg_weight": 0.01,
+    "nau_l_eff_penalty_weight": 0.0,
+    "nau_l_eff_target": 200.0,
+    "actor_mean_clip": 0.0,
+    "irm_penalty_weight": 0.1,
+    "irm_n_envs": 3,
+    "ood_eval_interval": 50,
+    "log_interval": 10,
+    "save_interval": 100,
+    "log_dir": "logs",
+    "track_L_eff": true,
+    "device": "cuda"
+  },
+  "environment": "Hopper-v4",
+  "training_mode": "fixed-profile-from-scratch",
+  "effective_beta": -2.0,
+  "trained_from_scratch": true,
+  "training_device": "cuda",
+  "physics": {
+    "profile": "mass-only",
+    "actual_multipliers": {
+      "body_mass": 3.636303311321192,
+      "gravity": 1.0,
+      "friction": 1.0
+    },
+    "body_mass": [
+      0.0,
+      13.327747730582713,
+      14.75572070171658,
+      10.113856563550767,
+      19.329042137267958
+    ],
+    "gravity": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "geom_friction": [
+      [
+        1.0,
+        0.005,
+        0.0001
+      ],
+      [
+        0.9,
+        0.005,
+        0.0001
+      ],
+      [
+        0.9,
+        0.005,
+        0.0001
+      ],
+      [
+        0.9,
+        0.005,
+        0.0001
+      ],
+      [
+        2.0,
+        0.005,
+        0.0001
+      ]
+    ]
+  },
+  "reward_settings": {
+    "healthy_reward": 1.0,
+    "ctrl_cost_weight": 0.001,
+    "forward_reward_weight": 1.0
+  },
+  "reward_changes": [],
+  "policy_receives_profile_labels": false,
+  "checkpoint_selection": "final-not-best",
+  "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v138_physics_components_20261012/runtime/run_checkpoints/smoke_seed3_mass-only/final.pt",
+  "resumable_checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v138_physics_components_20261012/runtime/run_checkpoints/smoke_seed3_mass-only/latest.pt",
+  "periodic_evaluation_selects_checkpoint": false,
+  "optimizer_updates_during_evaluation": 0,
+  "source_readout_refitted": false,
+  "training": {
+    "interactions": 512,
+    "optimizer_updates": 257,
+    "episodes_completed": 20,
+    "partial_episode_steps": 23,
+    "partial_episode_return": 24.36561862122794,
+    "recent_completed_episode_returns": [
+      13.233231967742235,
+      15.314555345723203,
+      10.14005362646232,
+      25.824446242672746,
+      17.840926270842306,
+      11.234341897856023,
+      9.57068322769668,
+      21.598375979033385,
+      21.812018101164497,
+      10.643243316230063,
+      13.582248528376043,
+      23.980772869451688,
+      19.593447296931267,
+      20.072541297516544,
+      9.159172789688395,
+      32.33315209939069,
+      27.49920616468149,
+      61.835743106712016,
+      18.84424188982156,
+      25.61377628717168
+    ],
+    "diagnostic_blocks": [
+      {
+        "step": 256,
+        "interactions": 256,
+        "updates": 1,
+        "mean_reward": 0.8059732242088266,
+        "mean_forward_velocity": -0.19293730536975925,
+        "fraction_abs_velocity_below_point1": 0.34765625,
+        "physical_terminations": 12,
+        "time_limit_truncations": 0,
+        "metrics": {
+          "q_loss": 4.342010021209717,
+          "policy_loss": -1.409693717956543,
+          "q_mean": 0.2885448634624481,
+          "q_std": 0.5695148706436157,
+          "alpha": 0.9997000694274902,
+          "effective_beta": -2.0,
+          "reward_normalization_std": 0.9952039114623302,
+          "policy_entropy": 2.0016958713531494,
+          "td_mse": 4.285914421081543,
+          "td_objective": 4.285914421081543,
+          "td_abs_max": 3.7722008228302,
+          "td_fraction_above10": 0.0,
+          "predicted_q_abs_max": 1.216407060623169,
+          "target_q_abs_max": 3.206461191177368
+        }
+      },
+      {
+        "step": 512,
+        "interactions": 256,
+        "updates": 256,
+        "mean_reward": 0.8896978575348953,
+        "mean_forward_velocity": -0.10925032368797644,
+        "fraction_abs_velocity_below_point1": 0.3671875,
+        "physical_terminations": 8,
+        "time_limit_truncations": 0,
+        "metrics": {
+          "q_loss": 0.2729559362633154,
+          "policy_loss": -6.456766032148153,
+          "q_mean": 4.643134868238121,
+          "q_std": 0.10043623081583064,
+          "alpha": 0.9621071617584676,
+          "effective_beta": -2.0,
+          "reward_normalization_std": 0.5849626983904537,
+          "policy_entropy": 2.030276708304882,
+          "td_mse": 0.26356958714313805,
+          "td_objective": 0.26356958714313805,
+          "td_abs_max": 2.5268711801618338,
+          "td_fraction_above10": 0.0,
+          "predicted_q_abs_max": 6.2914917399175465,
+          "target_q_abs_max": 6.63899820484221
+        }
+      }
+    ],
+    "periodic_evaluations": [
+      {
+        "step": 0,
+        "profile": "mass-only",
+        "actual_multipliers": {
+          "body_mass": 3.636303311321192,
+          "gravity": 1.0,
+          "friction": 1.0
+        },
+        "episodes": [
+          {
+            "seed": 149000,
+            "episode_return": 62.5032536173847,
+            "length": 64,
+            "mean_forward_velocity": -0.02338664136947135,
+            "mean_control_cost": 2.0858891701891483e-08,
+            "fraction_abs_velocity_below_point1": 1.0,
+            "physical_termination": false,
+            "time_limit_truncation": false
+          }
+        ],
+        "mean_return": 62.5032536173847,
+        "mean_episode_velocity": -0.02338664136947135,
+        "mean_episode_length": 64.0,
+        "physical_terminations": 0,
+        "environment_step_calls": 64
+      },
+      {
+        "step": 256,
+        "profile": "mass-only",
+        "actual_multipliers": {
+          "body_mass": 3.636303311321192,
+          "gravity": 1.0,
+          "friction": 1.0
+        },
+        "episodes": [
+          {
+            "seed": 149000,
+            "episode_return": 62.46200635776899,
+            "length": 64,
+            "mean_forward_velocity": -0.024031124220367354,
+            "mean_control_cost": 2.643949076741592e-08,
+            "fraction_abs_velocity_below_point1": 1.0,
+            "physical_termination": false,
+            "time_limit_truncation": false
+          }
+        ],
+        "mean_return": 62.46200635776899,
+        "mean_episode_velocity": -0.024031124220367354,
+        "mean_episode_length": 64.0,
+        "physical_terminations": 0,
+        "environment_step_calls": 64
+      }
+    ]
+  },
+  "final_evaluation": {
+    "protocol": {
+      "reset_seeds": [
+        154000
+      ],
+      "action_noise_seeds": [
+        137000
+      ],
+      "max_steps": 64,
+      "device": "cpu",
+      "context_mode": "online",
+      "sampled_noise_scale": 1.0,
+      "profile_schedule": "matching-static",
+      "noise_schedule": "v126 CPU torch.Generator; one float32 (1,3) draw per step"
+    },
+    "device": "cpu",
+    "profile": "mass-only",
+    "episodes": [
+      {
+        "condition": "static/mass-only",
+        "mode": "deterministic",
+        "reset_seed": 154000,
+        "noise_seed": null,
+        "context_mode": "online",
+        "noise_scale": 0.0,
+        "length": 64,
+        "episode_return": 62.58356385024204,
+        "mean_velocity": -0.022106939752023172,
+        "physical_termination": false,
+        "time_limit_truncation": false,
+        "diagnostic_cutoff": true,
+        "mean_policy_std": 0.8997240364551544,
+        "mean_action_noise_l2": 0.0,
+        "mean_context_l2": 0.7361178155988455,
+        "context_updates": 64,
+        "profile_counts": {
+          "mass-only": 64
+        },
+        "non_id_steps": 64,
+        "profile_events": [
+          {
+            "step": 1,
+            "profile": "mass-only",
+            "actual_multipliers": {
+              "body_mass": 3.636303311321192,
+              "gravity": 1.0,
+              "friction": 1.0
+            }
+          }
+        ],
+        "switches": 0,
+        "final_physical_state": {
+          "height": 1.1947040974281717,
+          "angle": -0.008644996403208625,
+          "max_abs_qvel": 0.0595926263604078,
+          "unhealthy_conditions": []
+        },
+        "native_reward_verified": true
+      },
+      {
+        "condition": "static/mass-only",
+        "mode": "sampled",
+        "reset_seed": 154000,
+        "noise_seed": 137000,
+        "context_mode": "online",
+        "noise_scale": 1.0,
+        "length": 13,
+        "episode_return": 10.152882792551493,
+        "mean_velocity": -0.21789322624784818,
+        "physical_termination": true,
+        "time_limit_truncation": false,
+        "diagnostic_cutoff": false,
+        "mean_policy_std": 0.8728333711624146,
+        "mean_action_noise_l2": 1.0978833116017854,
+        "mean_context_l2": 0.15241729926604491,
+        "context_updates": 13,
+        "profile_counts": {
+          "mass-only": 13
+        },
+        "non_id_steps": 13,
+        "profile_events": [
+          {
+            "step": 1,
+            "profile": "mass-only",
+            "actual_multipliers": {
+              "body_mass": 3.636303311321192,
+              "gravity": 1.0,
+              "friction": 1.0
+            }
+          }
+        ],
+        "switches": 0,
+        "final_physical_state": {
+          "height": 1.1999980417816527,
+          "angle": -0.2342078687362506,
+          "max_abs_qvel": 4.144380299050136,
+          "unhealthy_conditions": [
+            "angle"
+          ]
+        },
+        "native_reward_verified": true
+      }
+    ],
+    "optimizer_updates": 0,
+    "replay_loaded": false,
+    "evaluation_interactions": 77
+  },
+  "final_context_count": 512,
+  "runtime": {
+    "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+    "torch": "2.5.1+cu121",
+    "numpy": "2.1.3",
+    "gymnasium": "1.2.0",
+    "mujoco": "3.2.7",
+    "gpu": "NVIDIA GeForce RTX 3080 Ti"
+  },
+  "seconds": 5.992395714856684,
+  "scope": "Known-regime learnability at matched budgets, not unknown-regime adaptation or baseline superiority"
+}

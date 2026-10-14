@@ -463,6 +463,8 @@ class ExtremeOODWrapper(gym.Wrapper):
     def reset(self, **kwargs):
         self._step = 0
         self._episode += 1
+        if kwargs.get("seed") is not None:
+            self._rng = np.random.RandomState(kwargs["seed"])
         out = self.env.reset(**kwargs)
         if isinstance(out, tuple):
             obs, info = out

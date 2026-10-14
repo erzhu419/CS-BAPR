@@ -1,0 +1,207 @@
+{
+  "revision": "general_ood_v97_regime_coverage",
+  "stage": "reference-collection",
+  "passed": true,
+  "seed": 135201,
+  "spec": {
+    "seeds": [
+      135200,
+      135201
+    ],
+    "steps": 6000,
+    "switch_step": 3800,
+    "stride": 2
+  },
+  "smoke": false,
+  "collection_device": "cuda",
+  "source_training_seed": 1,
+  "source_updates": 99745,
+  "recipes": {
+    "old_recipe": [
+      "normal",
+      "slippery"
+    ],
+    "diverse_recipe": [
+      "high_grav",
+      "compound"
+    ]
+  },
+  "collection_records": [
+    {
+      "role": "reference_extension",
+      "seed": 135201,
+      "mode": "normal",
+      "updating": true,
+      "group": "old_recipe",
+      "actual_transitions": 6000,
+      "counterfactual_step_calls": 30000,
+      "environment_step_calls": 36000,
+      "exact_true_mode_replays": 6000,
+      "optimizer_updates": 6000,
+      "physical_terminations": 0,
+      "time_limit_truncations": 6,
+      "clipped_input_velocities": 0,
+      "mean_q_loss": 375951.6906986593
+    },
+    {
+      "role": "reference_extension",
+      "seed": 135201,
+      "mode": "slippery",
+      "updating": true,
+      "group": "old_recipe",
+      "actual_transitions": 6000,
+      "counterfactual_step_calls": 30000,
+      "environment_step_calls": 36000,
+      "exact_true_mode_replays": 6000,
+      "optimizer_updates": 6000,
+      "physical_terminations": 0,
+      "time_limit_truncations": 6,
+      "clipped_input_velocities": 0,
+      "mean_q_loss": 375106.42769311526
+    },
+    {
+      "role": "reference_extension",
+      "seed": 135201,
+      "mode": "high_grav",
+      "updating": true,
+      "group": "diverse_recipe",
+      "actual_transitions": 6000,
+      "counterfactual_step_calls": 30000,
+      "environment_step_calls": 36000,
+      "exact_true_mode_replays": 6000,
+      "optimizer_updates": 6000,
+      "physical_terminations": 0,
+      "time_limit_truncations": 6,
+      "clipped_input_velocities": 0,
+      "mean_q_loss": 375640.60267114255
+    },
+    {
+      "role": "reference_extension",
+      "seed": 135201,
+      "mode": "compound",
+      "updating": true,
+      "group": "diverse_recipe",
+      "actual_transitions": 6000,
+      "counterfactual_step_calls": 30000,
+      "environment_step_calls": 36000,
+      "exact_true_mode_replays": 6000,
+      "optimizer_updates": 6000,
+      "physical_terminations": 0,
+      "time_limit_truncations": 6,
+      "clipped_input_velocities": 0,
+      "mean_q_loss": 375285.8307112834
+    }
+  ],
+  "actual_transitions": 24000,
+  "counterfactual_step_calls": 120000,
+  "environment_step_calls": 144000,
+  "exact_true_mode_replays": 24000,
+  "optimizer_updates": 24000,
+  "per_recipe_budgets": {
+    "old_recipe": {
+      "actual_transitions": 12000,
+      "counterfactual_step_calls": 60000,
+      "environment_step_calls": 72000,
+      "exact_true_mode_replays": 12000,
+      "optimizer_updates": 12000
+    },
+    "diverse_recipe": {
+      "actual_transitions": 12000,
+      "counterfactual_step_calls": 60000,
+      "environment_step_calls": 72000,
+      "exact_true_mode_replays": 12000,
+      "optimizer_updates": 12000
+    }
+  },
+  "per_recipe_reference_inputs": {
+    "old_recipe": 2200,
+    "diverse_recipe": 2200
+  },
+  "per_recipe_counterfactual_labels": {
+    "old_recipe": 11000,
+    "diverse_recipe": 11000
+  },
+  "sources": {
+    "old_recipe": [
+      {
+        "source_mode": "normal",
+        "source_steps": [
+          3800,
+          6000
+        ],
+        "stride": 2,
+        "input_row_range": [
+          0,
+          1100
+        ],
+        "seed": 135201,
+        "role": "reference_extension",
+        "updating": true
+      },
+      {
+        "source_mode": "slippery",
+        "source_steps": [
+          3800,
+          6000
+        ],
+        "stride": 2,
+        "input_row_range": [
+          1100,
+          2200
+        ],
+        "seed": 135201,
+        "role": "reference_extension",
+        "updating": true
+      }
+    ],
+    "diverse_recipe": [
+      {
+        "source_mode": "high_grav",
+        "source_steps": [
+          3800,
+          6000
+        ],
+        "stride": 2,
+        "input_row_range": [
+          0,
+          1100
+        ],
+        "seed": 135201,
+        "role": "reference_extension",
+        "updating": true
+      },
+      {
+        "source_mode": "compound",
+        "source_steps": [
+          3800,
+          6000
+        ],
+        "stride": 2,
+        "input_row_range": [
+          1100,
+          2200
+        ],
+        "seed": 135201,
+        "role": "reference_extension",
+        "updating": true
+      }
+    ]
+  },
+  "paired_prefixes": true,
+  "equal_recipe_budgets": true,
+  "exact_true_mode_replays_verified": true,
+  "counterfactuals_added_to_RL_replay": false,
+  "evaluation_paths_used_for_reference": false,
+  "reference_banks_fitted": false,
+  "normal_thresholds_recalibrated": false,
+  "coefficient_tuned": false,
+  "readout_controls_actor": false,
+  "readout_adopted": false,
+  "decision": "reference-collection-only-pending-error-refit-calibration-development-replay",
+  "limitations": [
+    "Known-mode simulator counterfactual labels for offline reference construction.",
+    "All collection policies adapt with fixed-minus2 from one source policy; not independent training seeds.",
+    "The recipes change the post-switch trajectory distribution, not model form or observation representation.",
+    "No recognition, risk, return or actor-integration claim from collection alone."
+  ]
+}

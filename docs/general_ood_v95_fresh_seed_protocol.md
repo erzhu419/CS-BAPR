@@ -1,0 +1,14 @@
+# v95 Frozen readout confirmation on fresh environment seeds
+
+Freeze v78 raw covariance and all three v94 suffix readouts before collection. Load the existing 25,200-row mean/error support, six source-deletion members, raw weight 0.24619454443573643, coefficient one and saved phase calibration; no reference fitting, null recollection or threshold recalibration. v78 retains its own original mean and phase calibration. Preserve all v94 development results and counterexamples separately.
+
+Seeds 135190/135191/135192, each with normal/heavy/slippery/high_grav/compound and frozen/updating continuation policies: 30 paths of 6,000 actual transitions, switch at 3,800. All paths start from the same source-training-seed1 final checkpoint (99,745 updates), shared replay (6,144 rows) and context (100,000 observations). Stochastic actions, fixed-minus2 continuation, native 1,000-step episode limit. Match normal prefixes within each seed/policy setting, including the switch input; match the first action across frozen/updating settings. Both settings collect on CUDA. Only real transitions enter RL replay; no candidate readout controls behavior.
+
+Budget: 180,000 real transitions, 900,000 shadow calls, 1,080,000 total simulator calls, 180,000 exact true-mode replays and 90,000 optimizer updates in updating test-path collection. No new reference labels or optimizer updates from the readout. Every readout receives the same full trajectory and history; score 48 changed early/tail windows, with the existing first800/full/last1000 normal windows. Retain fixed-pair energy/volume attribution and per-seed/policy/mode outcomes rather than only pooling the aggregate.
+
+Native preflight uses separate seed135189, ten 64-step paths switching at 32: 640 real transitions, 3,200 shadows, 3,840 simulator calls and 320 optimizer updates. Check loaded v94 metadata/phase correspondence, paired prefixes, policy-setting first action, exact true-mode replay and 40 finite path/readout evaluations. Local tests cover collection dispatch, completed-cell and within-cell resume, matched scoring and inherited full-history evaluation.
+
+Dispatch three independent seed shards, two CPU cores / 4 GiB RAM / 2 GiB VRAM each, with scheduler-selected GPU and no preference. node007 is the native-input host; no Windows nodes. Resume both collection and completed evaluation paths. Pull only scalar JSON/logs; source/shared states, traces, likelihoods and checkpoints stay server-side. No adoption decision is made by the worker.
+
+## Limitations
+This is fresh trajectory confirmation conditional on one source training seed, inherited calibration and known mild modes. It is not independent training-seed replication, extreme-OOD generalization or a closed-loop return comparison. Updating policies use fixed-minus2, not candidate belief feedback. Mean risk coefficients are not false-positive rates.

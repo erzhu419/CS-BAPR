@@ -1,0 +1,82 @@
+{
+  "revision": "general_ood_v126_noise_sensitivity",
+  "status": "complete",
+  "runtime": "/home/erzhu419/mine_code/CS-BAPR/experiments/general_ood_v126_noise_sensitivity_20261011/runtime",
+  "source_runtimes": [
+    "/home/erzhu419/mine_code/CS-BAPR/experiments/general_ood_v123_source_extension_20261011/runtime",
+    "/home/erzhu419/mine_code/CS-BAPR/experiments/general_ood_v125_actor_beta_20261011/runtime"
+  ],
+  "protocol": "docs/general_ood_v126_noise_sensitivity_protocol.md",
+  "training_seeds": [0, 1, 2],
+  "source_steps": [300000, 350000],
+  "source_arm": "beta-minus2",
+  "noise_scales": [0, 0.25, 0.5, 1],
+  "noise_groups": {"legacy": [12400, 12401, 12402], "fresh": [12600, 12601, 12602]},
+  "reset_seeds": [150000, 150001, 150002, 150003, 150004],
+  "new_training_interactions": 0,
+  "optimizer_updates": 0,
+  "source_readout_refitted": false,
+  "checkpoint_selection": "final-not-best",
+  "reward_or_physics_changes": [],
+  "planned_cpu_evaluation_episodes": 570,
+  "planned_cuda_evaluation_episodes": 190,
+  "maximum_formal_evaluation_interactions": 760000,
+  "allowed_nodes": ["node007"],
+  "placement_reason": "All six final snapshots and their exact native simulator/runtime are here; no checkpoint/replay transfer.",
+  "preferred_node": null,
+  "preferred_gpu": null,
+  "resource_request": {"cpu": 2, "ram_mb": 4096, "cpu_task_vram_mb": 0, "cuda_task_vram_mb": 1024},
+  "sync_policy": "Small noise.json only; native final models unchanged; progress JSON remains native.",
+  "local_tests": {
+    "command": "python3 -m pytest -q tests/test_general_ood_v124.py tests/test_general_ood_v125.py tests/test_general_ood_v126.py",
+    "passed": 14,
+    "seconds": 3.50
+  },
+  "native_smokes": [
+    {"task_id": "t142264", "training_seed": 2, "device": "cpu", "status": "done", "exit_code": 0, "result_sync": "manual scalar-only sync succeeded", "seconds": 2.9256985508836806, "evaluation_interactions": 896, "result_bytes": 110472, "source_and_context_pairing_passed": true, "result": "results/general_ood_v126_noise_sensitivity/smoke_cpu/noise.json"},
+    {"task_id": "t142265", "training_seed": 2, "device": "cuda", "status": "done", "exit_code": 0, "result_sync": "manual scalar-only sync succeeded", "seconds": 4.238175326026976, "evaluation_interactions": 896, "result_bytes": 113632, "source_and_context_pairing_passed": true, "max_same_input_action_abs_difference": 1.6391277313232422e-7, "result": "results/general_ood_v126_noise_sensitivity/smoke_cuda/noise.json"}
+  ],
+  "formal_shards": [
+    {"task_id": "t142278", "training_seed": 0, "device": "cpu", "status": "done", "exit_code": 0, "node": "node007", "gpu_idx": null, "started_at": 1791698634.5701237, "finished_at": 1791698746.445985, "result_synced_at": 1791698752.1206305, "result_bytes": 1396257, "evaluation_interactions": 28078, "result": "results/general_ood_v126_noise_sensitivity/seed0_cpu/noise.json"},
+    {"task_id": "t142279", "training_seed": 1, "device": "cpu", "status": "done", "exit_code": 0, "node": "node007", "gpu_idx": null, "started_at": 1791698635.3165827, "finished_at": 1791698794.2122405, "result_synced_at": 1791698800.1099725, "result_bytes": 1387405, "evaluation_interactions": 144045, "result": "results/general_ood_v126_noise_sensitivity/seed1_cpu/noise.json"},
+    {"task_id": "t142280", "training_seed": 2, "device": "cpu", "status": "done", "exit_code": 0, "node": "node007", "gpu_idx": null, "started_at": 1791698634.5700395, "finished_at": 1791698794.2126503, "result_synced_at": 1791698862.1008754, "result_bytes": 1385529, "evaluation_interactions": 125885, "result": "results/general_ood_v126_noise_sensitivity/seed2_cpu/noise.json"},
+    {"task_id": "t142281", "training_seed": 2, "device": "cuda", "status": "done", "exit_code": 0, "node": "node007", "gpu_idx": 0, "started_at": 1791698634.5699425, "finished_at": 1791698910.8453152, "result_synced_at": 1791699551.1842759, "result_bytes": 1427742, "evaluation_interactions": 125885, "result": "results/general_ood_v126_noise_sensitivity/seed2_cuda/noise.json"}
+  ],
+  "active_tasks": [],
+  "actual_formal_evaluation_episodes": 760,
+  "actual_formal_evaluation_interactions": 423893,
+  "formal_result_bytes": 5596933,
+  "batch_wall_minutes": 4.60,
+  "paired_protocol_validation": "passed",
+  "summary": "results/general_ood_v126_noise_sensitivity/summary.json",
+  "results_note": "docs/general_ood_v126_noise_sensitivity_results.md",
+  "seed2_device_comparison": {
+    "paired_episodes": 190,
+    "length_mismatches": 0,
+    "physical_termination_mismatches": 0,
+    "max_same_input_action_abs_difference": 1.0728836059570312e-6,
+    "max_paired_return_difference_300k": 1.1241926701172815,
+    "max_paired_return_difference_350k": 0.43869204189786615
+  },
+  "decision": "Seed2's post-continuation noise fragility replicates with fresh noise and matched CPU/CUDA inference. Seed1 is also fragile under full fresh noise; seed0 fails even at zero noise. Do not treat entropy reduction as an established repair; separate actor mean/std and context-normalizer changes next.",
+  "next_experiment_plan": {
+    "revision": "v127",
+    "status": "submitted",
+    "manifest": "experiments/general_ood_v127_component_attribution_20261011/dispatch_manifest.json",
+    "training_seeds": [0, 1, 2],
+    "component_source_steps": [300000, 350000],
+    "source_arms": "v123 and v125 beta-minus2",
+    "crossed_components": ["full_actor_mean_function", "full_actor_std_function", "initial_context_normalizer"],
+    "sampled_combinations_per_seed": 8,
+    "deterministic_combinations_per_seed": 4,
+    "sampled_noise_scale": 1,
+    "reset_seeds": [150000, 150001, 150002, 150003, 150004],
+    "noise_groups": {"legacy": [12400, 12401, 12402], "fresh_from_v126": [12600, 12601, 12602]},
+    "planned_evaluation_episodes": 780,
+    "new_training_interactions": 0,
+    "optimizer_updates": 0,
+    "source_readout_refitted": false,
+    "reward_or_physics_changes": []
+  },
+  "summary_command": "python3 scripts/summarize_general_ood_v126.py --result-dir results/general_ood_v126_noise_sensitivity"
+}

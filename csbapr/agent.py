@@ -115,7 +115,7 @@ class CSBAPRAgent:
         self.alpha = self.config.alpha
         self.target_entropy = -action_dim
 
-        # ===== BA-PR Components (from proven BAPR) =====
+        # ===== BA-PR Components =====
         self.belief_tracker = BeliefTracker(
             max_run_length=self.config.max_run_length,
             hazard_rate=self.config.hazard_rate,
@@ -289,6 +289,12 @@ class CSBAPRAgent:
 
     def _actor_loss_batch(self, states, actions, log_probs, noise):
         return states, actions, log_probs
+
+    def _actor_auxiliary_loss(self, states):
+        return None
+
+    def _effective_policy_beta(self, weighted_lambda):
+        return -2.0 - weighted_lambda * self.config.penalty_scale
 
     def update(self, batch_size: int = None, recent_rollout: dict = None):
         """
@@ -488,7 +494,7 @@ class CSBAPRAgent:
         #     instead of hardcoded 5.0, reducing over-conservatism at
         #     steady-state too.
         w_lambda_eff = 0.0 if self.training_steps < self.config.bapr_warmup_iters else w_lambda
-        effective_beta = -2.0 - w_lambda_eff * self.config.penalty_scale
+        effective_beta = self._effective_policy_beta(w_lambda_eff)
         policy_loss = -(q_mean + effective_beta * q_std_for_policy - self.alpha * policy_log_prob).mean()
 
         # Behavior cloning regularization (RE-SAC dual reg, prevents policy drift
@@ -525,6 +531,10 @@ class CSBAPRAgent:
             l_eff_penalty_val = float(l_eff_penalty.detach().item())
             l_eff_surrogate_val = float(l_eff_surrogate.detach().item())
 
+        auxiliary_loss = self._actor_auxiliary_loss(policy_state)
+        if auxiliary_loss is not None:
+            policy_loss = policy_loss + auxiliary_loss
+
         self.actor_optimizer.zero_grad()
         policy_loss.backward()
         if self.config.grad_clip > 0:
@@ -553,11 +563,17 @@ class CSBAPRAgent:
             'alpha': self.alpha,
             'weighted_lambda': w_lambda,
             'weighted_lambda_effective': w_lambda_eff,   # 0 during BAPR warmup, else = w_lambda
+            'effective_beta': effective_beta,
             'sym_penalty': sym_p,
             'jac_loss': jac_loss_val,
             'action_anchor_loss': action_anchor_loss_val,
             'surprise': surprise,
+            **self.surprise_computer.last_components,
+            'reward_normalization_std': max(self._reward_ema_var ** 0.5, 1e-6),
+            'policy_entropy': -policy_log_prob.detach().mean().item(),
             'belief_entropy': self.belief_tracker.entropy,
+            'belief_reset_probability': float(self.belief_tracker.belief[0]),
+            'belief_effective_window': float(self.belief_tracker.effective_window),
             'L_eff': L_eff,
             'L_eff_surrogate': l_eff_surrogate_val,
             'L_eff_penalty': l_eff_penalty_val,
@@ -628,6 +644,8 @@ class CSBAPRAgent:
             'n_train_samples': self._n_train_samples,
             'use_context': self.use_context,
             'context_dim': self.context_dim,
+            'context_state': (vars(self.context_tracker)
+                              if self.context_tracker is not None else None),
             'sindy_report': getattr(self, '_sindy_report', None),
             'irm_report': getattr(self, '_irm_report', None),
             'symbolic_reference_gain': (self.pi_sym_torch.gain
@@ -671,6 +689,8 @@ class CSBAPRAgent:
         self.alpha = checkpoint.get('alpha', self.log_alpha.exp().item())
         self.training_steps = checkpoint['training_steps']
         self._n_train_samples = checkpoint.get('n_train_samples', 0)
+        if self.context_tracker is not None and checkpoint.get('context_state') is not None:
+            vars(self.context_tracker).update(checkpoint['context_state'])
         self._sindy_report = checkpoint.get('sindy_report', None)
         self._irm_report = checkpoint.get('irm_report', None)
         gain = checkpoint.get('symbolic_reference_gain')

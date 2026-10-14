@@ -1,0 +1,2843 @@
+{
+  "revision": "general_ood_v149_warm_recovery",
+  "training_seed": 5,
+  "training_profile": "no-pulse",
+  "smoke": true,
+  "spec": {
+    "revision": "general_ood_v149_warm_recovery",
+    "profile": "no-pulse",
+    "smoke": true,
+    "steps": 600512,
+    "block_steps": 256,
+    "checkpoint_interval": 256,
+    "evaluation_interval": 256,
+    "milestones": [
+      600256,
+      600512
+    ],
+    "bootstrap_mask": "terminated-only",
+    "episode_boundary": "terminated-or-truncated",
+    "training_reset_schedule": "seed*10000 + completed episodes",
+    "settings": {
+      "learning_rate": 0.0003,
+      "buffer_size": 1000000,
+      "learning_starts": 255,
+      "batch_size": 256,
+      "gamma": 0.99,
+      "tau": 0.005,
+      "train_freq": 1,
+      "gradient_steps": 1,
+      "ent_coef": "auto_0.2",
+      "target_entropy": "auto",
+      "use_sde": false,
+      "policy_kwargs": {
+        "net_arch": [
+          256,
+          256
+        ],
+        "n_critics": 2
+      }
+    },
+    "training_pulse": {
+      "probability": 0.0,
+      "gravity": 2.0,
+      "duration": 10,
+      "onset_min": 80,
+      "onset_max": 320
+    },
+    "pulse_rng_seed": "147000 + training seed",
+    "heldout_peak_gravity": 2.6591479484724942,
+    "heldout_durations": [
+      25,
+      50
+    ],
+    "policy_receives_profile_labels": false,
+    "policy_receives_onset_clock": false,
+    "state_resets_at_switch": 0,
+    "source_profile": "no-pulse",
+    "source_steps": 600000,
+    "new_steps": 512,
+    "initialization": "full-state-including-normal-replay-optimizers-and-rngs",
+    "schedule_assignment": "subsequent-episode-resets-only"
+  },
+  "config": {
+    "learning_rate": 0.0003,
+    "buffer_size": 1000000,
+    "learning_starts": 255,
+    "batch_size": 256,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "train_freq": 1,
+    "gradient_steps": 1,
+    "ent_coef": "auto_0.2",
+    "target_entropy": "auto",
+    "use_sde": false,
+    "policy_kwargs": {
+      "net_arch": [
+        256,
+        256
+      ],
+      "n_critics": 2
+    }
+  },
+  "environment": "Hopper-v4",
+  "training_device": "cuda",
+  "source": {
+    "revision": "general_ood_v147_randomized_recovery",
+    "seed": 5,
+    "profile": "no-pulse",
+    "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v147_randomized_recovery_20261014/runtime/run_checkpoints/seed5_no-pulse/latest.pt",
+    "training_interactions": 600000,
+    "optimizer_updates": 599745,
+    "config": {
+      "learning_rate": 0.0003,
+      "buffer_size": 1000000,
+      "learning_starts": 255,
+      "batch_size": 256,
+      "gamma": 0.99,
+      "tau": 0.005,
+      "train_freq": 1,
+      "gradient_steps": 1,
+      "ent_coef": "auto_0.2",
+      "target_entropy": "auto",
+      "use_sde": false,
+      "policy_kwargs": {
+        "net_arch": [
+          256,
+          256
+        ],
+        "n_critics": 2
+      }
+    }
+  },
+  "initialization": {
+    "step": 600000,
+    "optimizer_updates": 599745,
+    "replay_size": 600000,
+    "replay_position": 600000,
+    "replay_capacity": 1000000,
+    "replay_full": false,
+    "optimizer_steps": {
+      "actor": [
+        599745
+      ],
+      "critic": [
+        599745
+      ],
+      "entropy": [
+        599745
+      ]
+    },
+    "log_entropy_coefficient": -3.180847406387329,
+    "reset_index": 1795,
+    "episode": 1794,
+    "episode_step": 352,
+    "onset": null,
+    "active_profile": "id",
+    "source_coverage": {
+      "episode_resets": 1795,
+      "pulse_assigned_episodes": 0,
+      "baseline_steps": 600000,
+      "completed_episodes": 1794,
+      "physical_failures_without_exposure": 1458,
+      "healthy_time_limits_without_pulse": 336
+    }
+  },
+  "actual_new_training_interactions": 512,
+  "continuation_training_interactions": 512,
+  "cumulative_training_interactions": 600512,
+  "continuation_optimizer_updates": 512,
+  "optimizer_updates": 600257,
+  "recovery_coverage": {
+    "episode_resets": 0,
+    "pulse_assigned_episodes": 0,
+    "baseline_steps": 512,
+    "completed_episodes": 0,
+    "physical_failures_without_exposure": 0,
+    "healthy_time_limits_without_pulse": 0
+  },
+  "reward_settings": {
+    "healthy_reward": 1.0,
+    "ctrl_cost_weight": 0.001,
+    "forward_reward_weight": 1.0
+  },
+  "reward_changes": [],
+  "healthy_termination_changes": [],
+  "motor_limit_changes": [],
+  "state_resets_at_switch": 0,
+  "policy_receives_profile_labels": false,
+  "policy_receives_onset_clock": false,
+  "observation_dim": 11,
+  "use_context": false,
+  "use_symbolic_constraints": false,
+  "reward_normalization": false,
+  "snapshots": [
+    {
+      "step": 600256,
+      "optimizer_updates": 600001,
+      "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v149_warm_recovery_20261014/runtime/run_checkpoints/smoke_seed5_no-pulse/step600256.zip",
+      "final_evaluation": {
+        "protocol": {
+          "schedules": [
+            {
+              "name": "no-pulse",
+              "onset": null,
+              "duration": null
+            },
+            {
+              "name": "after100_pulse10",
+              "onset": 100,
+              "duration": 10
+            },
+            {
+              "name": "after100_permanent",
+              "onset": 100,
+              "duration": null
+            }
+          ],
+          "max_steps": 256,
+          "reset_seeds": [
+            154000
+          ],
+          "action_noise_seeds": [
+            137000
+          ],
+          "peak_gravity": 2.6591479484724942,
+          "recovery_steps": 100,
+          "device": "cpu"
+        },
+        "episodes": [
+          {
+            "condition": "no-pulse",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 256,
+            "episode_return": 761.8336940586337,
+            "mean_velocity": 1.976771205511325,
+            "physical_termination": false,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": true,
+            "mean_policy_std": 0.29198527566040866,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 256
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.4733127410247318,
+              "angle": 0.006249225526383469,
+              "max_abs_qvel": 6.3862603011015695,
+              "unhealthy_conditions": []
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [
+              {
+                "completed_steps": 100,
+                "observation": [
+                  1.4144004583358765,
+                  0.07601267099380493,
+                  -0.08482462167739868,
+                  -0.5125889778137207,
+                  -0.7691420912742615,
+                  2.59421968460083,
+                  0.9973768591880798,
+                  1.0309343338012695,
+                  -2.2040657997131348,
+                  7.909564018249512,
+                  1.6621557474136353
+                ],
+                "cumulative_return": 221.31578833756555,
+                "qpos": [
+                  0.9700538610923306,
+                  1.4144004035354194,
+                  0.0760126742624933,
+                  -0.08482461875257954,
+                  -0.5125889729719584,
+                  -0.7691420995065503
+                ],
+                "qvel": [
+                  2.594219726384906,
+                  0.9973768371932663,
+                  1.0309343589444981,
+                  -2.2040658373664144,
+                  7.909564017285529,
+                  1.6621557700482859
+                ]
+              }
+            ],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "no-pulse",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 256,
+            "episode_return": 759.6228670536142,
+            "mean_velocity": 1.9682491434038893,
+            "physical_termination": false,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": true,
+            "mean_policy_std": 0.29233735453453846,
+            "mean_action_noise_l2": 0.29331044997888966,
+            "profile_counts": {
+              "id": 256
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.4764017608420519,
+              "angle": 0.01638876682219236,
+              "max_abs_qvel": 7.00362046413949,
+              "unhealthy_conditions": []
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [
+              {
+                "completed_steps": 100,
+                "observation": [
+                  1.4058067798614502,
+                  0.08693917840719223,
+                  -0.054961301386356354,
+                  -0.5487762689590454,
+                  -0.7777150273323059,
+                  2.573484182357788,
+                  1.0653700828552246,
+                  1.3984005451202393,
+                  -1.570149540901184,
+                  7.701648235321045,
+                  1.321258306503296
+                ],
+                "cumulative_return": 219.68922029468982,
+                "qpos": [
+                  0.9570980295489573,
+                  1.4058067218726205,
+                  0.08693917749480672,
+                  -0.05496130263606533,
+                  -0.5487762771445597,
+                  -0.7777150334418094
+                ],
+                "qvel": [
+                  2.5734840709328894,
+                  1.065370107283545,
+                  1.3984006024096782,
+                  -1.570149517853999,
+                  7.701648384351742,
+                  1.3212583038283858
+                ]
+              }
+            ],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "after100_pulse10",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 183,
+            "episode_return": 549.128443970377,
+            "mean_velocity": 2.0015850808489843,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.27678673001912124,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 173,
+              "gravity-only": 10
+            },
+            "non_id_steps": 10,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              },
+              {
+                "step": 101,
+                "profile": "gravity-only",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 2.6591479484724942,
+                  "friction": 1.0
+                }
+              },
+              {
+                "step": 111,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 2,
+            "final_physical_state": {
+              "height": 0.6952443489996943,
+              "angle": 0.12874616335723343,
+              "max_abs_qvel": 3.114383074536208,
+              "unhealthy_conditions": [
+                "height"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [
+              {
+                "completed_steps": 100,
+                "observation": [
+                  1.4144004583358765,
+                  0.07601267099380493,
+                  -0.08482462167739868,
+                  -0.5125889778137207,
+                  -0.7691420912742615,
+                  2.59421968460083,
+                  0.9973768591880798,
+                  1.0309343338012695,
+                  -2.2040657997131348,
+                  7.909564018249512,
+                  1.6621557474136353
+                ],
+                "cumulative_return": 221.31578833756555,
+                "qpos": [
+                  0.9700538610923306,
+                  1.4144004035354194,
+                  0.0760126742624933,
+                  -0.08482461875257954,
+                  -0.5125889729719584,
+                  -0.7691420995065503
+                ],
+                "qvel": [
+                  2.594219726384906,
+                  0.9973768371932663,
+                  1.0309343589444981,
+                  -2.2040658373664144,
+                  7.909564017285529,
+                  1.6621557700482859
+                ]
+              }
+            ],
+            "recovery": {
+              "exposed": true,
+              "peak_steps": 10,
+              "recovery_horizon": 210,
+              "recovery_evaluable": true,
+              "recovered": false,
+              "baseline_restored": true
+            }
+          },
+          {
+            "condition": "after100_pulse10",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 186,
+            "episode_return": 555.6160382278542,
+            "mean_velocity": 1.9881817509932929,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.279718898076524,
+            "mean_action_noise_l2": 0.29154241215738075,
+            "profile_counts": {
+              "id": 176,
+              "gravity-only": 10
+            },
+            "non_id_steps": 10,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              },
+              {
+                "step": 101,
+                "profile": "gravity-only",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 2.6591479484724942,
+                  "friction": 1.0
+                }
+              },
+              {
+                "step": 111,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 2,
+            "final_physical_state": {
+              "height": 0.6948132930799473,
+              "angle": 0.09721889937037324,
+              "max_abs_qvel": 3.1434672753019073,
+              "unhealthy_conditions": [
+                "height"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [
+              {
+                "completed_steps": 100,
+                "observation": [
+                  1.4058067798614502,
+                  0.08693917840719223,
+                  -0.054961301386356354,
+                  -0.5487762689590454,
+                  -0.7777150273323059,
+                  2.573484182357788,
+                  1.0653700828552246,
+                  1.3984005451202393,
+                  -1.570149540901184,
+                  7.701648235321045,
+                  1.321258306503296
+                ],
+                "cumulative_return": 219.68922029468982,
+                "qpos": [
+                  0.9570980295489573,
+                  1.4058067218726205,
+                  0.08693917749480672,
+                  -0.05496130263606533,
+                  -0.5487762771445597,
+                  -0.7777150334418094
+                ],
+                "qvel": [
+                  2.5734840709328894,
+                  1.065370107283545,
+                  1.3984006024096782,
+                  -1.570149517853999,
+                  7.701648384351742,
+                  1.3212583038283858
+                ]
+              }
+            ],
+            "recovery": {
+              "exposed": true,
+              "peak_steps": 10,
+              "recovery_horizon": 210,
+              "recovery_evaluable": true,
+              "recovered": false,
+              "baseline_restored": true
+            }
+          },
+          {
+            "condition": "after100_permanent",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 155,
+            "episode_return": 434.58181151272123,
+            "mean_velocity": 1.8047107323038991,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.30105478523239015,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 100,
+              "gravity-only": 55
+            },
+            "non_id_steps": 55,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              },
+              {
+                "step": 101,
+                "profile": "gravity-only",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 2.6591479484724942,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 1,
+            "final_physical_state": {
+              "height": 0.6974850243889152,
+              "angle": -0.0034198781500731574,
+              "max_abs_qvel": 8.226922797866374,
+              "unhealthy_conditions": [
+                "height"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [
+              {
+                "completed_steps": 100,
+                "observation": [
+                  1.4144004583358765,
+                  0.07601267099380493,
+                  -0.08482462167739868,
+                  -0.5125889778137207,
+                  -0.7691420912742615,
+                  2.59421968460083,
+                  0.9973768591880798,
+                  1.0309343338012695,
+                  -2.2040657997131348,
+                  7.909564018249512,
+                  1.6621557474136353
+                ],
+                "cumulative_return": 221.31578833756555,
+                "qpos": [
+                  0.9700538610923306,
+                  1.4144004035354194,
+                  0.0760126742624933,
+                  -0.08482461875257954,
+                  -0.5125889729719584,
+                  -0.7691420995065503
+                ],
+                "qvel": [
+                  2.594219726384906,
+                  0.9973768371932663,
+                  1.0309343589444981,
+                  -2.2040658373664144,
+                  7.909564017285529,
+                  1.6621557700482859
+                ]
+              }
+            ],
+            "recovery": {
+              "exposed": true,
+              "peak_steps": 55,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "after100_permanent",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 123,
+            "episode_return": 294.00168320560425,
+            "mean_velocity": 1.3911872552372373,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.301961631794286,
+            "mean_action_noise_l2": 0.32899475830599545,
+            "profile_counts": {
+              "id": 100,
+              "gravity-only": 23
+            },
+            "non_id_steps": 23,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              },
+              {
+                "step": 101,
+                "profile": "gravity-only",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 2.6591479484724942,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 1,
+            "final_physical_state": {
+              "height": 1.1057793507476044,
+              "angle": 0.21664174664008604,
+              "max_abs_qvel": 11.417335323510942,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [
+              {
+                "completed_steps": 100,
+                "observation": [
+                  1.4058067798614502,
+                  0.08693917840719223,
+                  -0.054961301386356354,
+                  -0.5487762689590454,
+                  -0.7777150273323059,
+                  2.573484182357788,
+                  1.0653700828552246,
+                  1.3984005451202393,
+                  -1.570149540901184,
+                  7.701648235321045,
+                  1.321258306503296
+                ],
+                "cumulative_return": 219.68922029468982,
+                "qpos": [
+                  0.9570980295489573,
+                  1.4058067218726205,
+                  0.08693917749480672,
+                  -0.05496130263606533,
+                  -0.5487762771445597,
+                  -0.7777150334418094
+                ],
+                "qvel": [
+                  2.5734840709328894,
+                  1.065370107283545,
+                  1.3984006024096782,
+                  -1.570149517853999,
+                  7.701648384351742,
+                  1.3212583038283858
+                ]
+              }
+            ],
+            "recovery": {
+              "exposed": true,
+              "peak_steps": 23,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          }
+        ],
+        "prefix_pairs_verified": 4,
+        "optimizer_updates": 0,
+        "replay_loaded": false,
+        "device": "cpu",
+        "evaluation_interactions": 1159
+      }
+    },
+    {
+      "step": 600512,
+      "optimizer_updates": 600257,
+      "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v149_warm_recovery_20261014/runtime/run_checkpoints/smoke_seed5_no-pulse/step600512.zip",
+      "final_evaluation": {
+        "protocol": {
+          "schedules": [
+            {
+              "name": "no-pulse",
+              "onset": null,
+              "duration": null
+            },
+            {
+              "name": "after100_pulse10",
+              "onset": 100,
+              "duration": 10
+            },
+            {
+              "name": "after100_permanent",
+              "onset": 100,
+              "duration": null
+            }
+          ],
+          "max_steps": 256,
+          "reset_seeds": [
+            154000
+          ],
+          "action_noise_seeds": [
+            137000
+          ],
+          "peak_gravity": 2.6591479484724942,
+          "recovery_steps": 100,
+          "device": "cpu"
+        },
+        "episodes": [
+          {
+            "condition": "no-pulse",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 256,
+            "episode_return": 768.8434425600058,
+            "mean_velocity": 2.0041677529592055,
+            "physical_termination": false,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": true,
+            "mean_policy_std": 0.29765106274862774,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 256
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.465874646830859,
+              "angle": 0.04061706482880572,
+              "max_abs_qvel": 6.6558204354502415,
+              "unhealthy_conditions": []
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [
+              {
+                "completed_steps": 100,
+                "observation": [
+                  1.41179621219635,
+                  0.06969655305147171,
+                  -0.04943196102976799,
+                  -0.5581480860710144,
+                  -0.7793222069740295,
+                  2.5608184337615967,
+                  1.0472731590270996,
+                  1.1645084619522095,
+                  -1.8666213750839233,
+                  7.771938323974609,
+                  1.324539065361023
+                ],
+                "cumulative_return": 219.50972332939568,
+                "qpos": [
+                  0.9555880089810104,
+                  1.4117962199852347,
+                  0.06969655466192064,
+                  -0.04943196141253219,
+                  -0.5581480743584925,
+                  -0.7793221848609984
+                ],
+                "qvel": [
+                  2.560818336774921,
+                  1.0472731796053685,
+                  1.1645084870290874,
+                  -1.8666213172905324,
+                  7.771938107004987,
+                  1.324539039432166
+                ]
+              }
+            ],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "no-pulse",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 256,
+            "episode_return": 764.5679473104935,
+            "mean_velocity": 1.9875752330253806,
+            "physical_termination": false,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": true,
+            "mean_policy_std": 0.30136964193661697,
+            "mean_action_noise_l2": 0.29879173883091426,
+            "profile_counts": {
+              "id": 256
+            },
+            "non_id_steps": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 0,
+            "final_physical_state": {
+              "height": 1.4774095477814397,
+              "angle": 0.025012880362287743,
+              "max_abs_qvel": 7.264687529455084,
+              "unhealthy_conditions": []
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [
+              {
+                "completed_steps": 100,
+                "observation": [
+                  1.388790488243103,
+                  0.06886222958564758,
+                  -0.04142694175243378,
+                  -0.6454827785491943,
+                  -0.7756534814834595,
+                  2.654390811920166,
+                  1.1650142669677734,
+                  1.9334042072296143,
+                  -0.5758051872253418,
+                  7.079290866851807,
+                  1.146725058555603
+                ],
+                "cumulative_return": 220.18703608195506,
+                "qpos": [
+                  0.9611159343787341,
+                  1.3887905173729491,
+                  0.0688622304372074,
+                  -0.04142694210376185,
+                  -0.6454827892078328,
+                  -0.7756534537863815
+                ],
+                "qvel": [
+                  2.6543908390019446,
+                  1.1650143179468817,
+                  1.9334041770336126,
+                  -0.5758051719271928,
+                  7.079290636592434,
+                  1.1467250428818794
+                ]
+              }
+            ],
+            "recovery": {
+              "exposed": false,
+              "peak_steps": 0,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "after100_pulse10",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 187,
+            "episode_return": 545.2897321098606,
+            "mean_velocity": 1.9169265833052427,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.29990637119122365,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 177,
+              "gravity-only": 10
+            },
+            "non_id_steps": 10,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              },
+              {
+                "step": 101,
+                "profile": "gravity-only",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 2.6591479484724942,
+                  "friction": 1.0
+                }
+              },
+              {
+                "step": 111,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 2,
+            "final_physical_state": {
+              "height": 0.6951008779439912,
+              "angle": 0.06453068126129145,
+              "max_abs_qvel": 2.9128157019291425,
+              "unhealthy_conditions": [
+                "height"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [
+              {
+                "completed_steps": 100,
+                "observation": [
+                  1.41179621219635,
+                  0.06969655305147171,
+                  -0.04943196102976799,
+                  -0.5581480860710144,
+                  -0.7793222069740295,
+                  2.5608184337615967,
+                  1.0472731590270996,
+                  1.1645084619522095,
+                  -1.8666213750839233,
+                  7.771938323974609,
+                  1.324539065361023
+                ],
+                "cumulative_return": 219.50972332939568,
+                "qpos": [
+                  0.9555880089810104,
+                  1.4117962199852347,
+                  0.06969655466192064,
+                  -0.04943196141253219,
+                  -0.5581480743584925,
+                  -0.7793221848609984
+                ],
+                "qvel": [
+                  2.560818336774921,
+                  1.0472731796053685,
+                  1.1645084870290874,
+                  -1.8666213172905324,
+                  7.771938107004987,
+                  1.324539039432166
+                ]
+              }
+            ],
+            "recovery": {
+              "exposed": true,
+              "peak_steps": 10,
+              "recovery_horizon": 210,
+              "recovery_evaluable": true,
+              "recovered": false,
+              "baseline_restored": true
+            }
+          },
+          {
+            "condition": "after100_pulse10",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 169,
+            "episode_return": 469.5813160555706,
+            "mean_velocity": 1.7797257031597231,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.3101607248980618,
+            "mean_action_noise_l2": 0.3025717029524361,
+            "profile_counts": {
+              "id": 159,
+              "gravity-only": 10
+            },
+            "non_id_steps": 10,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              },
+              {
+                "step": 101,
+                "profile": "gravity-only",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 2.6591479484724942,
+                  "friction": 1.0
+                }
+              },
+              {
+                "step": 111,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 2,
+            "final_physical_state": {
+              "height": 0.6942802564204595,
+              "angle": 0.12979536429170505,
+              "max_abs_qvel": 3.9646515688251136,
+              "unhealthy_conditions": [
+                "height"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [
+              {
+                "completed_steps": 100,
+                "observation": [
+                  1.388790488243103,
+                  0.06886222958564758,
+                  -0.04142694175243378,
+                  -0.6454827785491943,
+                  -0.7756534814834595,
+                  2.654390811920166,
+                  1.1650142669677734,
+                  1.9334042072296143,
+                  -0.5758051872253418,
+                  7.079290866851807,
+                  1.146725058555603
+                ],
+                "cumulative_return": 220.18703608195506,
+                "qpos": [
+                  0.9611159343787341,
+                  1.3887905173729491,
+                  0.0688622304372074,
+                  -0.04142694210376185,
+                  -0.6454827892078328,
+                  -0.7756534537863815
+                ],
+                "qvel": [
+                  2.6543908390019446,
+                  1.1650143179468817,
+                  1.9334041770336126,
+                  -0.5758051719271928,
+                  7.079290636592434,
+                  1.1467250428818794
+                ]
+              }
+            ],
+            "recovery": {
+              "exposed": true,
+              "peak_steps": 10,
+              "recovery_horizon": 210,
+              "recovery_evaluable": true,
+              "recovered": false,
+              "baseline_restored": true
+            }
+          },
+          {
+            "condition": "after100_permanent",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 125,
+            "episode_return": 299.6546223289693,
+            "mean_velocity": 1.3980500492338412,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.3078572833538055,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 100,
+              "gravity-only": 25
+            },
+            "non_id_steps": 25,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              },
+              {
+                "step": 101,
+                "profile": "gravity-only",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 2.6591479484724942,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 1,
+            "final_physical_state": {
+              "height": 1.0751026522865608,
+              "angle": 0.21314783549151098,
+              "max_abs_qvel": 10.86912922970253,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [
+              {
+                "completed_steps": 100,
+                "observation": [
+                  1.41179621219635,
+                  0.06969655305147171,
+                  -0.04943196102976799,
+                  -0.5581480860710144,
+                  -0.7793222069740295,
+                  2.5608184337615967,
+                  1.0472731590270996,
+                  1.1645084619522095,
+                  -1.8666213750839233,
+                  7.771938323974609,
+                  1.324539065361023
+                ],
+                "cumulative_return": 219.50972332939568,
+                "qpos": [
+                  0.9555880089810104,
+                  1.4117962199852347,
+                  0.06969655466192064,
+                  -0.04943196141253219,
+                  -0.5581480743584925,
+                  -0.7793221848609984
+                ],
+                "qvel": [
+                  2.560818336774921,
+                  1.0472731796053685,
+                  1.1645084870290874,
+                  -1.8666213172905324,
+                  7.771938107004987,
+                  1.324539039432166
+                ]
+              }
+            ],
+            "recovery": {
+              "exposed": true,
+              "peak_steps": 25,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          },
+          {
+            "condition": "after100_permanent",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 153,
+            "episode_return": 433.84690199049135,
+            "mean_velocity": 1.8366839940604012,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.31785065870659024,
+            "mean_action_noise_l2": 0.3109569640501457,
+            "profile_counts": {
+              "id": 100,
+              "gravity-only": 53
+            },
+            "non_id_steps": 53,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              },
+              {
+                "step": 101,
+                "profile": "gravity-only",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 2.6591479484724942,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "switches": 1,
+            "final_physical_state": {
+              "height": 0.6811060127762196,
+              "angle": 0.10184447393468773,
+              "max_abs_qvel": 5.86127885207527,
+              "unhealthy_conditions": [
+                "height"
+              ]
+            },
+            "native_reward_verified": true,
+            "dt": 0.008,
+            "prefix_markers": [
+              {
+                "completed_steps": 100,
+                "observation": [
+                  1.388790488243103,
+                  0.06886222958564758,
+                  -0.04142694175243378,
+                  -0.6454827785491943,
+                  -0.7756534814834595,
+                  2.654390811920166,
+                  1.1650142669677734,
+                  1.9334042072296143,
+                  -0.5758051872253418,
+                  7.079290866851807,
+                  1.146725058555603
+                ],
+                "cumulative_return": 220.18703608195506,
+                "qpos": [
+                  0.9611159343787341,
+                  1.3887905173729491,
+                  0.0688622304372074,
+                  -0.04142694210376185,
+                  -0.6454827892078328,
+                  -0.7756534537863815
+                ],
+                "qvel": [
+                  2.6543908390019446,
+                  1.1650143179468817,
+                  1.9334041770336126,
+                  -0.5758051719271928,
+                  7.079290636592434,
+                  1.1467250428818794
+                ]
+              }
+            ],
+            "recovery": {
+              "exposed": true,
+              "peak_steps": 53,
+              "recovery_horizon": null,
+              "recovery_evaluable": false,
+              "recovered": false,
+              "baseline_restored": false
+            }
+          }
+        ],
+        "prefix_pairs_verified": 4,
+        "optimizer_updates": 0,
+        "replay_loaded": false,
+        "device": "cpu",
+        "evaluation_interactions": 1146
+      }
+    }
+  ],
+  "training": {
+    "step": 600512,
+    "source": {
+      "revision": "general_ood_v147_randomized_recovery",
+      "seed": 5,
+      "profile": "no-pulse",
+      "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v147_randomized_recovery_20261014/runtime/run_checkpoints/seed5_no-pulse/latest.pt",
+      "training_interactions": 600000,
+      "optimizer_updates": 599745,
+      "config": {
+        "learning_rate": 0.0003,
+        "buffer_size": 1000000,
+        "learning_starts": 255,
+        "batch_size": 256,
+        "gamma": 0.99,
+        "tau": 0.005,
+        "train_freq": 1,
+        "gradient_steps": 1,
+        "ent_coef": "auto_0.2",
+        "target_entropy": "auto",
+        "use_sde": false,
+        "policy_kwargs": {
+          "net_arch": [
+            256,
+            256
+          ],
+          "n_critics": 2
+        }
+      }
+    },
+    "initialization": {
+      "step": 600000,
+      "optimizer_updates": 599745,
+      "replay_size": 600000,
+      "replay_position": 600000,
+      "replay_capacity": 1000000,
+      "replay_full": false,
+      "optimizer_steps": {
+        "actor": [
+          599745
+        ],
+        "critic": [
+          599745
+        ],
+        "entropy": [
+          599745
+        ]
+      },
+      "log_entropy_coefficient": -3.180847406387329,
+      "reset_index": 1795,
+      "episode": 1794,
+      "episode_step": 352,
+      "onset": null,
+      "active_profile": "id",
+      "source_coverage": {
+        "episode_resets": 1795,
+        "pulse_assigned_episodes": 0,
+        "baseline_steps": 600000,
+        "completed_episodes": 1794,
+        "physical_failures_without_exposure": 1458,
+        "healthy_time_limits_without_pulse": 336
+      }
+    },
+    "blocks": [
+      {
+        "step": 600256,
+        "interactions": 256,
+        "updates": 256,
+        "metrics": {
+          "train/actor_loss": -295.1835021972656,
+          "train/critic_loss": 1.9321597814559937,
+          "train/ent_coef": 0.04138541221618652
+        },
+        "recovery_coverage": {
+          "episode_resets": 0,
+          "pulse_assigned_episodes": 0,
+          "baseline_steps": 256,
+          "completed_episodes": 0,
+          "physical_failures_without_exposure": 0,
+          "healthy_time_limits_without_pulse": 0
+        }
+      },
+      {
+        "step": 600512,
+        "interactions": 256,
+        "updates": 256,
+        "metrics": {
+          "train/actor_loss": -284.66473388671875,
+          "train/critic_loss": 1.0054877996444702,
+          "train/ent_coef": 0.04099968820810318
+        },
+        "recovery_coverage": {
+          "episode_resets": 0,
+          "pulse_assigned_episodes": 0,
+          "baseline_steps": 512,
+          "completed_episodes": 0,
+          "physical_failures_without_exposure": 0,
+          "healthy_time_limits_without_pulse": 0
+        }
+      }
+    ],
+    "periodic_evaluations": [
+      {
+        "step": 600000,
+        "device": "cuda",
+        "episodes": [
+          {
+            "condition": "id",
+            "mode": "deterministic",
+            "reset_seed": 149000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 64,
+            "episode_return": 119.59539803500513,
+            "mean_velocity": 0.8691433095273045,
+            "physical_termination": false,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": true,
+            "mean_policy_std": 0.3016142987180501,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 64
+            },
+            "non_id_steps": 0,
+            "switches": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "final_physical_state": {
+              "height": 1.0896009755093696,
+              "angle": -0.08507159006788444,
+              "max_abs_qvel": 3.0851721852872056,
+              "unhealthy_conditions": []
+            },
+            "native_reward_verified": true
+          }
+        ]
+      },
+      {
+        "step": 600256,
+        "device": "cuda",
+        "episodes": [
+          {
+            "condition": "id",
+            "mode": "deterministic",
+            "reset_seed": 149000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 64,
+            "episode_return": 119.57039742306299,
+            "mean_velocity": 0.8688010455847566,
+            "physical_termination": false,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": true,
+            "mean_policy_std": 0.30392663925886154,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "id": 64
+            },
+            "non_id_steps": 0,
+            "switches": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "id",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.0,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "final_physical_state": {
+              "height": 1.0915901786130076,
+              "angle": -0.06296121429793822,
+              "max_abs_qvel": 2.581898901038328,
+              "unhealthy_conditions": []
+            },
+            "native_reward_verified": true
+          }
+        ]
+      }
+    ],
+    "snapshots": [
+      {
+        "step": 600256,
+        "optimizer_updates": 600001,
+        "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v149_warm_recovery_20261014/runtime/run_checkpoints/smoke_seed5_no-pulse/step600256.zip",
+        "final_evaluation": {
+          "protocol": {
+            "schedules": [
+              {
+                "name": "no-pulse",
+                "onset": null,
+                "duration": null
+              },
+              {
+                "name": "after100_pulse10",
+                "onset": 100,
+                "duration": 10
+              },
+              {
+                "name": "after100_permanent",
+                "onset": 100,
+                "duration": null
+              }
+            ],
+            "max_steps": 256,
+            "reset_seeds": [
+              154000
+            ],
+            "action_noise_seeds": [
+              137000
+            ],
+            "peak_gravity": 2.6591479484724942,
+            "recovery_steps": 100,
+            "device": "cpu"
+          },
+          "episodes": [
+            {
+              "condition": "no-pulse",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 256,
+              "episode_return": 761.8336940586337,
+              "mean_velocity": 1.976771205511325,
+              "physical_termination": false,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": true,
+              "mean_policy_std": 0.29198527566040866,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "id": 256
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.4733127410247318,
+                "angle": 0.006249225526383469,
+                "max_abs_qvel": 6.3862603011015695,
+                "unhealthy_conditions": []
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [
+                {
+                  "completed_steps": 100,
+                  "observation": [
+                    1.4144004583358765,
+                    0.07601267099380493,
+                    -0.08482462167739868,
+                    -0.5125889778137207,
+                    -0.7691420912742615,
+                    2.59421968460083,
+                    0.9973768591880798,
+                    1.0309343338012695,
+                    -2.2040657997131348,
+                    7.909564018249512,
+                    1.6621557474136353
+                  ],
+                  "cumulative_return": 221.31578833756555,
+                  "qpos": [
+                    0.9700538610923306,
+                    1.4144004035354194,
+                    0.0760126742624933,
+                    -0.08482461875257954,
+                    -0.5125889729719584,
+                    -0.7691420995065503
+                  ],
+                  "qvel": [
+                    2.594219726384906,
+                    0.9973768371932663,
+                    1.0309343589444981,
+                    -2.2040658373664144,
+                    7.909564017285529,
+                    1.6621557700482859
+                  ]
+                }
+              ],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "no-pulse",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 256,
+              "episode_return": 759.6228670536142,
+              "mean_velocity": 1.9682491434038893,
+              "physical_termination": false,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": true,
+              "mean_policy_std": 0.29233735453453846,
+              "mean_action_noise_l2": 0.29331044997888966,
+              "profile_counts": {
+                "id": 256
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.4764017608420519,
+                "angle": 0.01638876682219236,
+                "max_abs_qvel": 7.00362046413949,
+                "unhealthy_conditions": []
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [
+                {
+                  "completed_steps": 100,
+                  "observation": [
+                    1.4058067798614502,
+                    0.08693917840719223,
+                    -0.054961301386356354,
+                    -0.5487762689590454,
+                    -0.7777150273323059,
+                    2.573484182357788,
+                    1.0653700828552246,
+                    1.3984005451202393,
+                    -1.570149540901184,
+                    7.701648235321045,
+                    1.321258306503296
+                  ],
+                  "cumulative_return": 219.68922029468982,
+                  "qpos": [
+                    0.9570980295489573,
+                    1.4058067218726205,
+                    0.08693917749480672,
+                    -0.05496130263606533,
+                    -0.5487762771445597,
+                    -0.7777150334418094
+                  ],
+                  "qvel": [
+                    2.5734840709328894,
+                    1.065370107283545,
+                    1.3984006024096782,
+                    -1.570149517853999,
+                    7.701648384351742,
+                    1.3212583038283858
+                  ]
+                }
+              ],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "after100_pulse10",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 183,
+              "episode_return": 549.128443970377,
+              "mean_velocity": 2.0015850808489843,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.27678673001912124,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "id": 173,
+                "gravity-only": 10
+              },
+              "non_id_steps": 10,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                },
+                {
+                  "step": 101,
+                  "profile": "gravity-only",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 2.6591479484724942,
+                    "friction": 1.0
+                  }
+                },
+                {
+                  "step": 111,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 2,
+              "final_physical_state": {
+                "height": 0.6952443489996943,
+                "angle": 0.12874616335723343,
+                "max_abs_qvel": 3.114383074536208,
+                "unhealthy_conditions": [
+                  "height"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [
+                {
+                  "completed_steps": 100,
+                  "observation": [
+                    1.4144004583358765,
+                    0.07601267099380493,
+                    -0.08482462167739868,
+                    -0.5125889778137207,
+                    -0.7691420912742615,
+                    2.59421968460083,
+                    0.9973768591880798,
+                    1.0309343338012695,
+                    -2.2040657997131348,
+                    7.909564018249512,
+                    1.6621557474136353
+                  ],
+                  "cumulative_return": 221.31578833756555,
+                  "qpos": [
+                    0.9700538610923306,
+                    1.4144004035354194,
+                    0.0760126742624933,
+                    -0.08482461875257954,
+                    -0.5125889729719584,
+                    -0.7691420995065503
+                  ],
+                  "qvel": [
+                    2.594219726384906,
+                    0.9973768371932663,
+                    1.0309343589444981,
+                    -2.2040658373664144,
+                    7.909564017285529,
+                    1.6621557700482859
+                  ]
+                }
+              ],
+              "recovery": {
+                "exposed": true,
+                "peak_steps": 10,
+                "recovery_horizon": 210,
+                "recovery_evaluable": true,
+                "recovered": false,
+                "baseline_restored": true
+              }
+            },
+            {
+              "condition": "after100_pulse10",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 186,
+              "episode_return": 555.6160382278542,
+              "mean_velocity": 1.9881817509932929,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.279718898076524,
+              "mean_action_noise_l2": 0.29154241215738075,
+              "profile_counts": {
+                "id": 176,
+                "gravity-only": 10
+              },
+              "non_id_steps": 10,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                },
+                {
+                  "step": 101,
+                  "profile": "gravity-only",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 2.6591479484724942,
+                    "friction": 1.0
+                  }
+                },
+                {
+                  "step": 111,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 2,
+              "final_physical_state": {
+                "height": 0.6948132930799473,
+                "angle": 0.09721889937037324,
+                "max_abs_qvel": 3.1434672753019073,
+                "unhealthy_conditions": [
+                  "height"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [
+                {
+                  "completed_steps": 100,
+                  "observation": [
+                    1.4058067798614502,
+                    0.08693917840719223,
+                    -0.054961301386356354,
+                    -0.5487762689590454,
+                    -0.7777150273323059,
+                    2.573484182357788,
+                    1.0653700828552246,
+                    1.3984005451202393,
+                    -1.570149540901184,
+                    7.701648235321045,
+                    1.321258306503296
+                  ],
+                  "cumulative_return": 219.68922029468982,
+                  "qpos": [
+                    0.9570980295489573,
+                    1.4058067218726205,
+                    0.08693917749480672,
+                    -0.05496130263606533,
+                    -0.5487762771445597,
+                    -0.7777150334418094
+                  ],
+                  "qvel": [
+                    2.5734840709328894,
+                    1.065370107283545,
+                    1.3984006024096782,
+                    -1.570149517853999,
+                    7.701648384351742,
+                    1.3212583038283858
+                  ]
+                }
+              ],
+              "recovery": {
+                "exposed": true,
+                "peak_steps": 10,
+                "recovery_horizon": 210,
+                "recovery_evaluable": true,
+                "recovered": false,
+                "baseline_restored": true
+              }
+            },
+            {
+              "condition": "after100_permanent",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 155,
+              "episode_return": 434.58181151272123,
+              "mean_velocity": 1.8047107323038991,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.30105478523239015,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "id": 100,
+                "gravity-only": 55
+              },
+              "non_id_steps": 55,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                },
+                {
+                  "step": 101,
+                  "profile": "gravity-only",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 2.6591479484724942,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 1,
+              "final_physical_state": {
+                "height": 0.6974850243889152,
+                "angle": -0.0034198781500731574,
+                "max_abs_qvel": 8.226922797866374,
+                "unhealthy_conditions": [
+                  "height"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [
+                {
+                  "completed_steps": 100,
+                  "observation": [
+                    1.4144004583358765,
+                    0.07601267099380493,
+                    -0.08482462167739868,
+                    -0.5125889778137207,
+                    -0.7691420912742615,
+                    2.59421968460083,
+                    0.9973768591880798,
+                    1.0309343338012695,
+                    -2.2040657997131348,
+                    7.909564018249512,
+                    1.6621557474136353
+                  ],
+                  "cumulative_return": 221.31578833756555,
+                  "qpos": [
+                    0.9700538610923306,
+                    1.4144004035354194,
+                    0.0760126742624933,
+                    -0.08482461875257954,
+                    -0.5125889729719584,
+                    -0.7691420995065503
+                  ],
+                  "qvel": [
+                    2.594219726384906,
+                    0.9973768371932663,
+                    1.0309343589444981,
+                    -2.2040658373664144,
+                    7.909564017285529,
+                    1.6621557700482859
+                  ]
+                }
+              ],
+              "recovery": {
+                "exposed": true,
+                "peak_steps": 55,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "after100_permanent",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 123,
+              "episode_return": 294.00168320560425,
+              "mean_velocity": 1.3911872552372373,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.301961631794286,
+              "mean_action_noise_l2": 0.32899475830599545,
+              "profile_counts": {
+                "id": 100,
+                "gravity-only": 23
+              },
+              "non_id_steps": 23,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                },
+                {
+                  "step": 101,
+                  "profile": "gravity-only",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 2.6591479484724942,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 1,
+              "final_physical_state": {
+                "height": 1.1057793507476044,
+                "angle": 0.21664174664008604,
+                "max_abs_qvel": 11.417335323510942,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [
+                {
+                  "completed_steps": 100,
+                  "observation": [
+                    1.4058067798614502,
+                    0.08693917840719223,
+                    -0.054961301386356354,
+                    -0.5487762689590454,
+                    -0.7777150273323059,
+                    2.573484182357788,
+                    1.0653700828552246,
+                    1.3984005451202393,
+                    -1.570149540901184,
+                    7.701648235321045,
+                    1.321258306503296
+                  ],
+                  "cumulative_return": 219.68922029468982,
+                  "qpos": [
+                    0.9570980295489573,
+                    1.4058067218726205,
+                    0.08693917749480672,
+                    -0.05496130263606533,
+                    -0.5487762771445597,
+                    -0.7777150334418094
+                  ],
+                  "qvel": [
+                    2.5734840709328894,
+                    1.065370107283545,
+                    1.3984006024096782,
+                    -1.570149517853999,
+                    7.701648384351742,
+                    1.3212583038283858
+                  ]
+                }
+              ],
+              "recovery": {
+                "exposed": true,
+                "peak_steps": 23,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            }
+          ],
+          "prefix_pairs_verified": 4,
+          "optimizer_updates": 0,
+          "replay_loaded": false,
+          "device": "cpu",
+          "evaluation_interactions": 1159
+        }
+      },
+      {
+        "step": 600512,
+        "optimizer_updates": 600257,
+        "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v149_warm_recovery_20261014/runtime/run_checkpoints/smoke_seed5_no-pulse/step600512.zip",
+        "final_evaluation": {
+          "protocol": {
+            "schedules": [
+              {
+                "name": "no-pulse",
+                "onset": null,
+                "duration": null
+              },
+              {
+                "name": "after100_pulse10",
+                "onset": 100,
+                "duration": 10
+              },
+              {
+                "name": "after100_permanent",
+                "onset": 100,
+                "duration": null
+              }
+            ],
+            "max_steps": 256,
+            "reset_seeds": [
+              154000
+            ],
+            "action_noise_seeds": [
+              137000
+            ],
+            "peak_gravity": 2.6591479484724942,
+            "recovery_steps": 100,
+            "device": "cpu"
+          },
+          "episodes": [
+            {
+              "condition": "no-pulse",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 256,
+              "episode_return": 768.8434425600058,
+              "mean_velocity": 2.0041677529592055,
+              "physical_termination": false,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": true,
+              "mean_policy_std": 0.29765106274862774,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "id": 256
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.465874646830859,
+                "angle": 0.04061706482880572,
+                "max_abs_qvel": 6.6558204354502415,
+                "unhealthy_conditions": []
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [
+                {
+                  "completed_steps": 100,
+                  "observation": [
+                    1.41179621219635,
+                    0.06969655305147171,
+                    -0.04943196102976799,
+                    -0.5581480860710144,
+                    -0.7793222069740295,
+                    2.5608184337615967,
+                    1.0472731590270996,
+                    1.1645084619522095,
+                    -1.8666213750839233,
+                    7.771938323974609,
+                    1.324539065361023
+                  ],
+                  "cumulative_return": 219.50972332939568,
+                  "qpos": [
+                    0.9555880089810104,
+                    1.4117962199852347,
+                    0.06969655466192064,
+                    -0.04943196141253219,
+                    -0.5581480743584925,
+                    -0.7793221848609984
+                  ],
+                  "qvel": [
+                    2.560818336774921,
+                    1.0472731796053685,
+                    1.1645084870290874,
+                    -1.8666213172905324,
+                    7.771938107004987,
+                    1.324539039432166
+                  ]
+                }
+              ],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "no-pulse",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 256,
+              "episode_return": 764.5679473104935,
+              "mean_velocity": 1.9875752330253806,
+              "physical_termination": false,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": true,
+              "mean_policy_std": 0.30136964193661697,
+              "mean_action_noise_l2": 0.29879173883091426,
+              "profile_counts": {
+                "id": 256
+              },
+              "non_id_steps": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 0,
+              "final_physical_state": {
+                "height": 1.4774095477814397,
+                "angle": 0.025012880362287743,
+                "max_abs_qvel": 7.264687529455084,
+                "unhealthy_conditions": []
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [
+                {
+                  "completed_steps": 100,
+                  "observation": [
+                    1.388790488243103,
+                    0.06886222958564758,
+                    -0.04142694175243378,
+                    -0.6454827785491943,
+                    -0.7756534814834595,
+                    2.654390811920166,
+                    1.1650142669677734,
+                    1.9334042072296143,
+                    -0.5758051872253418,
+                    7.079290866851807,
+                    1.146725058555603
+                  ],
+                  "cumulative_return": 220.18703608195506,
+                  "qpos": [
+                    0.9611159343787341,
+                    1.3887905173729491,
+                    0.0688622304372074,
+                    -0.04142694210376185,
+                    -0.6454827892078328,
+                    -0.7756534537863815
+                  ],
+                  "qvel": [
+                    2.6543908390019446,
+                    1.1650143179468817,
+                    1.9334041770336126,
+                    -0.5758051719271928,
+                    7.079290636592434,
+                    1.1467250428818794
+                  ]
+                }
+              ],
+              "recovery": {
+                "exposed": false,
+                "peak_steps": 0,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "after100_pulse10",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 187,
+              "episode_return": 545.2897321098606,
+              "mean_velocity": 1.9169265833052427,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.29990637119122365,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "id": 177,
+                "gravity-only": 10
+              },
+              "non_id_steps": 10,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                },
+                {
+                  "step": 101,
+                  "profile": "gravity-only",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 2.6591479484724942,
+                    "friction": 1.0
+                  }
+                },
+                {
+                  "step": 111,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 2,
+              "final_physical_state": {
+                "height": 0.6951008779439912,
+                "angle": 0.06453068126129145,
+                "max_abs_qvel": 2.9128157019291425,
+                "unhealthy_conditions": [
+                  "height"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [
+                {
+                  "completed_steps": 100,
+                  "observation": [
+                    1.41179621219635,
+                    0.06969655305147171,
+                    -0.04943196102976799,
+                    -0.5581480860710144,
+                    -0.7793222069740295,
+                    2.5608184337615967,
+                    1.0472731590270996,
+                    1.1645084619522095,
+                    -1.8666213750839233,
+                    7.771938323974609,
+                    1.324539065361023
+                  ],
+                  "cumulative_return": 219.50972332939568,
+                  "qpos": [
+                    0.9555880089810104,
+                    1.4117962199852347,
+                    0.06969655466192064,
+                    -0.04943196141253219,
+                    -0.5581480743584925,
+                    -0.7793221848609984
+                  ],
+                  "qvel": [
+                    2.560818336774921,
+                    1.0472731796053685,
+                    1.1645084870290874,
+                    -1.8666213172905324,
+                    7.771938107004987,
+                    1.324539039432166
+                  ]
+                }
+              ],
+              "recovery": {
+                "exposed": true,
+                "peak_steps": 10,
+                "recovery_horizon": 210,
+                "recovery_evaluable": true,
+                "recovered": false,
+                "baseline_restored": true
+              }
+            },
+            {
+              "condition": "after100_pulse10",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 169,
+              "episode_return": 469.5813160555706,
+              "mean_velocity": 1.7797257031597231,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.3101607248980618,
+              "mean_action_noise_l2": 0.3025717029524361,
+              "profile_counts": {
+                "id": 159,
+                "gravity-only": 10
+              },
+              "non_id_steps": 10,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                },
+                {
+                  "step": 101,
+                  "profile": "gravity-only",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 2.6591479484724942,
+                    "friction": 1.0
+                  }
+                },
+                {
+                  "step": 111,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 2,
+              "final_physical_state": {
+                "height": 0.6942802564204595,
+                "angle": 0.12979536429170505,
+                "max_abs_qvel": 3.9646515688251136,
+                "unhealthy_conditions": [
+                  "height"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [
+                {
+                  "completed_steps": 100,
+                  "observation": [
+                    1.388790488243103,
+                    0.06886222958564758,
+                    -0.04142694175243378,
+                    -0.6454827785491943,
+                    -0.7756534814834595,
+                    2.654390811920166,
+                    1.1650142669677734,
+                    1.9334042072296143,
+                    -0.5758051872253418,
+                    7.079290866851807,
+                    1.146725058555603
+                  ],
+                  "cumulative_return": 220.18703608195506,
+                  "qpos": [
+                    0.9611159343787341,
+                    1.3887905173729491,
+                    0.0688622304372074,
+                    -0.04142694210376185,
+                    -0.6454827892078328,
+                    -0.7756534537863815
+                  ],
+                  "qvel": [
+                    2.6543908390019446,
+                    1.1650143179468817,
+                    1.9334041770336126,
+                    -0.5758051719271928,
+                    7.079290636592434,
+                    1.1467250428818794
+                  ]
+                }
+              ],
+              "recovery": {
+                "exposed": true,
+                "peak_steps": 10,
+                "recovery_horizon": 210,
+                "recovery_evaluable": true,
+                "recovered": false,
+                "baseline_restored": true
+              }
+            },
+            {
+              "condition": "after100_permanent",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 125,
+              "episode_return": 299.6546223289693,
+              "mean_velocity": 1.3980500492338412,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.3078572833538055,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "id": 100,
+                "gravity-only": 25
+              },
+              "non_id_steps": 25,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                },
+                {
+                  "step": 101,
+                  "profile": "gravity-only",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 2.6591479484724942,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 1,
+              "final_physical_state": {
+                "height": 1.0751026522865608,
+                "angle": 0.21314783549151098,
+                "max_abs_qvel": 10.86912922970253,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [
+                {
+                  "completed_steps": 100,
+                  "observation": [
+                    1.41179621219635,
+                    0.06969655305147171,
+                    -0.04943196102976799,
+                    -0.5581480860710144,
+                    -0.7793222069740295,
+                    2.5608184337615967,
+                    1.0472731590270996,
+                    1.1645084619522095,
+                    -1.8666213750839233,
+                    7.771938323974609,
+                    1.324539065361023
+                  ],
+                  "cumulative_return": 219.50972332939568,
+                  "qpos": [
+                    0.9555880089810104,
+                    1.4117962199852347,
+                    0.06969655466192064,
+                    -0.04943196141253219,
+                    -0.5581480743584925,
+                    -0.7793221848609984
+                  ],
+                  "qvel": [
+                    2.560818336774921,
+                    1.0472731796053685,
+                    1.1645084870290874,
+                    -1.8666213172905324,
+                    7.771938107004987,
+                    1.324539039432166
+                  ]
+                }
+              ],
+              "recovery": {
+                "exposed": true,
+                "peak_steps": 25,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            },
+            {
+              "condition": "after100_permanent",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 153,
+              "episode_return": 433.84690199049135,
+              "mean_velocity": 1.8366839940604012,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.31785065870659024,
+              "mean_action_noise_l2": 0.3109569640501457,
+              "profile_counts": {
+                "id": 100,
+                "gravity-only": 53
+              },
+              "non_id_steps": 53,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "id",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.0,
+                    "friction": 1.0
+                  }
+                },
+                {
+                  "step": 101,
+                  "profile": "gravity-only",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 2.6591479484724942,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "switches": 1,
+              "final_physical_state": {
+                "height": 0.6811060127762196,
+                "angle": 0.10184447393468773,
+                "max_abs_qvel": 5.86127885207527,
+                "unhealthy_conditions": [
+                  "height"
+                ]
+              },
+              "native_reward_verified": true,
+              "dt": 0.008,
+              "prefix_markers": [
+                {
+                  "completed_steps": 100,
+                  "observation": [
+                    1.388790488243103,
+                    0.06886222958564758,
+                    -0.04142694175243378,
+                    -0.6454827785491943,
+                    -0.7756534814834595,
+                    2.654390811920166,
+                    1.1650142669677734,
+                    1.9334042072296143,
+                    -0.5758051872253418,
+                    7.079290866851807,
+                    1.146725058555603
+                  ],
+                  "cumulative_return": 220.18703608195506,
+                  "qpos": [
+                    0.9611159343787341,
+                    1.3887905173729491,
+                    0.0688622304372074,
+                    -0.04142694210376185,
+                    -0.6454827892078328,
+                    -0.7756534537863815
+                  ],
+                  "qvel": [
+                    2.6543908390019446,
+                    1.1650143179468817,
+                    1.9334041770336126,
+                    -0.5758051719271928,
+                    7.079290636592434,
+                    1.1467250428818794
+                  ]
+                }
+              ],
+              "recovery": {
+                "exposed": true,
+                "peak_steps": 53,
+                "recovery_horizon": null,
+                "recovery_evaluable": false,
+                "recovered": false,
+                "baseline_restored": false
+              }
+            }
+          ],
+          "prefix_pairs_verified": 4,
+          "optimizer_updates": 0,
+          "replay_loaded": false,
+          "device": "cpu",
+          "evaluation_interactions": 1146
+        }
+      }
+    ]
+  },
+  "checkpoint_selection": "predeclared650k700k-not-best",
+  "resumable_checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v149_warm_recovery_20261014/runtime/run_checkpoints/smoke_seed5_no-pulse/latest.pt",
+  "bootstrap_mask": "terminated-only",
+  "replay_handle_timeout_termination": true,
+  "optimizer_updates_during_evaluation": 0,
+  "runtime": {
+    "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+    "torch": "2.5.1+cu121",
+    "numpy": "2.1.3",
+    "gymnasium": "1.2.0",
+    "mujoco": "3.2.7",
+    "stable_baselines3": "2.7.0",
+    "gpu": "NVIDIA GeForce RTX 3080 Ti"
+  },
+  "peak_cuda_allocated_mb": 22.6455078125,
+  "seconds": 22.55460720998235,
+  "scope": "Two paired full-state warm continuations; standard-SAC environment calibration, not new independent training seeds or CS-BAPR contribution"
+}

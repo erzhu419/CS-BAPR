@@ -1,0 +1,59 @@
+{
+  "revision": "general_ood_v49_startup_noise",
+  "protocol": "docs/general_ood_v49_startup_noise_protocol.md",
+  "frozen_source": "experiments/general_ood_v49_startup_noise_20261006/runtime",
+  "checkpoint_source": "experiments/general_ood_v40_strength_20261006/runtime/run_checkpoints/formal/Hopper-v4/seed1",
+  "source_policies": ["fixed-minus2", "relative-adaptive"],
+  "arms": ["global-robust", "noise-likelihood", "noise-weighted-history"],
+  "noise_rule": "max(normal startup signal MSE about ongoing mean minus ongoing variance,0)",
+  "first_switch": 1024, "second_switch": 1280, "probe_steps": 1792, "episode_time_limit": 1536,
+  "assessment_offsets": {"first16": [0, 16], "first50": [0, 50], "first256": [0, 256], "last64": [192, 256]},
+  "filter_settings": {"max_run_length": 20, "hazard_rate": 0.02, "base_variance": 1.0, "variance_growth": 0.05},
+  "robust_student_degrees": 4,
+  "phases": {"validation256": [768, 1024], "first_post16": [1024, 1040], "first_post256": [1024, 1280], "second_post256": [1280, 1536], "early_post64": [1024, 1088], "late_first64": [1216, 1280], "late_second64": [1472, 1536], "full1536": [0, 1536], "prefix1024": [0, 1024], "all_post512": [1024, 1536], "prefix1280": [0, 1280], "second_early16": [1280, 1296], "second_early64": [1280, 1344], "second_all512": [1280, 1792], "second_late256": [1536, 1792], "second_last64": [1728, 1792], "full1792": [0, 1792], "second_first50": [1280, 1330], "restart_first16": [1536, 1552], "restart_first50": [1536, 1586]},
+  "optimizer_updates_during_probe": 0, "replay_insertions": 0,
+  "auxiliary_signal_controls_actions": false, "reset_filters_at_episode_end": false,
+  "predictors_updated_after_calibration": false, "actor_critic_target_frozen": true,
+  "preflight": {
+    "fit_seeds": [97900, 97901], "calibration_seeds": [97910, 97911], "evaluation_seeds": [99000, 99001],
+    "environment_interactions": 89088
+  },
+  "formal": {
+    "fit_seeds": [98000, 98001, 98002, 98003, 98004, 98005, 98006, 98007],
+    "calibration_seeds": [98010, 98011, 98012, 98013],
+    "evaluation_seeds": [90000, 90001, 90002, 90003, 90004, 90005, 90006, 90007, 90008, 90009, 90010, 90011, 90012, 90013, 90014, 90015, 90016, 90017, 90018, 90019],
+    "environment_interactions": 718848
+  },
+  "allowed_nodes": ["node007"],
+  "placement_reason": "Read existing v40 checkpoints in place, idle GPU selected without preference, no Windows node",
+  "resource_family": "CS-BAPR-v49-startup-noise",
+  "resource_request": {"cpu_cores": 2, "ram_mb": 3072, "vram_mb": 768},
+  "artifact_policy": "Compact scalar summaries/counterfactuals/first50 curves/logs only, no trajectories or checkpoints",
+  "tests_before_worker": "6 passed, 1 worker source fixture deferred until preflight",
+  "preflight_tasks": [{"task_id": "t135934", "environment_interactions": 89088}],
+  "preflight_audit": {
+    "task_id": "t135934", "status": "done", "exit_code": 0, "node": "node007", "gpu_idx": 0,
+    "wall_seconds": 123.4083767, "environment_interactions": 89088,
+    "focused_tests": "7 passed including completed-worker legacy control and reset-switch control-window checks",
+    "v48_source_trajectories_scores_signal_control_beliefs_match": true,
+    "fixed_normal_major_reset_cases": {"global-robust": 2, "noise-likelihood": 0, "noise-weighted-history": 0},
+    "true_reset_switch_prefixes_and_observed_reset_steps_match": true,
+    "reset_switch_first50_response_negative_or_inconsistent_in_all_arms": true,
+    "decision": "Operational source/pairing preflight passed; noise removes known-startup majority triggers but real reset-switch penalty response remains unresolved. Formal noise rule and arms unchanged, no RL feedback"
+  },
+  "formal_tasks": [{"task_id": "t135937", "environment_interactions": 718848}],
+  "formal_audit": {
+    "task_id": "t135937", "status": "done", "exit_code": 0, "node": "node007", "gpu_idx": 0,
+    "wall_seconds": 809.7936684, "environment_interactions": 718848,
+    "result_bytes": 17982422, "focused_tests": "7 passed",
+    "v48_source_trajectories_scores_signal_control_beliefs_match": true,
+    "true_reset_switch_prefixes_and_observed_reset_steps_match": true,
+    "fixed_legacy_major_resets_after_episode_end": {"global-robust": 87, "noise-likelihood": 0, "noise-weighted-history": 0},
+    "legacy_first50_positive_changed_pairs": {"global-robust": 159, "noise-likelihood": 159, "noise-weighted-history": 159, "pairs": 160},
+    "reset_switch_first256_physical_endings": 0,
+    "diagnostic_candidate": "noise-likelihood",
+    "decision": "Startup likelihood repair supported; weighted history adds no consistent benefit. Real reset-switch penalty response remains negative/inconsistent, no OOD mode or RL improvement confirmation",
+    "results_report": "docs/general_ood_v49_startup_noise_results.md"
+  },
+  "status": "formal-complete-startup-repair-reset-switch-hold"
+}

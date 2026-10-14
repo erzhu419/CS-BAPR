@@ -1,0 +1,1014 @@
+{
+  "revision": "general_ood_v140_critic_rate",
+  "status": "complete",
+  "runtime": "/home/erzhu419/mine_code/CS-BAPR/experiments/general_ood_v140_critic_rate_20261012/runtime",
+  "frozen_core": "experiments/general_ood_v139_frozen_diagnostics_20261012/runtime",
+  "plan": "docs/general_ood_v140_critic_rate_plan.md",
+  "training_driver_revision": "general_ood_v132_source_stability",
+  "training_mode": "fixed-profile-from-scratch",
+  "training_seeds": [
+    3,
+    4
+  ],
+  "training_profiles": [
+    "friction-only",
+    "gravity-only",
+    "id"
+  ],
+  "change": {
+    "lr_critic": [
+      0.0003,
+      0.0001
+    ]
+  },
+  "steps_per_task": 300000,
+  "planned_formal_tasks": 6,
+  "planned_training_interactions": 1800000,
+  "planned_optimizer_updates": 1798470,
+  "critic_td_objective": "mse",
+  "gamma": 0.99,
+  "tau": 0.005,
+  "effective_beta": -2.0,
+  "alpha_cap": null,
+  "reward_changes": [],
+  "policy_receives_profile_labels": false,
+  "checkpoint_selection": "final-not-best",
+  "bootstrap_mask": "terminated-only",
+  "final_evaluation_device": "cpu",
+  "final_evaluation_reset_seeds": [
+    154000,
+    154001,
+    154002,
+    154003,
+    154004
+  ],
+  "final_evaluation_noise_seeds": [
+    137000,
+    137001,
+    137002
+  ],
+  "final_evaluation_episodes_per_model": 20,
+  "final_evaluation_episodes": 120,
+  "allowed_nodes": [
+    "node007",
+    "jtl110gpu",
+    "jtl110gpu2"
+  ],
+  "preferred_node": null,
+  "preferred_gpu": null,
+  "require_node": null,
+  "resource_request": {
+    "cpu": 2,
+    "ram_mb": 4096,
+    "vram_mb": 1024
+  },
+  "local_tests": {
+    "command": "python3 -m pytest -q tests/test_general_ood_v140.py tests/test_general_ood_v137.py tests/test_general_ood_v138.py",
+    "passed": 31,
+    "seconds": 7.69
+  },
+  "sync_policy": "Small source.json/log tails locally; checkpoints and replay stay or move between Linux servers",
+  "reused_controls": [
+    {
+      "seed": 3,
+      "profile": "friction-only",
+      "revision": "general_ood_v138_physics_components",
+      "result": "results/general_ood_v138_physics_components/seed3_friction-only/source.json",
+      "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v138_physics_components_20261012/runtime/run_checkpoints/seed3_friction-only/final.pt",
+      "resumable_checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v138_physics_components_20261012/runtime/run_checkpoints/seed3_friction-only/latest.pt",
+      "training_interactions": 300000,
+      "optimizer_updates": 299745,
+      "config": {
+        "env_name": "Hopper-v4",
+        "state_dim": 11,
+        "action_dim": 3,
+        "max_episodes": 2000,
+        "max_steps_per_episode": 1000,
+        "gamma": 0.99,
+        "tau": 0.005,
+        "alpha": 0.2,
+        "auto_alpha": true,
+        "alpha_cap": null,
+        "lr_actor": 0.0001,
+        "lr_critic": 0.0003,
+        "lr_alpha": 0.0003,
+        "hidden_dim": 256,
+        "num_critics": 5,
+        "buffer_size": 1000000,
+        "batch_size": 256,
+        "warmup_steps": 5000,
+        "max_run_length": 20,
+        "hazard_rate": 0.02,
+        "base_variance": 1.0,
+        "surprise_ema": 0.1,
+        "weight_reg": 0.0,
+        "beta_ood": 0.1,
+        "beta_bc": 0.005,
+        "actor_type": null,
+        "policy_q_std_cap": 0.0,
+        "critic_q_std_cap": 0.0,
+        "critic_q_std_penalty_weight": 0.0,
+        "use_context": true,
+        "context_ema_alpha": 0.05,
+        "context_clip": 5.0,
+        "enable_min_q_target": true,
+        "enable_reward_ema": true,
+        "enable_entropy_floor": true,
+        "entropy_floor": 0.01,
+        "enable_rollout_surprise": true,
+        "surprise_window": 256,
+        "bapr_warmup_iters": 100,
+        "penalty_scale": 0.0,
+        "weight_sym": 0.0,
+        "jac_weight": 0.0,
+        "action_anchor_weight": 0.0,
+        "grad_clip": 1.0,
+        "jac_curriculum_start": 100,
+        "actor_weight_decay": 0.0001,
+        "sindy_with_control": true,
+        "sindy_threshold": 0.1,
+        "sindy_lib_degree": 2,
+        "sindy_discrete_time": true,
+        "sindy_n_explore_episodes": 30,
+        "sindy_epsilon_threshold": 1.0,
+        "use_nau_actor": false,
+        "nau_reg_weight": 0.01,
+        "nau_l_eff_penalty_weight": 0.0,
+        "nau_l_eff_target": 200.0,
+        "actor_mean_clip": 0.0,
+        "irm_penalty_weight": 0.1,
+        "irm_n_envs": 3,
+        "ood_eval_interval": 50,
+        "log_interval": 10,
+        "save_interval": 100,
+        "log_dir": "logs",
+        "track_L_eff": true,
+        "device": "cuda"
+      },
+      "physics": {
+        "profile": "friction-only",
+        "actual_multipliers": {
+          "body_mass": 1.0,
+          "gravity": 1.0,
+          "friction": 0.3760603093086394
+        },
+        "body_mass": [
+          0.0,
+          3.6651914291880923,
+          4.057890510886818,
+          2.7813566959781637,
+          5.315574769873931
+        ],
+        "gravity": [
+          0.0,
+          0.0,
+          -9.81
+        ],
+        "geom_friction": [
+          [
+            0.3760603093086394,
+            0.001880301546543197,
+            3.760603093086394e-05
+          ],
+          [
+            0.3384542783777754,
+            0.001880301546543197,
+            3.760603093086394e-05
+          ],
+          [
+            0.3384542783777754,
+            0.001880301546543197,
+            3.760603093086394e-05
+          ],
+          [
+            0.3384542783777754,
+            0.001880301546543197,
+            3.760603093086394e-05
+          ],
+          [
+            0.7521206186172787,
+            0.001880301546543197,
+            3.760603093086394e-05
+          ]
+        ]
+      }
+    },
+    {
+      "seed": 3,
+      "profile": "gravity-only",
+      "revision": "general_ood_v138_physics_components",
+      "result": "results/general_ood_v138_physics_components/seed3_gravity-only/source.json",
+      "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v138_physics_components_20261012/runtime/run_checkpoints/seed3_gravity-only/final.pt",
+      "resumable_checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v138_physics_components_20261012/runtime/run_checkpoints/seed3_gravity-only/latest.pt",
+      "training_interactions": 300000,
+      "optimizer_updates": 299745,
+      "config": {
+        "env_name": "Hopper-v4",
+        "state_dim": 11,
+        "action_dim": 3,
+        "max_episodes": 2000,
+        "max_steps_per_episode": 1000,
+        "gamma": 0.99,
+        "tau": 0.005,
+        "alpha": 0.2,
+        "auto_alpha": true,
+        "alpha_cap": null,
+        "lr_actor": 0.0001,
+        "lr_critic": 0.0003,
+        "lr_alpha": 0.0003,
+        "hidden_dim": 256,
+        "num_critics": 5,
+        "buffer_size": 1000000,
+        "batch_size": 256,
+        "warmup_steps": 5000,
+        "max_run_length": 20,
+        "hazard_rate": 0.02,
+        "base_variance": 1.0,
+        "surprise_ema": 0.1,
+        "weight_reg": 0.0,
+        "beta_ood": 0.1,
+        "beta_bc": 0.005,
+        "actor_type": null,
+        "policy_q_std_cap": 0.0,
+        "critic_q_std_cap": 0.0,
+        "critic_q_std_penalty_weight": 0.0,
+        "use_context": true,
+        "context_ema_alpha": 0.05,
+        "context_clip": 5.0,
+        "enable_min_q_target": true,
+        "enable_reward_ema": true,
+        "enable_entropy_floor": true,
+        "entropy_floor": 0.01,
+        "enable_rollout_surprise": true,
+        "surprise_window": 256,
+        "bapr_warmup_iters": 100,
+        "penalty_scale": 0.0,
+        "weight_sym": 0.0,
+        "jac_weight": 0.0,
+        "action_anchor_weight": 0.0,
+        "grad_clip": 1.0,
+        "jac_curriculum_start": 100,
+        "actor_weight_decay": 0.0001,
+        "sindy_with_control": true,
+        "sindy_threshold": 0.1,
+        "sindy_lib_degree": 2,
+        "sindy_discrete_time": true,
+        "sindy_n_explore_episodes": 30,
+        "sindy_epsilon_threshold": 1.0,
+        "use_nau_actor": false,
+        "nau_reg_weight": 0.01,
+        "nau_l_eff_penalty_weight": 0.0,
+        "nau_l_eff_target": 200.0,
+        "actor_mean_clip": 0.0,
+        "irm_penalty_weight": 0.1,
+        "irm_n_envs": 3,
+        "ood_eval_interval": 50,
+        "log_interval": 10,
+        "save_interval": 100,
+        "log_dir": "logs",
+        "track_L_eff": true,
+        "device": "cuda"
+      },
+      "physics": {
+        "profile": "gravity-only",
+        "actual_multipliers": {
+          "body_mass": 1.0,
+          "gravity": 2.6591479484724942,
+          "friction": 1.0
+        },
+        "body_mass": [
+          0.0,
+          3.6651914291880923,
+          4.057890510886818,
+          2.7813566959781637,
+          5.315574769873931
+        ],
+        "gravity": [
+          0.0,
+          0.0,
+          -26.08624137451517
+        ],
+        "geom_friction": [
+          [
+            1.0,
+            0.005,
+            0.0001
+          ],
+          [
+            0.9,
+            0.005,
+            0.0001
+          ],
+          [
+            0.9,
+            0.005,
+            0.0001
+          ],
+          [
+            0.9,
+            0.005,
+            0.0001
+          ],
+          [
+            2.0,
+            0.005,
+            0.0001
+          ]
+        ]
+      }
+    },
+    {
+      "seed": 3,
+      "profile": "id",
+      "revision": "general_ood_v137_fixed_profile",
+      "result": "results/general_ood_v137_fixed_profile/seed3_id/source.json",
+      "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v137_fixed_profile_20261012/runtime/run_checkpoints/seed3_id/final.pt",
+      "resumable_checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v137_fixed_profile_20261012/runtime/run_checkpoints/seed3_id/latest.pt",
+      "training_interactions": 300000,
+      "optimizer_updates": 299745,
+      "config": {
+        "env_name": "Hopper-v4",
+        "state_dim": 11,
+        "action_dim": 3,
+        "max_episodes": 2000,
+        "max_steps_per_episode": 1000,
+        "gamma": 0.99,
+        "tau": 0.005,
+        "alpha": 0.2,
+        "auto_alpha": true,
+        "alpha_cap": null,
+        "lr_actor": 0.0001,
+        "lr_critic": 0.0003,
+        "lr_alpha": 0.0003,
+        "hidden_dim": 256,
+        "num_critics": 5,
+        "buffer_size": 1000000,
+        "batch_size": 256,
+        "warmup_steps": 5000,
+        "max_run_length": 20,
+        "hazard_rate": 0.02,
+        "base_variance": 1.0,
+        "surprise_ema": 0.1,
+        "weight_reg": 0.0,
+        "beta_ood": 0.1,
+        "beta_bc": 0.005,
+        "actor_type": null,
+        "policy_q_std_cap": 0.0,
+        "critic_q_std_cap": 0.0,
+        "critic_q_std_penalty_weight": 0.0,
+        "use_context": true,
+        "context_ema_alpha": 0.05,
+        "context_clip": 5.0,
+        "enable_min_q_target": true,
+        "enable_reward_ema": true,
+        "enable_entropy_floor": true,
+        "entropy_floor": 0.01,
+        "enable_rollout_surprise": true,
+        "surprise_window": 256,
+        "bapr_warmup_iters": 100,
+        "penalty_scale": 0.0,
+        "weight_sym": 0.0,
+        "jac_weight": 0.0,
+        "action_anchor_weight": 0.0,
+        "grad_clip": 1.0,
+        "jac_curriculum_start": 100,
+        "actor_weight_decay": 0.0001,
+        "sindy_with_control": true,
+        "sindy_threshold": 0.1,
+        "sindy_lib_degree": 2,
+        "sindy_discrete_time": true,
+        "sindy_n_explore_episodes": 30,
+        "sindy_epsilon_threshold": 1.0,
+        "use_nau_actor": false,
+        "nau_reg_weight": 0.01,
+        "nau_l_eff_penalty_weight": 0.0,
+        "nau_l_eff_target": 200.0,
+        "actor_mean_clip": 0.0,
+        "irm_penalty_weight": 0.1,
+        "irm_n_envs": 3,
+        "ood_eval_interval": 50,
+        "log_interval": 10,
+        "save_interval": 100,
+        "log_dir": "logs",
+        "track_L_eff": true,
+        "device": "cuda"
+      },
+      "physics": {
+        "profile": "id",
+        "actual_multipliers": {
+          "body_mass": 1.0,
+          "gravity": 1.0,
+          "friction": 1.0
+        },
+        "body_mass": [
+          0.0,
+          3.6651914291880923,
+          4.057890510886818,
+          2.7813566959781637,
+          5.315574769873931
+        ],
+        "gravity": [
+          0.0,
+          0.0,
+          -9.81
+        ],
+        "geom_friction": [
+          [
+            1.0,
+            0.005,
+            0.0001
+          ],
+          [
+            0.9,
+            0.005,
+            0.0001
+          ],
+          [
+            0.9,
+            0.005,
+            0.0001
+          ],
+          [
+            0.9,
+            0.005,
+            0.0001
+          ],
+          [
+            2.0,
+            0.005,
+            0.0001
+          ]
+        ]
+      }
+    },
+    {
+      "seed": 4,
+      "profile": "friction-only",
+      "revision": "general_ood_v138_physics_components",
+      "result": "results/general_ood_v138_physics_components/seed4_friction-only/source.json",
+      "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v138_physics_components_20261012/runtime/run_checkpoints/seed4_friction-only/final.pt",
+      "resumable_checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v138_physics_components_20261012/runtime/run_checkpoints/seed4_friction-only/latest.pt",
+      "training_interactions": 300000,
+      "optimizer_updates": 299745,
+      "config": {
+        "env_name": "Hopper-v4",
+        "state_dim": 11,
+        "action_dim": 3,
+        "max_episodes": 2000,
+        "max_steps_per_episode": 1000,
+        "gamma": 0.99,
+        "tau": 0.005,
+        "alpha": 0.2,
+        "auto_alpha": true,
+        "alpha_cap": null,
+        "lr_actor": 0.0001,
+        "lr_critic": 0.0003,
+        "lr_alpha": 0.0003,
+        "hidden_dim": 256,
+        "num_critics": 5,
+        "buffer_size": 1000000,
+        "batch_size": 256,
+        "warmup_steps": 5000,
+        "max_run_length": 20,
+        "hazard_rate": 0.02,
+        "base_variance": 1.0,
+        "surprise_ema": 0.1,
+        "weight_reg": 0.0,
+        "beta_ood": 0.1,
+        "beta_bc": 0.005,
+        "actor_type": null,
+        "policy_q_std_cap": 0.0,
+        "critic_q_std_cap": 0.0,
+        "critic_q_std_penalty_weight": 0.0,
+        "use_context": true,
+        "context_ema_alpha": 0.05,
+        "context_clip": 5.0,
+        "enable_min_q_target": true,
+        "enable_reward_ema": true,
+        "enable_entropy_floor": true,
+        "entropy_floor": 0.01,
+        "enable_rollout_surprise": true,
+        "surprise_window": 256,
+        "bapr_warmup_iters": 100,
+        "penalty_scale": 0.0,
+        "weight_sym": 0.0,
+        "jac_weight": 0.0,
+        "action_anchor_weight": 0.0,
+        "grad_clip": 1.0,
+        "jac_curriculum_start": 100,
+        "actor_weight_decay": 0.0001,
+        "sindy_with_control": true,
+        "sindy_threshold": 0.1,
+        "sindy_lib_degree": 2,
+        "sindy_discrete_time": true,
+        "sindy_n_explore_episodes": 30,
+        "sindy_epsilon_threshold": 1.0,
+        "use_nau_actor": false,
+        "nau_reg_weight": 0.01,
+        "nau_l_eff_penalty_weight": 0.0,
+        "nau_l_eff_target": 200.0,
+        "actor_mean_clip": 0.0,
+        "irm_penalty_weight": 0.1,
+        "irm_n_envs": 3,
+        "ood_eval_interval": 50,
+        "log_interval": 10,
+        "save_interval": 100,
+        "log_dir": "logs",
+        "track_L_eff": true,
+        "device": "cuda"
+      },
+      "physics": {
+        "profile": "friction-only",
+        "actual_multipliers": {
+          "body_mass": 1.0,
+          "gravity": 1.0,
+          "friction": 0.3760603093086394
+        },
+        "body_mass": [
+          0.0,
+          3.6651914291880923,
+          4.057890510886818,
+          2.7813566959781637,
+          5.315574769873931
+        ],
+        "gravity": [
+          0.0,
+          0.0,
+          -9.81
+        ],
+        "geom_friction": [
+          [
+            0.3760603093086394,
+            0.001880301546543197,
+            3.760603093086394e-05
+          ],
+          [
+            0.3384542783777754,
+            0.001880301546543197,
+            3.760603093086394e-05
+          ],
+          [
+            0.3384542783777754,
+            0.001880301546543197,
+            3.760603093086394e-05
+          ],
+          [
+            0.3384542783777754,
+            0.001880301546543197,
+            3.760603093086394e-05
+          ],
+          [
+            0.7521206186172787,
+            0.001880301546543197,
+            3.760603093086394e-05
+          ]
+        ]
+      }
+    },
+    {
+      "seed": 4,
+      "profile": "gravity-only",
+      "revision": "general_ood_v138_physics_components",
+      "result": "results/general_ood_v138_physics_components/seed4_gravity-only/source.json",
+      "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v138_physics_components_20261012/runtime/run_checkpoints/seed4_gravity-only/final.pt",
+      "resumable_checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v138_physics_components_20261012/runtime/run_checkpoints/seed4_gravity-only/latest.pt",
+      "training_interactions": 300000,
+      "optimizer_updates": 299745,
+      "config": {
+        "env_name": "Hopper-v4",
+        "state_dim": 11,
+        "action_dim": 3,
+        "max_episodes": 2000,
+        "max_steps_per_episode": 1000,
+        "gamma": 0.99,
+        "tau": 0.005,
+        "alpha": 0.2,
+        "auto_alpha": true,
+        "alpha_cap": null,
+        "lr_actor": 0.0001,
+        "lr_critic": 0.0003,
+        "lr_alpha": 0.0003,
+        "hidden_dim": 256,
+        "num_critics": 5,
+        "buffer_size": 1000000,
+        "batch_size": 256,
+        "warmup_steps": 5000,
+        "max_run_length": 20,
+        "hazard_rate": 0.02,
+        "base_variance": 1.0,
+        "surprise_ema": 0.1,
+        "weight_reg": 0.0,
+        "beta_ood": 0.1,
+        "beta_bc": 0.005,
+        "actor_type": null,
+        "policy_q_std_cap": 0.0,
+        "critic_q_std_cap": 0.0,
+        "critic_q_std_penalty_weight": 0.0,
+        "use_context": true,
+        "context_ema_alpha": 0.05,
+        "context_clip": 5.0,
+        "enable_min_q_target": true,
+        "enable_reward_ema": true,
+        "enable_entropy_floor": true,
+        "entropy_floor": 0.01,
+        "enable_rollout_surprise": true,
+        "surprise_window": 256,
+        "bapr_warmup_iters": 100,
+        "penalty_scale": 0.0,
+        "weight_sym": 0.0,
+        "jac_weight": 0.0,
+        "action_anchor_weight": 0.0,
+        "grad_clip": 1.0,
+        "jac_curriculum_start": 100,
+        "actor_weight_decay": 0.0001,
+        "sindy_with_control": true,
+        "sindy_threshold": 0.1,
+        "sindy_lib_degree": 2,
+        "sindy_discrete_time": true,
+        "sindy_n_explore_episodes": 30,
+        "sindy_epsilon_threshold": 1.0,
+        "use_nau_actor": false,
+        "nau_reg_weight": 0.01,
+        "nau_l_eff_penalty_weight": 0.0,
+        "nau_l_eff_target": 200.0,
+        "actor_mean_clip": 0.0,
+        "irm_penalty_weight": 0.1,
+        "irm_n_envs": 3,
+        "ood_eval_interval": 50,
+        "log_interval": 10,
+        "save_interval": 100,
+        "log_dir": "logs",
+        "track_L_eff": true,
+        "device": "cuda"
+      },
+      "physics": {
+        "profile": "gravity-only",
+        "actual_multipliers": {
+          "body_mass": 1.0,
+          "gravity": 2.6591479484724942,
+          "friction": 1.0
+        },
+        "body_mass": [
+          0.0,
+          3.6651914291880923,
+          4.057890510886818,
+          2.7813566959781637,
+          5.315574769873931
+        ],
+        "gravity": [
+          0.0,
+          0.0,
+          -26.08624137451517
+        ],
+        "geom_friction": [
+          [
+            1.0,
+            0.005,
+            0.0001
+          ],
+          [
+            0.9,
+            0.005,
+            0.0001
+          ],
+          [
+            0.9,
+            0.005,
+            0.0001
+          ],
+          [
+            0.9,
+            0.005,
+            0.0001
+          ],
+          [
+            2.0,
+            0.005,
+            0.0001
+          ]
+        ]
+      }
+    },
+    {
+      "seed": 4,
+      "profile": "id",
+      "revision": "general_ood_v137_fixed_profile",
+      "result": "results/general_ood_v137_fixed_profile/seed4_id/source.json",
+      "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v137_fixed_profile_20261012/runtime/run_checkpoints/seed4_id/final.pt",
+      "resumable_checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v137_fixed_profile_20261012/runtime/run_checkpoints/seed4_id/latest.pt",
+      "training_interactions": 300000,
+      "optimizer_updates": 299745,
+      "config": {
+        "env_name": "Hopper-v4",
+        "state_dim": 11,
+        "action_dim": 3,
+        "max_episodes": 2000,
+        "max_steps_per_episode": 1000,
+        "gamma": 0.99,
+        "tau": 0.005,
+        "alpha": 0.2,
+        "auto_alpha": true,
+        "alpha_cap": null,
+        "lr_actor": 0.0001,
+        "lr_critic": 0.0003,
+        "lr_alpha": 0.0003,
+        "hidden_dim": 256,
+        "num_critics": 5,
+        "buffer_size": 1000000,
+        "batch_size": 256,
+        "warmup_steps": 5000,
+        "max_run_length": 20,
+        "hazard_rate": 0.02,
+        "base_variance": 1.0,
+        "surprise_ema": 0.1,
+        "weight_reg": 0.0,
+        "beta_ood": 0.1,
+        "beta_bc": 0.005,
+        "actor_type": null,
+        "policy_q_std_cap": 0.0,
+        "critic_q_std_cap": 0.0,
+        "critic_q_std_penalty_weight": 0.0,
+        "use_context": true,
+        "context_ema_alpha": 0.05,
+        "context_clip": 5.0,
+        "enable_min_q_target": true,
+        "enable_reward_ema": true,
+        "enable_entropy_floor": true,
+        "entropy_floor": 0.01,
+        "enable_rollout_surprise": true,
+        "surprise_window": 256,
+        "bapr_warmup_iters": 100,
+        "penalty_scale": 0.0,
+        "weight_sym": 0.0,
+        "jac_weight": 0.0,
+        "action_anchor_weight": 0.0,
+        "grad_clip": 1.0,
+        "jac_curriculum_start": 100,
+        "actor_weight_decay": 0.0001,
+        "sindy_with_control": true,
+        "sindy_threshold": 0.1,
+        "sindy_lib_degree": 2,
+        "sindy_discrete_time": true,
+        "sindy_n_explore_episodes": 30,
+        "sindy_epsilon_threshold": 1.0,
+        "use_nau_actor": false,
+        "nau_reg_weight": 0.01,
+        "nau_l_eff_penalty_weight": 0.0,
+        "nau_l_eff_target": 200.0,
+        "actor_mean_clip": 0.0,
+        "irm_penalty_weight": 0.1,
+        "irm_n_envs": 3,
+        "ood_eval_interval": 50,
+        "log_interval": 10,
+        "save_interval": 100,
+        "log_dir": "logs",
+        "track_L_eff": true,
+        "device": "cuda"
+      },
+      "physics": {
+        "profile": "id",
+        "actual_multipliers": {
+          "body_mass": 1.0,
+          "gravity": 1.0,
+          "friction": 1.0
+        },
+        "body_mass": [
+          0.0,
+          3.6651914291880923,
+          4.057890510886818,
+          2.7813566959781637,
+          5.315574769873931
+        ],
+        "gravity": [
+          0.0,
+          0.0,
+          -9.81
+        ],
+        "geom_friction": [
+          [
+            1.0,
+            0.005,
+            0.0001
+          ],
+          [
+            0.9,
+            0.005,
+            0.0001
+          ],
+          [
+            0.9,
+            0.005,
+            0.0001
+          ],
+          [
+            0.9,
+            0.005,
+            0.0001
+          ],
+          [
+            2.0,
+            0.005,
+            0.0001
+          ]
+        ]
+      }
+    }
+  ],
+  "native_smokes": [
+    {
+      "seed": 3,
+      "profile": "friction-only",
+      "task_id": "t147060",
+      "label": "native_smoke_seed3_friction-only",
+      "status": "running",
+      "local_result": "/home/erzhu419/mine_code/CS-BAPR/results/general_ood_v140_critic_rate/native_smoke_seed3_friction-only/source.json",
+      "node": "jtl110gpu",
+      "gpu": 0,
+      "exit_code": 0,
+      "native_accepted": true,
+      "json_bytes": 12929,
+      "seconds": 5.218705436214805,
+      "runtime": {
+        "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+        "torch": "2.5.1+cu121",
+        "numpy": "2.1.3",
+        "gymnasium": "1.2.0",
+        "mujoco": "3.2.7",
+        "gpu": "NVIDIA GeForce RTX 3080 Ti"
+      },
+      "remote_pids": [
+        26747
+      ]
+    },
+    {
+      "seed": 4,
+      "profile": "gravity-only",
+      "task_id": "t147061",
+      "label": "native_smoke_seed4_gravity-only",
+      "status": "running",
+      "local_result": "/home/erzhu419/mine_code/CS-BAPR/results/general_ood_v140_critic_rate/native_smoke_seed4_gravity-only/source.json",
+      "node": "jtl110gpu",
+      "gpu": 1,
+      "exit_code": 0,
+      "native_accepted": true,
+      "json_bytes": 12703,
+      "seconds": 4.919567168690264,
+      "runtime": {
+        "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+        "torch": "2.5.1+cu121",
+        "numpy": "2.1.3",
+        "gymnasium": "1.2.0",
+        "mujoco": "3.2.7",
+        "gpu": "NVIDIA GeForce RTX 3080 Ti"
+      },
+      "remote_pids": [
+        26773
+      ]
+    },
+    {
+      "seed": 3,
+      "profile": "id",
+      "task_id": "t147062",
+      "label": "native_smoke_seed3_id",
+      "status": "running",
+      "local_result": "/home/erzhu419/mine_code/CS-BAPR/results/general_ood_v140_critic_rate/native_smoke_seed3_id/source.json",
+      "node": "jtl110gpu2",
+      "gpu": 1,
+      "exit_code": 0,
+      "native_accepted": true,
+      "json_bytes": 12215,
+      "seconds": 6.1676558731123805,
+      "runtime": {
+        "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+        "torch": "2.5.1+cu121",
+        "numpy": "2.1.3",
+        "gymnasium": "1.2.0",
+        "mujoco": "3.2.7",
+        "gpu": "NVIDIA GeForce RTX 3080 Ti"
+      },
+      "remote_pids": [
+        4133202
+      ]
+    }
+  ],
+  "formal_tasks": [
+    {
+      "seed": 3,
+      "profile": "friction-only",
+      "task_id": "t147080",
+      "label": "seed3_friction-only",
+      "status": "done",
+      "local_result": "/home/erzhu419/mine_code/CS-BAPR/results/general_ood_v140_critic_rate/seed3_friction-only/source.json",
+      "node": "jtl110gpu2",
+      "gpu": 0,
+      "exit_code": 0,
+      "remote_pids": [
+        4134220
+      ],
+      "json_bytes": 110884,
+      "seconds": 7822.609701037174
+    },
+    {
+      "seed": 3,
+      "profile": "gravity-only",
+      "task_id": "t147081",
+      "label": "seed3_gravity-only",
+      "status": "done",
+      "local_result": "/home/erzhu419/mine_code/CS-BAPR/results/general_ood_v140_critic_rate/seed3_gravity-only/source.json",
+      "node": "jtl110gpu2",
+      "gpu": 0,
+      "exit_code": 0,
+      "remote_pids": [
+        4134284
+      ],
+      "json_bytes": 111140,
+      "seconds": 7827.138420440955
+    },
+    {
+      "seed": 3,
+      "profile": "id",
+      "task_id": "t147082",
+      "label": "seed3_id",
+      "status": "done",
+      "local_result": "/home/erzhu419/mine_code/CS-BAPR/results/general_ood_v140_critic_rate/seed3_id/source.json",
+      "node": "jtl110gpu",
+      "gpu": 0,
+      "exit_code": 0,
+      "remote_pids": [
+        29585
+      ],
+      "json_bytes": 108838,
+      "seconds": 5265.630043590441
+    },
+    {
+      "seed": 4,
+      "profile": "friction-only",
+      "task_id": "t147083",
+      "label": "seed4_friction-only",
+      "status": "done",
+      "local_result": "/home/erzhu419/mine_code/CS-BAPR/results/general_ood_v140_critic_rate/seed4_friction-only/source.json",
+      "node": "jtl110gpu",
+      "gpu": 1,
+      "exit_code": 0,
+      "remote_pids": [
+        29596
+      ],
+      "json_bytes": 111150,
+      "seconds": 5200.426446093246
+    },
+    {
+      "seed": 4,
+      "profile": "gravity-only",
+      "task_id": "t147084",
+      "label": "seed4_gravity-only",
+      "status": "done",
+      "local_result": "/home/erzhu419/mine_code/CS-BAPR/results/general_ood_v140_critic_rate/seed4_gravity-only/source.json",
+      "node": "jtl110gpu2",
+      "gpu": 1,
+      "exit_code": 0,
+      "remote_pids": [
+        4134202
+      ],
+      "json_bytes": 110956,
+      "seconds": 5879.820468686055
+    },
+    {
+      "seed": 4,
+      "profile": "id",
+      "task_id": "t147085",
+      "label": "seed4_id",
+      "status": "done",
+      "local_result": "/home/erzhu419/mine_code/CS-BAPR/results/general_ood_v140_critic_rate/seed4_id/source.json",
+      "node": "jtl110gpu2",
+      "gpu": 0,
+      "exit_code": 0,
+      "remote_pids": [
+        4134252
+      ],
+      "json_bytes": 109423,
+      "seconds": 7821.4862833980005
+    }
+  ],
+  "smoke_training_interactions": 1536,
+  "smoke_optimizer_updates": 771,
+  "local_smoke_json_bytes": 37847,
+  "formal_worker_count": 6,
+  "formal_json_bytes": 662391,
+  "summary": "results/general_ood_v140_critic_rate/summary.json",
+  "results": "docs/general_ood_v140_critic_rate_results.md",
+  "final_evaluation_interactions": 10081,
+  "next_step": {
+    "revision": "general_ood_v141_actor_rate",
+    "status": "complete",
+    "protocol": "docs/general_ood_v141_actor_rate_protocol.md",
+    "change_against_original": {
+      "lr_actor": [
+        0.0001,
+        3e-05
+      ]
+    },
+    "lr_critic": 0.0003,
+    "manifest": "experiments/general_ood_v141_actor_rate_20261013/dispatch_manifest.json",
+    "summary": "results/general_ood_v141_actor_rate/summary.json"
+  }
+}

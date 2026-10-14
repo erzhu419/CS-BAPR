@@ -1,0 +1,994 @@
+{
+  "revision": "general_ood_v136_warmup_context",
+  "spec": {
+    "training_seed": 4,
+    "source_arm": "mse-control",
+    "source_steps": 300000,
+    "smoke": true,
+    "device": "cpu",
+    "context_modes": [
+      "online",
+      "held-context"
+    ],
+    "conditions": [
+      "id",
+      "abrupt/mega_event"
+    ],
+    "reset_seeds": [
+      153000
+    ],
+    "action_noise_seeds": [
+      136000
+    ],
+    "sampled_noise_scale": 1.0,
+    "warmup_steps": 200,
+    "first_ood_step": 201,
+    "max_steps": 256,
+    "profile_family": "structured",
+    "intensity": 50.0,
+    "reward_changes": [],
+    "policy_receives_profile_labels": false,
+    "noise_schedule": "v126 CPU torch.Generator; one float32 (1,3) draw per step",
+    "context_protocol": "restore source normalizer and reset EMA; both update200 ID transitions; held-context stops thereafter",
+    "prefix_check": "exact state/context/action/transition equality through first post-warmup step, in memory only"
+  },
+  "runtime": {
+    "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+    "torch": "2.5.1+cu121",
+    "numpy": "2.1.3",
+    "gymnasium": "1.2.0",
+    "mujoco": "3.2.7"
+  },
+  "source": {
+    "revision": "general_ood_v133_source_extension",
+    "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v133_source_extension_20261012/runtime/run_checkpoints/seed4_mse-control/final.pt",
+    "config": {
+      "env_name": "Hopper-v4",
+      "state_dim": 11,
+      "action_dim": 3,
+      "max_episodes": 2000,
+      "max_steps_per_episode": 1000,
+      "gamma": 0.99,
+      "tau": 0.005,
+      "alpha": 0.2,
+      "auto_alpha": true,
+      "alpha_cap": null,
+      "lr_actor": 0.0001,
+      "lr_critic": 0.0003,
+      "lr_alpha": 0.0003,
+      "hidden_dim": 256,
+      "num_critics": 5,
+      "buffer_size": 1000000,
+      "batch_size": 256,
+      "warmup_steps": 5000,
+      "max_run_length": 20,
+      "hazard_rate": 0.02,
+      "base_variance": 1.0,
+      "surprise_ema": 0.1,
+      "weight_reg": 0.0,
+      "beta_ood": 0.1,
+      "beta_bc": 0.005,
+      "actor_type": null,
+      "policy_q_std_cap": 0.0,
+      "critic_q_std_cap": 0.0,
+      "critic_q_std_penalty_weight": 0.0,
+      "use_context": true,
+      "context_ema_alpha": 0.05,
+      "context_clip": 5.0,
+      "enable_min_q_target": true,
+      "enable_reward_ema": true,
+      "enable_entropy_floor": true,
+      "entropy_floor": 0.01,
+      "enable_rollout_surprise": true,
+      "surprise_window": 256,
+      "bapr_warmup_iters": 100,
+      "penalty_scale": 0.0,
+      "weight_sym": 0.0,
+      "jac_weight": 0.0,
+      "action_anchor_weight": 0.0,
+      "grad_clip": 1.0,
+      "jac_curriculum_start": 100,
+      "actor_weight_decay": 0.0001,
+      "sindy_with_control": true,
+      "sindy_threshold": 0.1,
+      "sindy_lib_degree": 2,
+      "sindy_discrete_time": true,
+      "sindy_n_explore_episodes": 30,
+      "sindy_epsilon_threshold": 1.0,
+      "use_nau_actor": false,
+      "nau_reg_weight": 0.01,
+      "nau_l_eff_penalty_weight": 0.0,
+      "nau_l_eff_target": 200.0,
+      "actor_mean_clip": 0.0,
+      "irm_penalty_weight": 0.1,
+      "irm_n_envs": 3,
+      "ood_eval_interval": 50,
+      "log_interval": 10,
+      "save_interval": 100,
+      "log_dir": "logs",
+      "track_L_eff": true,
+      "device": "cpu"
+    },
+    "context_count": 300000,
+    "training_steps": 299745,
+    "initial_context_normalizer": {
+      "count": 300000,
+      "mean": [
+        -0.0018450964707881212,
+        -4.953767347615212e-05,
+        -0.004985357169061899,
+        -3.456615377217531e-05,
+        -0.0024388853926211596,
+        0.009392011910676956,
+        -0.01037837564945221,
+        -0.001442644977942109,
+        -0.010490489192306995,
+        -0.00010384185588918626,
+        -0.00047749088844284415,
+        0.00793997198343277,
+        0.0029903578106313944,
+        0.009975998662412167,
+        0.0005692578852176666,
+        0.02897333726286888,
+        0.03196851909160614,
+        0.09865031391382217,
+        0.19520466029644012,
+        0.24305877089500427,
+        0.04637465626001358,
+        0.4444306194782257,
+        -0.002441262826323509,
+        0.5841517448425293,
+        -0.3273125886917114,
+        3.0270941257476807,
+        0.6502231359481812,
+        0.8800782561302185
+      ],
+      "m2": [
+        28.87579917907715,
+        6.376908779144287,
+        36.777915954589844,
+        1.3845998048782349,
+        461.59075927734375,
+        1005.4144897460938,
+        5576.767578125,
+        23463.458984375,
+        34796.03125,
+        6997.12744140625,
+        213576.03125,
+        10.98507308959961,
+        3.6952805519104004,
+        14.377532005310059,
+        1.289267897605896,
+        211.54966735839844,
+        725.3198852539062,
+        2689.23388671875,
+        12034.2060546875,
+        17107.595703125,
+        6358.5625,
+        154330.875,
+        15817.154296875,
+        31669.033203125,
+        80893.46875,
+        210117.953125,
+        159237.609375,
+        30535.7890625
+      ]
+    }
+  },
+  "pairs": [
+    {
+      "condition": "id",
+      "mode": "deterministic",
+      "reset_seed": 153000,
+      "noise_seed": null,
+      "episodes": [
+        {
+          "condition": "id",
+          "mode": "deterministic",
+          "reset_seed": 153000,
+          "noise_seed": null,
+          "context_mode": "online",
+          "noise_scale": 0.0,
+          "length": 256,
+          "episode_return": 764.189880349888,
+          "mean_velocity": 1.9861302018067735,
+          "physical_termination": false,
+          "time_limit_truncation": false,
+          "diagnostic_cutoff": true,
+          "warmup_steps": 200,
+          "warmup_return": 570.281469824479,
+          "intervention_reached": true,
+          "post_warmup_steps": 56,
+          "post_warmup_return": 193.90841052540895,
+          "post_warmup_mean_velocity": 2.4639254943061206,
+          "context_updates": 256,
+          "mean_context_l2": 0.4107287576334784,
+          "mean_post_context_change_l2": 0.36958992338207153,
+          "mean_action_noise_l2": 0.0,
+          "context_at_intervention": [
+            0.08741234987974167,
+            0.03488113731145859,
+            0.1410522609949112,
+            0.0025583503302186728,
+            0.08835975080728531,
+            -0.03466116264462471,
+            -0.06404617428779602,
+            0.004813439678400755,
+            0.016008539125323296,
+            0.00011893165356013924,
+            0.03624577820301056,
+            -0.053639378398656845,
+            -0.06255752593278885,
+            -0.09188811480998993,
+            -0.04601908475160599,
+            0.04706430435180664,
+            -0.08245621621608734,
+            -0.000900162267498672,
+            -0.11200886219739914,
+            -0.0860612615942955,
+            -0.06110282242298126,
+            -0.023593734949827194,
+            0.011970811523497105,
+            0.13640928268432617,
+            0.04176393896341324,
+            0.10408905148506165,
+            -0.05135076493024826,
+            0.07449014484882355
+          ],
+          "warmup_end_physical_state": {
+            "height": 1.4589322479809876,
+            "angle": 0.1589184327068112,
+            "max_abs_qvel": 5.565223816249965,
+            "unhealthy_conditions": []
+          },
+          "profile_counts": {
+            "id": 256
+          },
+          "profile_events": [
+            {
+              "step": 1,
+              "profile": "id",
+              "actual_multipliers": {
+                "body_mass": 1.0,
+                "gravity": 1.0,
+                "friction": 1.0
+              }
+            }
+          ],
+          "non_id_steps": 0,
+          "switches": 0,
+          "final_physical_state": {
+            "height": 1.4251696215087775,
+            "angle": 0.10479887237699201,
+            "max_abs_qvel": 2.400188863896439,
+            "unhealthy_conditions": []
+          },
+          "native_reward_verified": true
+        },
+        {
+          "condition": "id",
+          "mode": "deterministic",
+          "reset_seed": 153000,
+          "noise_seed": null,
+          "context_mode": "held-context",
+          "noise_scale": 0.0,
+          "length": 256,
+          "episode_return": 784.2697635060465,
+          "mean_velocity": 2.064522085780111,
+          "physical_termination": false,
+          "time_limit_truncation": false,
+          "diagnostic_cutoff": true,
+          "warmup_steps": 200,
+          "warmup_return": 570.281469824479,
+          "intervention_reached": true,
+          "post_warmup_steps": 56,
+          "post_warmup_return": 213.98829368156746,
+          "post_warmup_mean_velocity": 2.8222883924699507,
+          "context_updates": 200,
+          "mean_context_l2": 0.401844352381886,
+          "mean_post_context_change_l2": 0.0,
+          "mean_action_noise_l2": 0.0,
+          "context_at_intervention": [
+            0.08741234987974167,
+            0.03488113731145859,
+            0.1410522609949112,
+            0.0025583503302186728,
+            0.08835975080728531,
+            -0.03466116264462471,
+            -0.06404617428779602,
+            0.004813439678400755,
+            0.016008539125323296,
+            0.00011893165356013924,
+            0.03624577820301056,
+            -0.053639378398656845,
+            -0.06255752593278885,
+            -0.09188811480998993,
+            -0.04601908475160599,
+            0.04706430435180664,
+            -0.08245621621608734,
+            -0.000900162267498672,
+            -0.11200886219739914,
+            -0.0860612615942955,
+            -0.06110282242298126,
+            -0.023593734949827194,
+            0.011970811523497105,
+            0.13640928268432617,
+            0.04176393896341324,
+            0.10408905148506165,
+            -0.05135076493024826,
+            0.07449014484882355
+          ],
+          "warmup_end_physical_state": {
+            "height": 1.4589322479809876,
+            "angle": 0.1589184327068112,
+            "max_abs_qvel": 5.565223816249965,
+            "unhealthy_conditions": []
+          },
+          "profile_counts": {
+            "id": 256
+          },
+          "profile_events": [
+            {
+              "step": 1,
+              "profile": "id",
+              "actual_multipliers": {
+                "body_mass": 1.0,
+                "gravity": 1.0,
+                "friction": 1.0
+              }
+            }
+          ],
+          "non_id_steps": 0,
+          "switches": 0,
+          "final_physical_state": {
+            "height": 1.3050567981398424,
+            "angle": 0.11423507774905681,
+            "max_abs_qvel": 5.220479465083994,
+            "unhealthy_conditions": []
+          },
+          "native_reward_verified": true
+        }
+      ],
+      "prefix_equal": true,
+      "prefix_steps": 201,
+      "prefix_max_abs_difference": 0.0
+    },
+    {
+      "condition": "id",
+      "mode": "sampled",
+      "reset_seed": 153000,
+      "noise_seed": 136000,
+      "episodes": [
+        {
+          "condition": "id",
+          "mode": "sampled",
+          "reset_seed": 153000,
+          "noise_seed": 136000,
+          "context_mode": "online",
+          "noise_scale": 1.0,
+          "length": 256,
+          "episode_return": 759.8988684011315,
+          "mean_velocity": 1.9693761688594174,
+          "physical_termination": false,
+          "time_limit_truncation": false,
+          "diagnostic_cutoff": true,
+          "warmup_steps": 200,
+          "warmup_return": 567.5944961050867,
+          "intervention_reached": true,
+          "post_warmup_steps": 56,
+          "post_warmup_return": 192.30437229604465,
+          "post_warmup_mean_velocity": 2.4352717176160623,
+          "context_updates": 256,
+          "mean_context_l2": 0.3772932570136618,
+          "mean_post_context_change_l2": 0.35870907961257864,
+          "mean_action_noise_l2": 0.1991129034140613,
+          "context_at_intervention": [
+            0.08720681816339493,
+            0.026125648990273476,
+            0.12719646096229553,
+            0.0023119745310395956,
+            0.09465795755386353,
+            -0.03271925449371338,
+            -0.06496575474739075,
+            0.009073548018932343,
+            0.020474659278988838,
+            2.5386339984834194e-05,
+            0.03590738773345947,
+            -0.0509357675909996,
+            -0.052830565720796585,
+            -0.1120290458202362,
+            -0.04227970540523529,
+            0.05066179484128952,
+            -0.055110231041908264,
+            -0.002997186966240406,
+            -0.03045455366373062,
+            -0.016747165471315384,
+            -0.04842902719974518,
+            -0.0018693753518164158,
+            0.015944581478834152,
+            0.08958857506513596,
+            0.044367194175720215,
+            0.10648858547210693,
+            -0.016164354979991913,
+            0.05151941627264023
+          ],
+          "warmup_end_physical_state": {
+            "height": 1.486857685162405,
+            "angle": 0.13397539771449316,
+            "max_abs_qvel": 5.663343079773449,
+            "unhealthy_conditions": []
+          },
+          "profile_counts": {
+            "id": 256
+          },
+          "profile_events": [
+            {
+              "step": 1,
+              "profile": "id",
+              "actual_multipliers": {
+                "body_mass": 1.0,
+                "gravity": 1.0,
+                "friction": 1.0
+              }
+            }
+          ],
+          "non_id_steps": 0,
+          "switches": 0,
+          "final_physical_state": {
+            "height": 1.424131893394037,
+            "angle": 0.08524911954029436,
+            "max_abs_qvel": 2.351441588252225,
+            "unhealthy_conditions": []
+          },
+          "native_reward_verified": true
+        },
+        {
+          "condition": "id",
+          "mode": "sampled",
+          "reset_seed": 153000,
+          "noise_seed": 136000,
+          "context_mode": "held-context",
+          "noise_scale": 1.0,
+          "length": 256,
+          "episode_return": 782.234567572762,
+          "mean_velocity": 2.0565925156881377,
+          "physical_termination": false,
+          "time_limit_truncation": false,
+          "diagnostic_cutoff": true,
+          "warmup_steps": 200,
+          "warmup_return": 567.5944961050867,
+          "intervention_reached": true,
+          "post_warmup_steps": 56,
+          "post_warmup_return": 214.64007146767523,
+          "post_warmup_mean_velocity": 2.833975017404499,
+          "context_updates": 200,
+          "mean_context_l2": 0.3613339670409914,
+          "mean_post_context_change_l2": 0.0,
+          "mean_action_noise_l2": 0.20045712299179286,
+          "context_at_intervention": [
+            0.08720681816339493,
+            0.026125648990273476,
+            0.12719646096229553,
+            0.0023119745310395956,
+            0.09465795755386353,
+            -0.03271925449371338,
+            -0.06496575474739075,
+            0.009073548018932343,
+            0.020474659278988838,
+            2.5386339984834194e-05,
+            0.03590738773345947,
+            -0.0509357675909996,
+            -0.052830565720796585,
+            -0.1120290458202362,
+            -0.04227970540523529,
+            0.05066179484128952,
+            -0.055110231041908264,
+            -0.002997186966240406,
+            -0.03045455366373062,
+            -0.016747165471315384,
+            -0.04842902719974518,
+            -0.0018693753518164158,
+            0.015944581478834152,
+            0.08958857506513596,
+            0.044367194175720215,
+            0.10648858547210693,
+            -0.016164354979991913,
+            0.05151941627264023
+          ],
+          "warmup_end_physical_state": {
+            "height": 1.486857685162405,
+            "angle": 0.13397539771449316,
+            "max_abs_qvel": 5.663343079773449,
+            "unhealthy_conditions": []
+          },
+          "profile_counts": {
+            "id": 256
+          },
+          "profile_events": [
+            {
+              "step": 1,
+              "profile": "id",
+              "actual_multipliers": {
+                "body_mass": 1.0,
+                "gravity": 1.0,
+                "friction": 1.0
+              }
+            }
+          ],
+          "non_id_steps": 0,
+          "switches": 0,
+          "final_physical_state": {
+            "height": 1.302641284376104,
+            "angle": 0.09708392468200677,
+            "max_abs_qvel": 5.2967508093243945,
+            "unhealthy_conditions": []
+          },
+          "native_reward_verified": true
+        }
+      ],
+      "prefix_equal": true,
+      "prefix_steps": 201,
+      "prefix_max_abs_difference": 0.0
+    },
+    {
+      "condition": "abrupt/mega_event",
+      "mode": "deterministic",
+      "reset_seed": 153000,
+      "noise_seed": null,
+      "episodes": [
+        {
+          "condition": "abrupt/mega_event",
+          "mode": "deterministic",
+          "reset_seed": 153000,
+          "noise_seed": null,
+          "context_mode": "online",
+          "noise_scale": 0.0,
+          "length": 237,
+          "episode_return": 721.9056549341881,
+          "mean_velocity": 2.0470066284088055,
+          "physical_termination": true,
+          "time_limit_truncation": false,
+          "diagnostic_cutoff": false,
+          "warmup_steps": 200,
+          "warmup_return": 570.281469824479,
+          "intervention_reached": true,
+          "post_warmup_steps": 37,
+          "post_warmup_return": 151.62418510970903,
+          "post_warmup_mean_velocity": 3.0992180257161,
+          "context_updates": 237,
+          "mean_context_l2": 0.43788159536472854,
+          "mean_post_context_change_l2": 0.5937569493276847,
+          "mean_action_noise_l2": 0.0,
+          "context_at_intervention": [
+            0.08741234987974167,
+            0.03488113731145859,
+            0.1410522609949112,
+            0.0025583503302186728,
+            0.08835975080728531,
+            -0.03466116264462471,
+            -0.06404617428779602,
+            0.004813439678400755,
+            0.016008539125323296,
+            0.00011893165356013924,
+            0.03624577820301056,
+            -0.053639378398656845,
+            -0.06255752593278885,
+            -0.09188811480998993,
+            -0.04601908475160599,
+            0.04706430435180664,
+            -0.08245621621608734,
+            -0.000900162267498672,
+            -0.11200886219739914,
+            -0.0860612615942955,
+            -0.06110282242298126,
+            -0.023593734949827194,
+            0.011970811523497105,
+            0.13640928268432617,
+            0.04176393896341324,
+            0.10408905148506165,
+            -0.05135076493024826,
+            0.07449014484882355
+          ],
+          "warmup_end_physical_state": {
+            "height": 1.4589322479809876,
+            "angle": 0.1589184327068112,
+            "max_abs_qvel": 5.565223816249965,
+            "unhealthy_conditions": []
+          },
+          "profile_counts": {
+            "id": 200,
+            "mega_event": 37
+          },
+          "profile_events": [
+            {
+              "step": 1,
+              "profile": "id",
+              "actual_multipliers": {
+                "body_mass": 1.0,
+                "gravity": 1.0,
+                "friction": 1.0
+              }
+            },
+            {
+              "step": 201,
+              "profile": "mega_event",
+              "actual_multipliers": {
+                "body_mass": 3.636303311321192,
+                "gravity": 2.6591479484724942,
+                "friction": 0.3760603093086394
+              }
+            }
+          ],
+          "non_id_steps": 37,
+          "switches": 1,
+          "final_physical_state": {
+            "height": 0.6780938751575083,
+            "angle": 0.13977007237913178,
+            "max_abs_qvel": 4.011645655888832,
+            "unhealthy_conditions": [
+              "height"
+            ]
+          },
+          "native_reward_verified": true
+        },
+        {
+          "condition": "abrupt/mega_event",
+          "mode": "deterministic",
+          "reset_seed": 153000,
+          "noise_seed": null,
+          "context_mode": "held-context",
+          "noise_scale": 0.0,
+          "length": 236,
+          "episode_return": 718.603423333783,
+          "mean_velocity": 2.0458963471180778,
+          "physical_termination": true,
+          "time_limit_truncation": false,
+          "diagnostic_cutoff": false,
+          "warmup_steps": 200,
+          "warmup_return": 570.281469824479,
+          "intervention_reached": true,
+          "post_warmup_steps": 36,
+          "post_warmup_return": 148.32195350930388,
+          "post_warmup_mean_velocity": 3.1211676094020864,
+          "context_updates": 200,
+          "mean_context_l2": 0.40492458150611593,
+          "mean_post_context_change_l2": 0.0,
+          "mean_action_noise_l2": 0.0,
+          "context_at_intervention": [
+            0.08741234987974167,
+            0.03488113731145859,
+            0.1410522609949112,
+            0.0025583503302186728,
+            0.08835975080728531,
+            -0.03466116264462471,
+            -0.06404617428779602,
+            0.004813439678400755,
+            0.016008539125323296,
+            0.00011893165356013924,
+            0.03624577820301056,
+            -0.053639378398656845,
+            -0.06255752593278885,
+            -0.09188811480998993,
+            -0.04601908475160599,
+            0.04706430435180664,
+            -0.08245621621608734,
+            -0.000900162267498672,
+            -0.11200886219739914,
+            -0.0860612615942955,
+            -0.06110282242298126,
+            -0.023593734949827194,
+            0.011970811523497105,
+            0.13640928268432617,
+            0.04176393896341324,
+            0.10408905148506165,
+            -0.05135076493024826,
+            0.07449014484882355
+          ],
+          "warmup_end_physical_state": {
+            "height": 1.4589322479809876,
+            "angle": 0.1589184327068112,
+            "max_abs_qvel": 5.565223816249965,
+            "unhealthy_conditions": []
+          },
+          "profile_counts": {
+            "id": 200,
+            "mega_event": 36
+          },
+          "profile_events": [
+            {
+              "step": 1,
+              "profile": "id",
+              "actual_multipliers": {
+                "body_mass": 1.0,
+                "gravity": 1.0,
+                "friction": 1.0
+              }
+            },
+            {
+              "step": 201,
+              "profile": "mega_event",
+              "actual_multipliers": {
+                "body_mass": 3.636303311321192,
+                "gravity": 2.6591479484724942,
+                "friction": 0.3760603093086394
+              }
+            }
+          ],
+          "non_id_steps": 36,
+          "switches": 1,
+          "final_physical_state": {
+            "height": 0.6945700532800899,
+            "angle": 0.04287679957733745,
+            "max_abs_qvel": 5.172877906938672,
+            "unhealthy_conditions": [
+              "height"
+            ]
+          },
+          "native_reward_verified": true
+        }
+      ],
+      "prefix_equal": true,
+      "prefix_steps": 201,
+      "prefix_max_abs_difference": 0.0
+    },
+    {
+      "condition": "abrupt/mega_event",
+      "mode": "sampled",
+      "reset_seed": 153000,
+      "noise_seed": 136000,
+      "episodes": [
+        {
+          "condition": "abrupt/mega_event",
+          "mode": "sampled",
+          "reset_seed": 153000,
+          "noise_seed": 136000,
+          "context_mode": "online",
+          "noise_scale": 1.0,
+          "length": 238,
+          "episode_return": 723.5254790741337,
+          "mean_velocity": 2.0410278502985255,
+          "physical_termination": true,
+          "time_limit_truncation": false,
+          "diagnostic_cutoff": false,
+          "warmup_steps": 200,
+          "warmup_return": 567.5944961050867,
+          "intervention_reached": true,
+          "post_warmup_steps": 38,
+          "post_warmup_return": 155.93098296904697,
+          "post_warmup_mean_velocity": 3.1047248770931017,
+          "context_updates": 238,
+          "mean_context_l2": 0.4066179678657976,
+          "mean_post_context_change_l2": 0.57635309983437,
+          "mean_action_noise_l2": 0.1969780578442356,
+          "context_at_intervention": [
+            0.08720681816339493,
+            0.026125648990273476,
+            0.12719646096229553,
+            0.0023119745310395956,
+            0.09465795755386353,
+            -0.03271925449371338,
+            -0.06496575474739075,
+            0.009073548018932343,
+            0.020474659278988838,
+            2.5386339984834194e-05,
+            0.03590738773345947,
+            -0.0509357675909996,
+            -0.052830565720796585,
+            -0.1120290458202362,
+            -0.04227970540523529,
+            0.05066179484128952,
+            -0.055110231041908264,
+            -0.002997186966240406,
+            -0.03045455366373062,
+            -0.016747165471315384,
+            -0.04842902719974518,
+            -0.0018693753518164158,
+            0.015944581478834152,
+            0.08958857506513596,
+            0.044367194175720215,
+            0.10648858547210693,
+            -0.016164354979991913,
+            0.05151941627264023
+          ],
+          "warmup_end_physical_state": {
+            "height": 1.486857685162405,
+            "angle": 0.13397539771449316,
+            "max_abs_qvel": 5.663343079773449,
+            "unhealthy_conditions": []
+          },
+          "profile_counts": {
+            "id": 200,
+            "mega_event": 38
+          },
+          "profile_events": [
+            {
+              "step": 1,
+              "profile": "id",
+              "actual_multipliers": {
+                "body_mass": 1.0,
+                "gravity": 1.0,
+                "friction": 1.0
+              }
+            },
+            {
+              "step": 201,
+              "profile": "mega_event",
+              "actual_multipliers": {
+                "body_mass": 3.636303311321192,
+                "gravity": 2.6591479484724942,
+                "friction": 0.3760603093086394
+              }
+            }
+          ],
+          "non_id_steps": 38,
+          "switches": 1,
+          "final_physical_state": {
+            "height": 0.683296118227942,
+            "angle": 0.12081219857013209,
+            "max_abs_qvel": 3.8751705505789897,
+            "unhealthy_conditions": [
+              "height"
+            ]
+          },
+          "native_reward_verified": true
+        },
+        {
+          "condition": "abrupt/mega_event",
+          "mode": "sampled",
+          "reset_seed": 153000,
+          "noise_seed": 136000,
+          "context_mode": "held-context",
+          "noise_scale": 1.0,
+          "length": 237,
+          "episode_return": 720.2796623869124,
+          "mean_velocity": 2.040141508558725,
+          "physical_termination": true,
+          "time_limit_truncation": false,
+          "diagnostic_cutoff": false,
+          "warmup_steps": 200,
+          "warmup_return": 567.5944961050867,
+          "intervention_reached": true,
+          "post_warmup_steps": 37,
+          "post_warmup_return": 152.68516628182564,
+          "post_warmup_mean_velocity": 3.12779606721369,
+          "context_updates": 200,
+          "mean_context_l2": 0.3657339897776958,
+          "mean_post_context_change_l2": 0.0,
+          "mean_action_noise_l2": 0.19878076636212788,
+          "context_at_intervention": [
+            0.08720681816339493,
+            0.026125648990273476,
+            0.12719646096229553,
+            0.0023119745310395956,
+            0.09465795755386353,
+            -0.03271925449371338,
+            -0.06496575474739075,
+            0.009073548018932343,
+            0.020474659278988838,
+            2.5386339984834194e-05,
+            0.03590738773345947,
+            -0.0509357675909996,
+            -0.052830565720796585,
+            -0.1120290458202362,
+            -0.04227970540523529,
+            0.05066179484128952,
+            -0.055110231041908264,
+            -0.002997186966240406,
+            -0.03045455366373062,
+            -0.016747165471315384,
+            -0.04842902719974518,
+            -0.0018693753518164158,
+            0.015944581478834152,
+            0.08958857506513596,
+            0.044367194175720215,
+            0.10648858547210693,
+            -0.016164354979991913,
+            0.05151941627264023
+          ],
+          "warmup_end_physical_state": {
+            "height": 1.486857685162405,
+            "angle": 0.13397539771449316,
+            "max_abs_qvel": 5.663343079773449,
+            "unhealthy_conditions": []
+          },
+          "profile_counts": {
+            "id": 200,
+            "mega_event": 37
+          },
+          "profile_events": [
+            {
+              "step": 1,
+              "profile": "id",
+              "actual_multipliers": {
+                "body_mass": 1.0,
+                "gravity": 1.0,
+                "friction": 1.0
+              }
+            },
+            {
+              "step": 201,
+              "profile": "mega_event",
+              "actual_multipliers": {
+                "body_mass": 3.636303311321192,
+                "gravity": 2.6591479484724942,
+                "friction": 0.3760603093086394
+              }
+            }
+          ],
+          "non_id_steps": 37,
+          "switches": 1,
+          "final_physical_state": {
+            "height": 0.6926186444955561,
+            "angle": 0.012511130609615426,
+            "max_abs_qvel": 4.801977571082543,
+            "unhealthy_conditions": [
+              "height"
+            ]
+          },
+          "native_reward_verified": true
+        }
+      ],
+      "prefix_equal": true,
+      "prefix_steps": 201,
+      "prefix_max_abs_difference": 0.0
+    }
+  ],
+  "training_seed": 4,
+  "smoke": true,
+  "profiles": [
+    {
+      "name": "id",
+      "latent_load": 1.0,
+      "obs_scale": 1.0,
+      "action_scale": 1.0
+    },
+    {
+      "name": "easy_surface",
+      "latent_load": 0.1414213562373095,
+      "obs_scale": 1.0,
+      "action_scale": 1.0,
+      "body_mass": 0.5244087739130784,
+      "gravity": 0.613237563517304,
+      "friction": 1.6306894089533097
+    },
+    {
+      "name": "heavy_traffic",
+      "latent_load": 7.0710678118654755,
+      "obs_scale": 1.0,
+      "action_scale": 1.0,
+      "body_mass": 1.9069093610660137,
+      "gravity": 1.6306894089533097,
+      "friction": 0.613237563517304
+    },
+    {
+      "name": "mega_event",
+      "latent_load": 50.0,
+      "obs_scale": 1.0,
+      "action_scale": 1.0,
+      "body_mass": 3.636303311321192,
+      "gravity": 2.6591479484724942,
+      "friction": 0.3760603093086394
+    },
+    {
+      "name": "slippery_rush",
+      "latent_load": 7.0710678118654755,
+      "obs_scale": 1.0,
+      "action_scale": 1.0,
+      "body_mass": 1.6306894089533097,
+      "gravity": 1.4787576366283137,
+      "friction": 0.27500456215701824
+    }
+  ],
+  "evaluation_device": "cpu",
+  "cuda_initialized": false,
+  "optimizer_updates": 0,
+  "new_training_interactions": 0,
+  "replay_loaded": false,
+  "source_readout_refitted": false,
+  "checkpoint_selection": "predeclared-final-only",
+  "reward_changes": [],
+  "policy_receives_profile_labels": false,
+  "ablation_scope": "post-warmup inference context, not training representation",
+  "seconds": 1.9414365119300783,
+  "evaluation_interactions": 1972
+}

@@ -1,0 +1,73 @@
+{
+  "revision": "general_ood_v65_state_action",
+  "protocol": "docs/general_ood_v65_state_action_protocol.md",
+  "frozen_source": "experiments/general_ood_v65_state_action_20261008/runtime",
+  "inherited_runtime": "experiments/general_ood_v64_phase_vector_20261008/runtime",
+  "normal_fit_seeds": [134000],
+  "normal_calibration_seeds": [134010],
+  "readout_replay_cells": 17,
+  "added_interactions": 0,
+  "added_optimizer_updates": 0,
+  "observers": ["v60_frozen", "level_recalibrated", "level_plus_innovation", "phase_center", "phase_center_covariance", "state_action_center", "state_action_center_covariance"],
+  "main_candidate": "state_action_center_covariance",
+  "normal_windows": ["first800", "full", "last1000", "last64"],
+  "change_windows": ["first_post50", "last64"],
+  "fit_normal_transitions": 12000,
+  "calibration_normal_transitions": 12000,
+  "normal_reference_windows": 750,
+  "conditioning_dimension": 14,
+  "neighbors": 64,
+  "covariance_estimator": "sklearn.covariance.oas",
+  "window_steps": 16,
+  "knot_interval": 16,
+  "age_radius": 8,
+  "covariance_ridge_relative": 0.001,
+  "quantile": 0.95,
+  "beta": -2.0,
+  "readout_controls_actor": false,
+  "allowed_nodes": ["node007"],
+  "placement_reason": "Existing traces/references stay on their Linux server; CPU replay, no node/GPU preference or Windows",
+  "resource_family": "CS-BAPR-v65-state-action-screen",
+  "resource_request": {"cpu": 2, "ram_mb": 4096, "vram_mb": 0},
+  "stage_excludes": ["run_shared", "run_checkpoints", "run_results"],
+  "artifact_policy": "Scalar JSON/logs only; references, matrices and raw traces stay server-side",
+  "local_verification": {
+    "frozen_runtime_tested": true,
+    "test_file": "tests/test_general_ood_v65.py",
+    "passed": 6,
+    "failed": 0,
+    "seconds": 19.50,
+    "coverage": "Exact normal neighbors/OAS covariance and separate calibration; conditioning excludes next state/query residual; online/batch causality, reset persistence and serialized resume; unchanged gates and frozen-normal controls; full worker and server-only reference storage"
+  },
+  "tasks": ["t136628"],
+  "startup": {"task": "t136628", "node": "node007", "resource": "CPU", "gpu_used": false},
+  "completion": {
+    "task": "t136628",
+    "exit_code": 0,
+    "wall_seconds": 110,
+    "local_result": "results/general_ood_v65_state_action/screen/state_action.json",
+    "result_bytes": 446932,
+    "readout_replay_cells": 17,
+    "replayed_saved_transitions": 102000,
+    "added_interactions": 0,
+    "added_optimizer_updates": 0,
+    "reconstructed_gates_and_controls_match": true,
+    "main_candidate_summary": {
+      "v62_test": {"normal_null": false, "first50_positive": 8, "tail_positive": 6, "changed_pairs": 8, "largest_normal_mean": 0.2361215694713274},
+      "v61_development_replay": {"normal_null": true, "first50_positive": 4, "tail_positive": 3, "changed_pairs": 4, "largest_normal_mean": 0.048793031184515404}
+    },
+    "center_only_ablation_summary": {
+      "v62_test": {"normal_null": true, "first50_positive": 7, "tail_positive": 8, "changed_pairs": 8},
+      "v61_development_replay": {"normal_null": true, "first50_positive": 2, "tail_positive": 4, "changed_pairs": 4}
+    },
+    "failed_main_candidate_cells": [
+      "v62/seed134021/frozen-normal/first800",
+      "v62/seed134020/high_grav/last64",
+      "v62/seed134020/compound/last64",
+      "v61-replay/seed132020/compound/last64"
+    ],
+    "result_note": "docs/general_ood_v65_state_action_results.md"
+  },
+  "next_step": "Estimate global/local covariance mixing from blocked normal-fit validation; reserve separate normal calibration for scores/thresholds and keep all existing gates",
+  "status": "complete-state-action-covariance-hold"
+}

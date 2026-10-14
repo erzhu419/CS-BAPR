@@ -25,7 +25,7 @@
     "optimizer_updates_during_evaluation": 0
   },
   "artifact_policy": "checkpoints stay remote; sync compact evaluation JSON and logs only",
-  "status": "partial-results-runtime-recovery",
+  "status": "complete-negative-transfer",
   "preflight": {
     "environment": "Pendulum-v1",
     "method": "csbapr-stable-context",
@@ -93,8 +93,9 @@
     {"task_ids": ["t135523", "t135525", "t135529"], "reason": "jtl110gpu RL runtime was Python 3.8, outside the frozen launcher 3.10/3.11 requirement"}
   ],
   "cancelled_startup_attempts": [{"task_id": "t135530", "reason": "stopped repeat startup on incompatible jtl110gpu runtime before replacing with t135531"}],
-  "formal_status": "16 complete cells; 8 Hopper runtime-recovery tasks running on 2026-10-05",
+  "formal_status": "24 complete cells with exit code 0 and valid evaluation JSON on 2026-10-05; no v37 tasks running",
   "audit_20261005": {
+    "snapshot_stage": "partial; superseded by completion_audit_20261005",
     "successful_cells": 16,
     "failed_startup_attempts": 51,
     "evaluation_json_bytes": 72611,
@@ -119,6 +120,50 @@
       {"task_id": "t135531", "node": "node007", "gpu_idx": 1},
       {"task_id": "t135526", "node": "jtl110gpu2", "gpu_idx": 0}
     ]
+  },
+  "completion_audit_20261005": {
+    "successful_cells": 24,
+    "failed_startup_attempts": 51,
+    "cancelled_startup_attempts": 1,
+    "evaluation_json_bytes": 108643,
+    "summary": "results/general_ood_v37_cross_env/summary.json",
+    "report": "docs/general_ood_v37_cross_env_results.md",
+    "all_successful_tasks_exit_code": 0,
+    "successful_tasks": {
+      "Pendulum-v1": {
+        "csbapr-stable-context": ["t135230", "t135231", "t135266"],
+        "csbapr-no-sindy-stable": ["t135267", "t135268", "t135269"],
+        "bapr-stable-context": ["t135236", "t135237", "t135238"],
+        "resac": ["t135239", "t135240", "t135241"]
+      },
+      "Hopper-v4": {
+        "csbapr-stable-context": ["t135242", "t135243", "t135244"],
+        "csbapr-no-sindy-stable": ["t135245", "t135519", "t135520"],
+        "bapr-stable-context": ["t135521", "t135522", "t135528"],
+        "resac": ["t135524", "t135531", "t135526"]
+      }
+    },
+    "task_order": "training seeds 0, 1, 2; Pendulum completion records verified in scheduler archive",
+    "hopper_completed_training": [
+      {"task_id": "t135242", "interactions": 1689884, "training_seconds": 44260},
+      {"task_id": "t135243", "interactions": 1732454, "training_seconds": 46148},
+      {"task_id": "t135244", "interactions": 1821848, "training_seconds": 47902},
+      {"task_id": "t135245", "interactions": 1740686, "training_seconds": 45426},
+      {"task_id": "t135519", "interactions": 1581114, "training_seconds": 36169},
+      {"task_id": "t135520", "interactions": 1723518, "training_seconds": 37869},
+      {"task_id": "t135521", "interactions": 1838033, "training_seconds": 28584},
+      {"task_id": "t135522", "interactions": 1458689, "training_seconds": 22957},
+      {"task_id": "t135528", "interactions": 1760827, "training_seconds": 37378},
+      {"task_id": "t135524", "interactions": 1515242, "training_seconds": 26709},
+      {"task_id": "t135531", "interactions": 1746203, "training_seconds": 34886},
+      {"task_id": "t135526", "interactions": 1803090, "training_seconds": 31897}
+    ],
+    "route_b_admitted": false,
+    "all_seed_baseline_superiority_by_environment": {"Pendulum-v1": false, "Hopper-v4": false},
+    "decision": "Preserve measured v37 checkpoint-path negative evidence; no bus-like advantage in these scores, but omitted context normalizers prevent a definitive policy-transfer verdict.",
+    "evaluation_issue_discovered_v38": "Plain agent.save snapshots omitted training context normalizers; v37 context policies loaded with fresh normalizer statistics. Numeric scores and original admission failure are unchanged.",
+    "next_step": "Separate belief-response repair from v37, then use a fixed-interaction, single-factor diagnostic rather than expanding seeds or tuning this completed matrix.",
+    "new_tasks_dispatched": 0
   },
   "decision_rule": "Do not claim route-B success unless both environments have complete paired seed-level results and the candidate is compared against BAPR and RE-SAC; report any catastrophic seed or failed ablation.",
   "status_note": "Historical v2 matrices remain non-admissible because protocols and budgets were mixed."

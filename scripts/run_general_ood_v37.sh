@@ -17,7 +17,7 @@ for candidate in \
 done
 
 if [[ -z "$base" ]]; then
-    echo "No compatible CUDA Python runtime found for v37" >&2
+    echo "No compatible CUDA Python runtime found" >&2
     exit 1
 fi
 

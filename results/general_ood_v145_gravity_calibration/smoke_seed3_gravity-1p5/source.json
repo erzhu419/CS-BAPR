@@ -1,0 +1,1152 @@
+{
+  "revision": "general_ood_v145_gravity_calibration",
+  "training_seed": 3,
+  "training_profile": "gravity-1p5",
+  "smoke": true,
+  "spec": {
+    "revision": "general_ood_v145_gravity_calibration",
+    "profile": "gravity-1p5",
+    "smoke": true,
+    "steps": 512,
+    "block_steps": 256,
+    "checkpoint_interval": 256,
+    "evaluation_interval": 256,
+    "milestones": [
+      256,
+      512
+    ],
+    "bootstrap_mask": "terminated-only",
+    "episode_boundary": "terminated-or-truncated",
+    "training_reset_schedule": "seed*10000 + completed episodes",
+    "settings": {
+      "learning_rate": 0.0003,
+      "buffer_size": 1000000,
+      "learning_starts": 255,
+      "batch_size": 256,
+      "gamma": 0.99,
+      "tau": 0.005,
+      "train_freq": 1,
+      "gradient_steps": 1,
+      "ent_coef": "auto_0.2",
+      "target_entropy": "auto",
+      "use_sde": false,
+      "policy_kwargs": {
+        "net_arch": [
+          256,
+          256
+        ],
+        "n_critics": 2
+      }
+    },
+    "gravity_multiplier": 1.5,
+    "heldout_peak_profile": "gravity-only",
+    "heldout_peak_gravity_multiplier": 2.6591479484724942,
+    "training_intervention": "gravity-multiplier-only",
+    "reward_changes": [],
+    "healthy_termination_changes": []
+  },
+  "config": {
+    "learning_rate": 0.0003,
+    "buffer_size": 1000000,
+    "learning_starts": 255,
+    "batch_size": 256,
+    "gamma": 0.99,
+    "tau": 0.005,
+    "train_freq": 1,
+    "gradient_steps": 1,
+    "ent_coef": "auto_0.2",
+    "target_entropy": "auto",
+    "use_sde": false,
+    "policy_kwargs": {
+      "net_arch": [
+        256,
+        256
+      ],
+      "n_critics": 2
+    }
+  },
+  "environment": "Hopper-v4",
+  "training_device": "cuda",
+  "actual_new_training_interactions": 512,
+  "cumulative_training_interactions": 512,
+  "optimizer_updates": 257,
+  "physics": {
+    "profile": "gravity-1p5",
+    "actual_multipliers": {
+      "body_mass": 1.0,
+      "gravity": 1.5,
+      "friction": 1.0
+    },
+    "body_mass": [
+      0.0,
+      3.6651914291880923,
+      4.057890510886818,
+      2.7813566959781637,
+      5.315574769873931
+    ],
+    "gravity": [
+      0.0,
+      0.0,
+      -14.715
+    ],
+    "geom_friction": [
+      [
+        1.0,
+        0.005,
+        0.0001
+      ],
+      [
+        0.9,
+        0.005,
+        0.0001
+      ],
+      [
+        0.9,
+        0.005,
+        0.0001
+      ],
+      [
+        0.9,
+        0.005,
+        0.0001
+      ],
+      [
+        2.0,
+        0.005,
+        0.0001
+      ]
+    ]
+  },
+  "reward_settings": {
+    "healthy_reward": 1.0,
+    "ctrl_cost_weight": 0.001,
+    "forward_reward_weight": 1.0
+  },
+  "reward_changes": [],
+  "healthy_termination_changes": [],
+  "policy_receives_profile_labels": false,
+  "observation_dim": 11,
+  "use_context": false,
+  "use_symbolic_constraints": false,
+  "reward_normalization": false,
+  "snapshots": [
+    {
+      "step": 256,
+      "optimizer_updates": 1,
+      "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v145_gravity_calibration_20261013/runtime/run_checkpoints/smoke_seed3_gravity-1p5/step256.zip",
+      "final_evaluation": {
+        "protocol": {
+          "reset_seeds": [
+            154000
+          ],
+          "action_noise_seeds": [
+            137000
+          ],
+          "max_steps": 256,
+          "device": "cpu",
+          "context_mode": "not-applicable",
+          "sampled_noise_scale": 1.0,
+          "profile_schedule": "matching-static",
+          "noise_schedule": "v126 CPU torch.Generator; one float32 (1,3) draw per step"
+        },
+        "device": "cpu",
+        "profile": "gravity-1p5",
+        "replay_loaded": false,
+        "optimizer_updates": 0,
+        "episodes": [
+          {
+            "condition": "static/gravity-1p5",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 46,
+            "episode_return": 16.43908215752298,
+            "mean_velocity": -0.6426082059647048,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9331877801729285,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "gravity-1p5": 46
+            },
+            "non_id_steps": 46,
+            "switches": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "gravity-1p5",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.5,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "final_physical_state": {
+              "height": 1.1814820751079038,
+              "angle": -0.20772791343500505,
+              "max_abs_qvel": 1.5300304783677774,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true
+          },
+          {
+            "condition": "static/gravity-1p5",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 11,
+            "episode_return": 7.028954620351369,
+            "mean_velocity": -0.35982766479767636,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9006900028748945,
+            "mean_action_noise_l2": 1.0970217693935742,
+            "profile_counts": {
+              "gravity-1p5": 11
+            },
+            "non_id_steps": 11,
+            "switches": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "gravity-1p5",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.5,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "final_physical_state": {
+              "height": 1.210431979880512,
+              "angle": -0.25147192828807374,
+              "max_abs_qvel": 7.5896453107622195,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true
+          }
+        ],
+        "evaluation_interactions": 57,
+        "heldout_peak_evaluation": {
+          "protocol": {
+            "reset_seeds": [
+              154000
+            ],
+            "action_noise_seeds": [
+              137000
+            ],
+            "max_steps": 256,
+            "device": "cpu",
+            "context_mode": "not-applicable",
+            "sampled_noise_scale": 1.0,
+            "profile_schedule": "matching-static",
+            "noise_schedule": "v126 CPU torch.Generator; one float32 (1,3) draw per step"
+          },
+          "device": "cpu",
+          "profile": "gravity-only",
+          "replay_loaded": false,
+          "optimizer_updates": 0,
+          "episodes": [
+            {
+              "condition": "static/gravity-only",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 44,
+              "episode_return": 14.880169526007185,
+              "mean_velocity": -0.661793674621446,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9322026805444197,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "gravity-only": 44
+              },
+              "non_id_steps": 44,
+              "switches": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "gravity-only",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 2.6591479484724942,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "final_physical_state": {
+                "height": 1.1770761038760957,
+                "angle": -0.20496995828925868,
+                "max_abs_qvel": 1.6939159435504716,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true
+            },
+            {
+              "condition": "static/gravity-only",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 11,
+              "episode_return": 6.171519938127366,
+              "mean_velocity": -0.4377780729874294,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9063953107053583,
+              "mean_action_noise_l2": 1.1053936318917708,
+              "profile_counts": {
+                "gravity-only": 11
+              },
+              "non_id_steps": 11,
+              "switches": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "gravity-only",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 2.6591479484724942,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "final_physical_state": {
+                "height": 1.1893459472196406,
+                "angle": -0.2514504017651382,
+                "max_abs_qvel": 7.5159085805208505,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true
+            }
+          ],
+          "evaluation_interactions": 55
+        }
+      }
+    },
+    {
+      "step": 512,
+      "optimizer_updates": 257,
+      "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v145_gravity_calibration_20261013/runtime/run_checkpoints/smoke_seed3_gravity-1p5/step512.zip",
+      "final_evaluation": {
+        "protocol": {
+          "reset_seeds": [
+            154000
+          ],
+          "action_noise_seeds": [
+            137000
+          ],
+          "max_steps": 256,
+          "device": "cpu",
+          "context_mode": "not-applicable",
+          "sampled_noise_scale": 1.0,
+          "profile_schedule": "matching-static",
+          "noise_schedule": "v126 CPU torch.Generator; one float32 (1,3) draw per step"
+        },
+        "device": "cpu",
+        "profile": "gravity-1p5",
+        "replay_loaded": false,
+        "optimizer_updates": 0,
+        "episodes": [
+          {
+            "condition": "static/gravity-1p5",
+            "mode": "deterministic",
+            "reset_seed": 154000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 56,
+            "episode_return": 84.15596880310545,
+            "mean_velocity": 0.5030554995356907,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9213002100586891,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "gravity-1p5": 56
+            },
+            "non_id_steps": 56,
+            "switches": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "gravity-1p5",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.5,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "final_physical_state": {
+              "height": 1.1812780032068941,
+              "angle": 0.20182044250407496,
+              "max_abs_qvel": 1.352361311952154,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true
+          },
+          {
+            "condition": "static/gravity-1p5",
+            "mode": "sampled",
+            "reset_seed": 154000,
+            "noise_seed": 137000,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 1.0,
+            "length": 15,
+            "episode_return": 8.235862373325912,
+            "mean_velocity": -0.44970222048028025,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.883123787244161,
+            "mean_action_noise_l2": 1.0542904297510782,
+            "profile_counts": {
+              "gravity-1p5": 15
+            },
+            "non_id_steps": 15,
+            "switches": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "gravity-1p5",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.5,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "final_physical_state": {
+              "height": 1.206013752967946,
+              "angle": -0.21483805450997057,
+              "max_abs_qvel": 2.4864195471717006,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true
+          }
+        ],
+        "evaluation_interactions": 71,
+        "heldout_peak_evaluation": {
+          "protocol": {
+            "reset_seeds": [
+              154000
+            ],
+            "action_noise_seeds": [
+              137000
+            ],
+            "max_steps": 256,
+            "device": "cpu",
+            "context_mode": "not-applicable",
+            "sampled_noise_scale": 1.0,
+            "profile_schedule": "matching-static",
+            "noise_schedule": "v126 CPU torch.Generator; one float32 (1,3) draw per step"
+          },
+          "device": "cpu",
+          "profile": "gravity-only",
+          "replay_loaded": false,
+          "optimizer_updates": 0,
+          "episodes": [
+            {
+              "condition": "static/gravity-only",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 54,
+              "episode_return": 82.62851906431065,
+              "mean_velocity": 0.5304292802185894,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9221243935602682,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "gravity-only": 54
+              },
+              "non_id_steps": 54,
+              "switches": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "gravity-only",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 2.6591479484724942,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "final_physical_state": {
+                "height": 1.1753975129096819,
+                "angle": 0.20598890282485324,
+                "max_abs_qvel": 1.5676061960851335,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true
+            },
+            {
+              "condition": "static/gravity-only",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 15,
+              "episode_return": 7.468708882510427,
+              "mean_velocity": -0.5008460965166336,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.8872207681337992,
+              "mean_action_noise_l2": 1.062691040833791,
+              "profile_counts": {
+                "gravity-only": 15
+              },
+              "non_id_steps": 15,
+              "switches": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "gravity-only",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 2.6591479484724942,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "final_physical_state": {
+                "height": 1.191664188003273,
+                "angle": -0.2110820297242392,
+                "max_abs_qvel": 2.5367022050856405,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true
+            }
+          ],
+          "evaluation_interactions": 69
+        }
+      }
+    }
+  ],
+  "training": {
+    "step": 512,
+    "blocks": [
+      {
+        "step": 256,
+        "interactions": 256,
+        "updates": 1,
+        "metrics": {
+          "train/actor_loss": -0.36160874366760254,
+          "train/critic_loss": 0.9033154249191284,
+          "train/ent_coef": 0.20000000298023224
+        }
+      },
+      {
+        "step": 512,
+        "interactions": 256,
+        "updates": 256,
+        "metrics": {
+          "train/actor_loss": -2.2269630432128906,
+          "train/critic_loss": 0.031950950622558594,
+          "train/ent_coef": 0.18531635403633118
+        }
+      }
+    ],
+    "periodic_evaluations": [
+      {
+        "step": 0,
+        "device": "cuda",
+        "episodes": [
+          {
+            "condition": "static/gravity-1p5",
+            "mode": "deterministic",
+            "reset_seed": 149000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 41,
+            "episode_return": 12.087500021572197,
+            "mean_velocity": -0.7051461323417181,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9213389725219913,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "gravity-1p5": 41
+            },
+            "non_id_steps": 41,
+            "switches": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "gravity-1p5",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.5,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "final_physical_state": {
+              "height": 1.182574527638518,
+              "angle": -0.2061234732018466,
+              "max_abs_qvel": 1.6796642851934531,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true
+          }
+        ]
+      },
+      {
+        "step": 256,
+        "device": "cuda",
+        "episodes": [
+          {
+            "condition": "static/gravity-1p5",
+            "mode": "deterministic",
+            "reset_seed": 149000,
+            "noise_seed": null,
+            "context_mode": "not-applicable",
+            "context_updates": 0,
+            "noise_scale": 0.0,
+            "length": 45,
+            "episode_return": 16.76025144287587,
+            "mean_velocity": -0.6275295482941853,
+            "physical_termination": true,
+            "time_limit_truncation": false,
+            "diagnostic_cutoff": false,
+            "mean_policy_std": 0.9330311920907762,
+            "mean_action_noise_l2": 0.0,
+            "profile_counts": {
+              "gravity-1p5": 45
+            },
+            "non_id_steps": 45,
+            "switches": 0,
+            "profile_events": [
+              {
+                "step": 1,
+                "profile": "gravity-1p5",
+                "actual_multipliers": {
+                  "body_mass": 1.0,
+                  "gravity": 1.5,
+                  "friction": 1.0
+                }
+              }
+            ],
+            "final_physical_state": {
+              "height": 1.18297213095312,
+              "angle": -0.2012364590884569,
+              "max_abs_qvel": 1.4941412532669067,
+              "unhealthy_conditions": [
+                "angle"
+              ]
+            },
+            "native_reward_verified": true
+          }
+        ]
+      }
+    ],
+    "snapshots": [
+      {
+        "step": 256,
+        "optimizer_updates": 1,
+        "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v145_gravity_calibration_20261013/runtime/run_checkpoints/smoke_seed3_gravity-1p5/step256.zip",
+        "final_evaluation": {
+          "protocol": {
+            "reset_seeds": [
+              154000
+            ],
+            "action_noise_seeds": [
+              137000
+            ],
+            "max_steps": 256,
+            "device": "cpu",
+            "context_mode": "not-applicable",
+            "sampled_noise_scale": 1.0,
+            "profile_schedule": "matching-static",
+            "noise_schedule": "v126 CPU torch.Generator; one float32 (1,3) draw per step"
+          },
+          "device": "cpu",
+          "profile": "gravity-1p5",
+          "replay_loaded": false,
+          "optimizer_updates": 0,
+          "episodes": [
+            {
+              "condition": "static/gravity-1p5",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 46,
+              "episode_return": 16.43908215752298,
+              "mean_velocity": -0.6426082059647048,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9331877801729285,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "gravity-1p5": 46
+              },
+              "non_id_steps": 46,
+              "switches": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "gravity-1p5",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.5,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "final_physical_state": {
+                "height": 1.1814820751079038,
+                "angle": -0.20772791343500505,
+                "max_abs_qvel": 1.5300304783677774,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true
+            },
+            {
+              "condition": "static/gravity-1p5",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 11,
+              "episode_return": 7.028954620351369,
+              "mean_velocity": -0.35982766479767636,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9006900028748945,
+              "mean_action_noise_l2": 1.0970217693935742,
+              "profile_counts": {
+                "gravity-1p5": 11
+              },
+              "non_id_steps": 11,
+              "switches": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "gravity-1p5",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.5,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "final_physical_state": {
+                "height": 1.210431979880512,
+                "angle": -0.25147192828807374,
+                "max_abs_qvel": 7.5896453107622195,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true
+            }
+          ],
+          "evaluation_interactions": 57,
+          "heldout_peak_evaluation": {
+            "protocol": {
+              "reset_seeds": [
+                154000
+              ],
+              "action_noise_seeds": [
+                137000
+              ],
+              "max_steps": 256,
+              "device": "cpu",
+              "context_mode": "not-applicable",
+              "sampled_noise_scale": 1.0,
+              "profile_schedule": "matching-static",
+              "noise_schedule": "v126 CPU torch.Generator; one float32 (1,3) draw per step"
+            },
+            "device": "cpu",
+            "profile": "gravity-only",
+            "replay_loaded": false,
+            "optimizer_updates": 0,
+            "episodes": [
+              {
+                "condition": "static/gravity-only",
+                "mode": "deterministic",
+                "reset_seed": 154000,
+                "noise_seed": null,
+                "context_mode": "not-applicable",
+                "context_updates": 0,
+                "noise_scale": 0.0,
+                "length": 44,
+                "episode_return": 14.880169526007185,
+                "mean_velocity": -0.661793674621446,
+                "physical_termination": true,
+                "time_limit_truncation": false,
+                "diagnostic_cutoff": false,
+                "mean_policy_std": 0.9322026805444197,
+                "mean_action_noise_l2": 0.0,
+                "profile_counts": {
+                  "gravity-only": 44
+                },
+                "non_id_steps": 44,
+                "switches": 0,
+                "profile_events": [
+                  {
+                    "step": 1,
+                    "profile": "gravity-only",
+                    "actual_multipliers": {
+                      "body_mass": 1.0,
+                      "gravity": 2.6591479484724942,
+                      "friction": 1.0
+                    }
+                  }
+                ],
+                "final_physical_state": {
+                  "height": 1.1770761038760957,
+                  "angle": -0.20496995828925868,
+                  "max_abs_qvel": 1.6939159435504716,
+                  "unhealthy_conditions": [
+                    "angle"
+                  ]
+                },
+                "native_reward_verified": true
+              },
+              {
+                "condition": "static/gravity-only",
+                "mode": "sampled",
+                "reset_seed": 154000,
+                "noise_seed": 137000,
+                "context_mode": "not-applicable",
+                "context_updates": 0,
+                "noise_scale": 1.0,
+                "length": 11,
+                "episode_return": 6.171519938127366,
+                "mean_velocity": -0.4377780729874294,
+                "physical_termination": true,
+                "time_limit_truncation": false,
+                "diagnostic_cutoff": false,
+                "mean_policy_std": 0.9063953107053583,
+                "mean_action_noise_l2": 1.1053936318917708,
+                "profile_counts": {
+                  "gravity-only": 11
+                },
+                "non_id_steps": 11,
+                "switches": 0,
+                "profile_events": [
+                  {
+                    "step": 1,
+                    "profile": "gravity-only",
+                    "actual_multipliers": {
+                      "body_mass": 1.0,
+                      "gravity": 2.6591479484724942,
+                      "friction": 1.0
+                    }
+                  }
+                ],
+                "final_physical_state": {
+                  "height": 1.1893459472196406,
+                  "angle": -0.2514504017651382,
+                  "max_abs_qvel": 7.5159085805208505,
+                  "unhealthy_conditions": [
+                    "angle"
+                  ]
+                },
+                "native_reward_verified": true
+              }
+            ],
+            "evaluation_interactions": 55
+          }
+        }
+      },
+      {
+        "step": 512,
+        "optimizer_updates": 257,
+        "checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v145_gravity_calibration_20261013/runtime/run_checkpoints/smoke_seed3_gravity-1p5/step512.zip",
+        "final_evaluation": {
+          "protocol": {
+            "reset_seeds": [
+              154000
+            ],
+            "action_noise_seeds": [
+              137000
+            ],
+            "max_steps": 256,
+            "device": "cpu",
+            "context_mode": "not-applicable",
+            "sampled_noise_scale": 1.0,
+            "profile_schedule": "matching-static",
+            "noise_schedule": "v126 CPU torch.Generator; one float32 (1,3) draw per step"
+          },
+          "device": "cpu",
+          "profile": "gravity-1p5",
+          "replay_loaded": false,
+          "optimizer_updates": 0,
+          "episodes": [
+            {
+              "condition": "static/gravity-1p5",
+              "mode": "deterministic",
+              "reset_seed": 154000,
+              "noise_seed": null,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 0.0,
+              "length": 56,
+              "episode_return": 84.15596880310545,
+              "mean_velocity": 0.5030554995356907,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.9213002100586891,
+              "mean_action_noise_l2": 0.0,
+              "profile_counts": {
+                "gravity-1p5": 56
+              },
+              "non_id_steps": 56,
+              "switches": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "gravity-1p5",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.5,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "final_physical_state": {
+                "height": 1.1812780032068941,
+                "angle": 0.20182044250407496,
+                "max_abs_qvel": 1.352361311952154,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true
+            },
+            {
+              "condition": "static/gravity-1p5",
+              "mode": "sampled",
+              "reset_seed": 154000,
+              "noise_seed": 137000,
+              "context_mode": "not-applicable",
+              "context_updates": 0,
+              "noise_scale": 1.0,
+              "length": 15,
+              "episode_return": 8.235862373325912,
+              "mean_velocity": -0.44970222048028025,
+              "physical_termination": true,
+              "time_limit_truncation": false,
+              "diagnostic_cutoff": false,
+              "mean_policy_std": 0.883123787244161,
+              "mean_action_noise_l2": 1.0542904297510782,
+              "profile_counts": {
+                "gravity-1p5": 15
+              },
+              "non_id_steps": 15,
+              "switches": 0,
+              "profile_events": [
+                {
+                  "step": 1,
+                  "profile": "gravity-1p5",
+                  "actual_multipliers": {
+                    "body_mass": 1.0,
+                    "gravity": 1.5,
+                    "friction": 1.0
+                  }
+                }
+              ],
+              "final_physical_state": {
+                "height": 1.206013752967946,
+                "angle": -0.21483805450997057,
+                "max_abs_qvel": 2.4864195471717006,
+                "unhealthy_conditions": [
+                  "angle"
+                ]
+              },
+              "native_reward_verified": true
+            }
+          ],
+          "evaluation_interactions": 71,
+          "heldout_peak_evaluation": {
+            "protocol": {
+              "reset_seeds": [
+                154000
+              ],
+              "action_noise_seeds": [
+                137000
+              ],
+              "max_steps": 256,
+              "device": "cpu",
+              "context_mode": "not-applicable",
+              "sampled_noise_scale": 1.0,
+              "profile_schedule": "matching-static",
+              "noise_schedule": "v126 CPU torch.Generator; one float32 (1,3) draw per step"
+            },
+            "device": "cpu",
+            "profile": "gravity-only",
+            "replay_loaded": false,
+            "optimizer_updates": 0,
+            "episodes": [
+              {
+                "condition": "static/gravity-only",
+                "mode": "deterministic",
+                "reset_seed": 154000,
+                "noise_seed": null,
+                "context_mode": "not-applicable",
+                "context_updates": 0,
+                "noise_scale": 0.0,
+                "length": 54,
+                "episode_return": 82.62851906431065,
+                "mean_velocity": 0.5304292802185894,
+                "physical_termination": true,
+                "time_limit_truncation": false,
+                "diagnostic_cutoff": false,
+                "mean_policy_std": 0.9221243935602682,
+                "mean_action_noise_l2": 0.0,
+                "profile_counts": {
+                  "gravity-only": 54
+                },
+                "non_id_steps": 54,
+                "switches": 0,
+                "profile_events": [
+                  {
+                    "step": 1,
+                    "profile": "gravity-only",
+                    "actual_multipliers": {
+                      "body_mass": 1.0,
+                      "gravity": 2.6591479484724942,
+                      "friction": 1.0
+                    }
+                  }
+                ],
+                "final_physical_state": {
+                  "height": 1.1753975129096819,
+                  "angle": 0.20598890282485324,
+                  "max_abs_qvel": 1.5676061960851335,
+                  "unhealthy_conditions": [
+                    "angle"
+                  ]
+                },
+                "native_reward_verified": true
+              },
+              {
+                "condition": "static/gravity-only",
+                "mode": "sampled",
+                "reset_seed": 154000,
+                "noise_seed": 137000,
+                "context_mode": "not-applicable",
+                "context_updates": 0,
+                "noise_scale": 1.0,
+                "length": 15,
+                "episode_return": 7.468708882510427,
+                "mean_velocity": -0.5008460965166336,
+                "physical_termination": true,
+                "time_limit_truncation": false,
+                "diagnostic_cutoff": false,
+                "mean_policy_std": 0.8872207681337992,
+                "mean_action_noise_l2": 1.062691040833791,
+                "profile_counts": {
+                  "gravity-only": 15
+                },
+                "non_id_steps": 15,
+                "switches": 0,
+                "profile_events": [
+                  {
+                    "step": 1,
+                    "profile": "gravity-only",
+                    "actual_multipliers": {
+                      "body_mass": 1.0,
+                      "gravity": 2.6591479484724942,
+                      "friction": 1.0
+                    }
+                  }
+                ],
+                "final_physical_state": {
+                  "height": 1.191664188003273,
+                  "angle": -0.2110820297242392,
+                  "max_abs_qvel": 2.5367022050856405,
+                  "unhealthy_conditions": [
+                    "angle"
+                  ]
+                },
+                "native_reward_verified": true
+              }
+            ],
+            "evaluation_interactions": 69
+          }
+        }
+      }
+    ]
+  },
+  "checkpoint_selection": "predeclared300k600k-not-best",
+  "resumable_checkpoint": "/home/zhengliang01/scheduleurm_work/CS-BAPR/experiments/general_ood_v145_gravity_calibration_20261013/runtime/run_checkpoints/smoke_seed3_gravity-1p5/latest.pt",
+  "bootstrap_mask": "terminated-only",
+  "replay_handle_timeout_termination": true,
+  "optimizer_updates_during_evaluation": 0,
+  "runtime": {
+    "python": "3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]",
+    "torch": "2.5.1+cu121",
+    "numpy": "2.1.3",
+    "gymnasium": "1.2.0",
+    "mujoco": "3.2.7",
+    "stable_baselines3": "2.7.0",
+    "gpu": "NVIDIA GeForce RTX 3080 Ti"
+  },
+  "peak_cuda_allocated_mb": 22.63525390625,
+  "seconds": 11.342987065203488,
+  "scope": "Native standard-SAC fixed-profile learnability positive control, not an algorithm-only CS-BAPR ablation"
+}

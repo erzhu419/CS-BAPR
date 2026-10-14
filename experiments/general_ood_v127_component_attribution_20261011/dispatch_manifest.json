@@ -1,0 +1,50 @@
+{
+  "revision": "general_ood_v127_component_attribution",
+  "status": "complete",
+  "runtime": "/home/erzhu419/mine_code/CS-BAPR/experiments/general_ood_v127_component_attribution_20261011/runtime",
+  "source_runtimes": [
+    "/home/erzhu419/mine_code/CS-BAPR/experiments/general_ood_v123_source_extension_20261011/runtime",
+    "/home/erzhu419/mine_code/CS-BAPR/experiments/general_ood_v125_actor_beta_20261011/runtime"
+  ],
+  "baseline_runtime": "/home/erzhu419/mine_code/CS-BAPR/experiments/general_ood_v126_noise_sensitivity_20261011/runtime",
+  "protocol": "docs/general_ood_v127_component_attribution_protocol.md",
+  "training_seeds": [0, 1, 2],
+  "component_source_steps": [300000, 350000],
+  "source_arm": "beta-minus2",
+  "crossed_components": ["full_actor_mean_function", "full_actor_std_function", "initial_context_normalizer"],
+  "sampled_combinations_per_seed": 8,
+  "deterministic_combinations_per_seed": 4,
+  "sampled_noise_scale": 1,
+  "reset_seeds": [150000, 150001, 150002, 150003, 150004],
+  "noise_groups": {"legacy": [12400, 12401, 12402], "fresh_from_v126": [12600, 12601, 12602]},
+  "evaluation_device": "cpu",
+  "checkpoint_selection": "final-not-best",
+  "new_training_interactions": 0,
+  "optimizer_updates": 0,
+  "source_readout_refitted": false,
+  "reward_or_physics_changes": [],
+  "planned_formal_evaluation_episodes": 780,
+  "maximum_formal_evaluation_interactions": 780000,
+  "planned_coherent_baseline_matches": 210,
+  "allowed_nodes": ["node007"],
+  "placement_reason": "Native final snapshots, v126 baseline JSON and exact simulator/runtime are on this Linux node; no checkpoint transfer.",
+  "preferred_node": null,
+  "preferred_gpu": null,
+  "resource_request": {"cpu": 2, "ram_mb": 4096, "vram_mb": 0},
+  "sync_policy": "Small components.json only; checkpoint and replay remain native; progress JSON remains native.",
+  "local_tests": {
+    "command": "python3 -m pytest -q tests/test_general_ood_v126.py tests/test_general_ood_v127.py",
+    "passed": 7,
+    "seconds": 2.54
+  },
+  "native_smoke": {"task_id": "t142368", "training_seed": 2, "status": "done", "exit_code": 0, "planned_evaluation_episodes": 20, "actual_evaluation_episodes": 20, "planned_coherent_baseline_matches": 6, "actual_coherent_baseline_matches": 6, "max_steps": 1000, "evaluation_interactions": 12870, "new_training_interactions": 0, "optimizer_updates": 0, "seconds": 12.416841698810458, "result_bytes": 140142, "result_synced_at": 1791702876.7980435, "result": "results/general_ood_v127_component_attribution/smoke/components.json"},
+  "formal_shards": [
+    {"task_id": "t142369", "training_seed": 0, "status": "done", "exit_code": 0, "node": "node007", "gpu_idx": null, "started_at": 1791702982.7473743, "finished_at": 1791703041.8083994, "result_synced_at": 1791703058.0922594, "remote_pids": [1228], "planned_evaluation_episodes": 260, "actual_evaluation_episodes": 260, "coherent_baseline_matches": 70, "evaluation_interactions": 38404, "result_bytes": 1719402, "result": "results/general_ood_v127_component_attribution/seed0/components.json"},
+    {"task_id": "t142370", "training_seed": 1, "status": "done", "exit_code": 0, "node": "node007", "gpu_idx": null, "started_at": 1791702982.7510715, "finished_at": 1791703206.3442614, "result_synced_at": 1791703214.4559357, "remote_pids": [1234], "planned_evaluation_episodes": 260, "actual_evaluation_episodes": 260, "coherent_baseline_matches": 70, "evaluation_interactions": 188368, "result_bytes": 1714295, "result": "results/general_ood_v127_component_attribution/seed1/components.json"},
+    {"task_id": "t142371", "training_seed": 2, "status": "done", "exit_code": 0, "node": "node007", "gpu_idx": null, "started_at": 1791702982.759248, "finished_at": 1791703150.0633457, "result_synced_at": 1791703157.5217524, "remote_pids": [1248], "planned_evaluation_episodes": 260, "actual_evaluation_episodes": 260, "coherent_baseline_matches": 70, "evaluation_interactions": 153059, "result_bytes": 1712091, "result": "results/general_ood_v127_component_attribution/seed2/components.json"}
+  ],
+  "active_tasks": [],
+  "summary_command": "python3 scripts/summarize_general_ood_v127.py --result-dir results/general_ood_v127_component_attribution",
+  "completion": {"evaluation_episodes": 780, "evaluation_interactions": 379831, "coherent_baseline_matches": 210, "new_training_interactions": 0, "optimizer_updates": 0, "result_bytes": 5145788, "batch_wall_minutes": 3.726614785194397, "summary": "results/general_ood_v127_component_attribution/summary.json", "results_note": "docs/general_ood_v127_component_attribution_results.md"},
+  "next_plan": {"revision": "general_ood_v128_mean_retention", "status": "submitted", "manifest": "experiments/general_ood_v128_mean_retention_20261011/dispatch_manifest.json", "source_revision": "general_ood_v123_source_extension", "source_steps": 300000, "target_steps": 350000, "training_seeds": [0, 1, 2], "arms": ["unchanged-control", "mean-only-source-regularization"], "penalty": "alpha.detach() * 0.5 * mean_batch(sum_action(((mu_current - mu_frozen_300k) / std_frozen_300k)^2))", "coefficient": 1, "same_current_augmented_input": true, "current_std_regularized": false, "initial_context_normalizer_swapped": false, "effective_beta": -2, "weight_reg": 0, "planned_new_training_interactions": 300000, "checkpoint_selection": "final-not-best", "evaluation_device": "cpu", "reset_seeds": [150000, 150001, 150002, 150003, 150004], "sampled_noise_scale": 1, "noise_groups": {"legacy": [12400, 12401, 12402], "v126_seen": [12600, 12601, 12602], "new_heldout": [12800, 12801, 12802]}, "planned_final_evaluation_episodes": 300, "plan": "docs/general_ood_v127_component_attribution_results.md"}
+}
